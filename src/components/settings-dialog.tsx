@@ -442,8 +442,21 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 Set your language and regional preferences
               </p>
             </div>
-            <div className="bg-muted/50 aspect-video max-w-3xl rounded-xl flex items-center justify-center text-muted-foreground">
-              Language settings coming soon
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="language">Display Language</Label>
+                <select
+                  id="language"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  defaultValue="en"
+                >
+                  <option value="en">English</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Choose your preferred language for the interface
+                </p>
+              </div>
             </div>
           </div>
         )
