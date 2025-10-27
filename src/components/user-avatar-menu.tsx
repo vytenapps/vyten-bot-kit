@@ -111,8 +111,8 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm" onClick={handleThemeClick}>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-2 py-1.5">
+            <div className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-sm py-1 px-1 -ml-1 flex-1" onClick={handleThemeClick}>
               <Monitor className="h-4 w-4" />
               <span className="text-sm">Theme</span>
             </div>
