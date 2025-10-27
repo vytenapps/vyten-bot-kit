@@ -107,7 +107,7 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
-              <span className="text-sm font-medium">Theme</span>
+              <span className="text-sm">Theme</span>
             </div>
             <ThemeSwitcher className="scale-75" />
           </div>
