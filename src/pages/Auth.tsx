@@ -31,7 +31,9 @@ const Auth = () => {
 
     // Listen for storage changes from other tabs (cross-tab session sync)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.includes('supabase.auth.token')) {
+      const key = e.key || '';
+      const looksLikeSupabaseAuth = key.startsWith('sb-') && key.endsWith('-auth-token');
+      if (looksLikeSupabaseAuth && e.newValue) {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
             navigate("/chat");
@@ -42,9 +44,20 @@ const Auth = () => {
 
     window.addEventListener('storage', handleStorageChange);
 
+    // Poll as a safety net in case storage event doesn't fire
+    const interval = setInterval(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          clearInterval(interval);
+          navigate('/chat');
+        }
+      });
+    }, 1000);
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
     };
   }, [navigate]);
 
@@ -57,6 +70,7 @@ const Auth = () => {
         email,
         options: {
           shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/chat`,
         },
       });
 
