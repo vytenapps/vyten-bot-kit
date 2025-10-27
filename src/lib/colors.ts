@@ -304,9 +304,15 @@ export const baseColors: Record<BaseColor, { name: string; cssVars: { light: Rec
   },
 };
 
-export function applyBaseColor(color: BaseColor) {
+export function applyBaseColor(color: BaseColor, isDarkOverride?: boolean) {
   const root = document.documentElement;
-  const isDark = root.classList.contains("dark");
+  const isDark =
+    typeof isDarkOverride === "boolean"
+      ? isDarkOverride
+      : root.classList.contains("dark") ||
+        (typeof window !== "undefined" &&
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
   
   // Validate that color exists in baseColors
   if (!baseColors[color]) {

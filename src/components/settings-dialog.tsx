@@ -92,7 +92,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   // Apply base color when theme changes
   useEffect(() => {
-    applyBaseColor(baseColor)
+    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    applyBaseColor(baseColor, isDark)
   }, [theme, baseColor])
 
   useEffect(() => {
@@ -472,7 +473,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         key={color}
                         onClick={() => {
                           setBaseColor(color)
-                          applyBaseColor(color)
+                          const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+                          applyBaseColor(color, isDark)
                           toast.success(`${baseColors[color].name} theme applied`)
                         }}
                         className="relative group"

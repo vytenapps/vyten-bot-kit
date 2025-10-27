@@ -20,7 +20,8 @@ function AppContent() {
   // Re-apply colors whenever theme changes
   useEffect(() => {
     const storedColor = getStoredBaseColor();
-    applyBaseColor(storedColor);
+    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    applyBaseColor(storedColor, isDark);
   }, [theme]);
 
   return (
