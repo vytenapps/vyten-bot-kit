@@ -60,9 +60,22 @@ const Auth = () => {
       });
     }, 1000);
 
+    // Recheck session when window gains focus (in case user logged in via another tab)
+    const handleFocus = () => {
+      console.debug('[Auth] window focus - rechecking session');
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        console.debug('[Auth] focus-triggered getSession', { hasSession: !!session });
+        if (session) {
+          navigate('/chat');
+        }
+      });
+    };
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
   }, [navigate]);

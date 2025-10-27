@@ -12,6 +12,7 @@ const Chat = () => {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     // Get initial session
@@ -20,6 +21,29 @@ const Chat = () => {
         navigate("/auth");
       } else {
         setSession(session);
+        
+        // If we arrived here from a magic link, broadcast to the original window
+        const loginState = searchParams.get('login_state');
+        if (loginState) {
+          console.debug('[Chat] broadcasting signed_in for loginState', loginState);
+          const channel = supabase.channel(`auth-sync:${loginState}`, { config: { broadcast: { self: true } } });
+          channel.subscribe((status) => {
+            console.debug('[Chat] Realtime subscribe status', status);
+            if (status === 'SUBSCRIBED') {
+              channel.send({
+                type: 'broadcast',
+                event: 'signed_in',
+                payload: { success: true }
+              }).then(() => {
+                console.debug('[Chat] broadcast sent successfully');
+                // Clean up the URL
+                setSearchParams({});
+                // Unsubscribe after a short delay
+                setTimeout(() => channel.unsubscribe(), 1000);
+              });
+            }
+          });
+        }
       }
     });
 
@@ -32,7 +56,7 @@ const Chat = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, searchParams, setSearchParams]);
 
   const handleSignOut = async () => {
     try {
