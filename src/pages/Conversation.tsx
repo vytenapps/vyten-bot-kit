@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FormEventHandler } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from "@supabase/supabase-js";
@@ -42,8 +42,10 @@ const ConversationPage = () => {
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
   const [model, setModel] = useState<string>("google/gemini-2.5-flash");
   const [conversationTitle, setConversationTitle] = useState<string>("");
+  const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const models = [
@@ -84,6 +86,40 @@ const ConversationPage = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate, chatId]);
+
+  // Auto-trigger AI response for new conversations from URL params
+  useEffect(() => {
+    const messageFromUrl = searchParams.get("message");
+    const modelFromUrl = searchParams.get("model");
+    
+    if (messageFromUrl && !hasTriggeredAI && session?.user?.id && chatId) {
+      console.log("Auto-triggering AI response from URL params");
+      setHasTriggeredAI(true);
+      
+      if (modelFromUrl) {
+        setModel(modelFromUrl);
+      }
+      
+      // Add user message to UI immediately
+      const userMsgId = crypto.randomUUID();
+      setMessages([{ id: userMsgId, role: "user", content: messageFromUrl }]);
+      
+      setStatus("streaming");
+      streamChat(messageFromUrl).then(() => {
+        setStatus("ready");
+        // Clear URL params
+        navigate(`/c/${chatId}`, { replace: true });
+      }).catch((error) => {
+        console.error("Auto-trigger AI error:", error);
+        setStatus("error");
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to get AI response",
+          variant: "destructive",
+        });
+      });
+    }
+  }, [searchParams, hasTriggeredAI, session, chatId]);
 
   const loadConversation = async (userId: string) => {
     if (!chatId) return;
@@ -150,6 +186,13 @@ const ConversationPage = () => {
   const streamChat = async (userMessage: string) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
+    console.log("Calling chat edge function:", {
+      url: CHAT_URL,
+      conversationId: chatId,
+      model,
+      messageLength: userMessage.length
+    });
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -163,8 +206,11 @@ const ConversationPage = () => {
       }),
     });
 
+    console.log("Chat response status:", resp.status);
+
     if (!resp.ok) {
       const errorData = await resp.json().catch(() => ({ error: "Unknown error" }));
+      console.error("Chat error response:", errorData);
       throw new Error(errorData.error || "Failed to start stream");
     }
 
@@ -183,6 +229,8 @@ const ConversationPage = () => {
       { id: assistantMsgId, role: "assistant", content: "" },
     ]);
 
+    console.log("Starting to read AI stream...");
+
     while (!streamDone) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -199,6 +247,7 @@ const ConversationPage = () => {
 
         const jsonStr = line.slice(6).trim();
         if (jsonStr === "[DONE]") {
+          console.log("Stream completed, total tokens:", assistantContent.length);
           streamDone = true;
           break;
         }
@@ -221,6 +270,7 @@ const ConversationPage = () => {
       }
     }
 
+    console.log("Reloading conversation to get saved messages...");
     // Reload conversation to get the saved message from DB
     if (session?.user?.id) {
       loadConversation(session.user.id);

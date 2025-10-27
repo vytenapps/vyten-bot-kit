@@ -125,7 +125,7 @@ const Chat = () => {
     setStatus('submitted');
 
     try {
-      // Create a new conversation
+      // Create a new conversation (don't save message yet - edge function will do it)
       const { data: conversation, error: convError } = await supabase
         .from("conversations")
         .insert({
@@ -139,22 +139,9 @@ const Chat = () => {
         throw convError;
       }
 
-      // Save the first message
-      const { error: msgError } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversation.id,
-          user_id: session.user.id,
-          role: "user",
-          content: text,
-        });
-
-      if (msgError) {
-        throw msgError;
-      }
-
-      // Navigate to the conversation page with selected model in state
-      navigate(`/c/${conversation.id}`, { state: { model: selectedModel, firstMessage: text } });
+      // Navigate to the conversation page with the message and model
+      // The conversation page will auto-trigger the AI call
+      navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${selectedModel}`);
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast({
