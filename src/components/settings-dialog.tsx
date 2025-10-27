@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import {
@@ -9,9 +7,13 @@ import {
   Paintbrush,
   Lock,
   Settings,
+  Check,
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { useTheme } from "@/components/theme-provider"
+import { ThemeSwitcher } from "@/components/theme-switcher"
+import { applyBaseColor, getStoredBaseColor, baseColors, type BaseColor } from "@/lib/colors"
 
 import {
   Breadcrumb,
@@ -85,6 +87,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const saveTimeoutRef = useRef<NodeJS.Timeout>()
   const isInitialLoad = useRef(true)
   const previousProfileRef = useRef(profile)
+  const [baseColor, setBaseColor] = useState<BaseColor>(getStoredBaseColor())
+  const { theme, setTheme } = useTheme()
+
+  // Apply base color when theme changes
+  useEffect(() => {
+    applyBaseColor(baseColor)
+  }, [theme, baseColor])
 
   useEffect(() => {
     if (open) {
@@ -427,8 +436,59 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 Customize how the app looks
               </p>
             </div>
-            <div className="bg-muted/50 aspect-video max-w-3xl rounded-xl flex items-center justify-center text-muted-foreground">
-              Appearance settings coming soon
+            
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-base">Theme</Label>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Select your preferred theme mode
+                  </p>
+                </div>
+                <ThemeSwitcher />
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-base">Color</Label>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Choose your accent color
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  {(Object.keys(baseColors) as BaseColor[]).map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => {
+                        setBaseColor(color)
+                        applyBaseColor(color)
+                        toast.success(`${baseColors[color].name} theme applied`)
+                      }}
+                      className="relative group"
+                      aria-label={`Select ${baseColors[color].name} color`}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-full border-2 border-border transition-transform group-hover:scale-110"
+                        style={{
+                          background: color === "neutral" ? "hsl(0 0% 50%)" :
+                                     color === "zinc" ? "hsl(240 5% 50%)" :
+                                     color === "slate" ? "hsl(215 20% 50%)" :
+                                     color === "gray" ? "hsl(220 15% 50%)" :
+                                     "hsl(25 10% 50%)",
+                        }}
+                      />
+                      {baseColor === color && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Check className="w-5 h-5 text-white drop-shadow-md" />
+                        </div>
+                      )}
+                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                        {baseColors[color].name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )
