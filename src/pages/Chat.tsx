@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from "@supabase/supabase-js";
 import { AppSidebar } from "@/components/app-sidebar";
+import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -118,6 +119,12 @@ const Chat = () => {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto">
+            <UserAvatarMenu 
+              isLoggedIn={!!session} 
+              userEmail={session?.user?.email}
+            />
+          </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
