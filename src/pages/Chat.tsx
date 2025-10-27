@@ -17,7 +17,7 @@ import {
   PromptInputTextarea,
   PromptInputToolbar,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Suggestion } from "@/components/ui/shadcn-io/ai/suggestion";
+import { Suggestions, Suggestion } from "@/components/ui/shadcn-io/ai/suggestion";
 
 const Chat = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -150,16 +150,15 @@ const Chat = () => {
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <Suggestions>
               {suggestions.map((suggestion, index) => (
                 <Suggestion
                   key={index}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  {suggestion}
-                </Suggestion>
+                  suggestion={suggestion}
+                  onClick={handleSuggestionClick}
+                />
               ))}
-            </div>
+            </Suggestions>
 
             <div className="w-full">
               <PromptInput onSubmit={handleSubmit}>
