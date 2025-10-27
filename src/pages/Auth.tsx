@@ -93,7 +93,24 @@ const Auth = () => {
       const channel = supabase.channel(`auth-sync:${loginSyncId}`, { config: { broadcast: { self: true } } });
       channel.on('broadcast', { event: 'signed_in' }, (payload) => {
         console.debug('[Auth] received Realtime broadcast signed_in', payload);
-        navigate('/chat');
+        // Wait for session tokens event to ensure this origin gets a session
+      });
+      channel.on('broadcast', { event: 'session_tokens' }, async (payload) => {
+        try {
+          console.debug('[Auth] received session_tokens broadcast');
+          const { access_token, refresh_token } = (payload as any)?.payload || {};
+          if (access_token && refresh_token) {
+            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+            console.debug('[Auth] setSession result', { hasSession: !!data?.session, error: !!error });
+            if (!error) {
+              navigate('/chat');
+            }
+          } else {
+            console.warn('[Auth] session_tokens payload missing tokens', payload);
+          }
+        } catch (err) {
+          console.error('[Auth] setSession failed', err);
+        }
       });
       channel.subscribe((status) => console.debug('[Auth] Realtime subscribe status', status));
 

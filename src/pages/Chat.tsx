@@ -30,16 +30,29 @@ const Chat = () => {
           channel.subscribe((status) => {
             console.debug('[Chat] Realtime subscribe status', status);
             if (status === 'SUBSCRIBED') {
-              channel.send({
-                type: 'broadcast',
-                event: 'signed_in',
-                payload: { success: true }
-              }).then(() => {
-                console.debug('[Chat] broadcast sent successfully');
-                // Clean up the URL
-                setSearchParams({});
-                // Unsubscribe after a short delay
-                setTimeout(() => channel.unsubscribe(), 1000);
+              supabase.auth.getSession().then(({ data: { session } }) => {
+                const access_token = session?.access_token;
+                const refresh_token = session?.refresh_token;
+                if (access_token && refresh_token) {
+                  channel.send({
+                    type: 'broadcast',
+                    event: 'session_tokens',
+                    payload: { access_token, refresh_token }
+                  }).then(() => console.debug('[Chat] session_tokens broadcast sent'));
+                } else {
+                  console.warn('[Chat] no tokens found to broadcast');
+                }
+                channel.send({
+                  type: 'broadcast',
+                  event: 'signed_in',
+                  payload: { success: true }
+                }).then(() => {
+                  console.debug('[Chat] signed_in broadcast sent successfully');
+                  // Clean up the URL
+                  setSearchParams({});
+                  // Unsubscribe after a short delay
+                  setTimeout(() => channel.unsubscribe(), 1000);
+                });
               });
             }
           });
