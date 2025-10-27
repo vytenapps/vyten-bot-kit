@@ -58,7 +58,7 @@ export function VersionSwitcher() {
 
   const handleClick = () => {
     window.open(
-      'https://vyten.com?utm_campaign=vyten-bot-kit&utm_source=lovable',
+      'https://vyten.com?utm_source=lovable&utm_medium=logo_link&utm_campaign=vyten-bot-kit&utm_content=sidebar_logo',
       '_blank',
       'noopener,noreferrer'
     );
