@@ -455,38 +455,51 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     Choose your accent color
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  {(Object.keys(baseColors) as BaseColor[]).map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => {
-                        setBaseColor(color)
-                        applyBaseColor(color)
-                        toast.success(`${baseColors[color].name} theme applied`)
-                      }}
-                      className="relative group"
-                      aria-label={`Select ${baseColors[color].name} color`}
-                    >
-                      <div
-                        className="w-10 h-10 rounded-full border-2 border-border transition-transform group-hover:scale-110"
-                        style={{
-                          background: color === "neutral" ? "hsl(0 0% 50%)" :
-                                     color === "zinc" ? "hsl(240 5% 50%)" :
-                                     color === "slate" ? "hsl(215 20% 50%)" :
-                                     color === "gray" ? "hsl(220 15% 50%)" :
-                                     "hsl(25 10% 50%)",
+                <div className="flex flex-wrap gap-3">
+                  {(Object.keys(baseColors) as BaseColor[]).map((color) => {
+                    const colorMap: Record<BaseColor, string> = {
+                      neutral: "hsl(0 0% 50%)",
+                      zinc: "hsl(240 5% 50%)",
+                      slate: "hsl(215 20% 50%)",
+                      gray: "hsl(220 15% 50%)",
+                      stone: "hsl(25 10% 50%)",
+                      red: "hsl(0 72% 51%)",
+                      rose: "hsl(347 77% 50%)",
+                      orange: "hsl(25 95% 53%)",
+                      green: "hsl(142 76% 36%)",
+                      blue: "hsl(221 83% 53%)",
+                      yellow: "hsl(48 96% 53%)",
+                      violet: "hsl(262 83% 58%)",
+                    };
+                    
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => {
+                          setBaseColor(color)
+                          applyBaseColor(color)
+                          toast.success(`${baseColors[color].name} theme applied`)
                         }}
-                      />
-                      {baseColor === color && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Check className="w-5 h-5 text-white drop-shadow-md" />
-                        </div>
-                      )}
-                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                        {baseColors[color].name}
-                      </span>
-                    </button>
-                  ))}
+                        className="relative group"
+                        aria-label={`Select ${baseColors[color].name} color`}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-full border-2 border-border transition-transform group-hover:scale-110"
+                          style={{
+                            background: colorMap[color],
+                          }}
+                        />
+                        {baseColor === color && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Check className="w-5 h-5 text-white drop-shadow-md" />
+                          </div>
+                        )}
+                        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                          {baseColors[color].name}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
