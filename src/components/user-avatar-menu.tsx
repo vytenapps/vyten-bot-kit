@@ -109,12 +109,12 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
             Profile
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <div className="flex items-center justify-between px-2 py-2">
+          <div className="flex items-center justify-between px-2 py-1.5">
             <div className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               <span className="text-sm font-medium">Theme</span>
             </div>
-            <ThemeSwitcher />
+            <ThemeSwitcher className="scale-75" />
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
