@@ -150,8 +150,8 @@ const Chat = () => {
               </p>
             </div>
 
-            <div className="w-full overflow-hidden">
-              <Suggestions>
+            <div className="w-full max-w-full overflow-hidden">
+              <Suggestions className="w-full">
                 {suggestions.map((suggestion, index) => (
                   <Suggestion
                     key={index}
