@@ -125,7 +125,7 @@ const Chat = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="overflow-x-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -139,8 +139,8 @@ const Chat = () => {
             />
           </div>
         </header>
-        <div className="flex flex-1 flex-col items-center justify-center p-8">
-          <div className="w-full max-w-3xl space-y-8">
+        <div className="flex w-full flex-1 flex-col items-center justify-center py-8 px-4 sm:px-6 md:px-8 overflow-x-hidden">
+          <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto space-y-8">
             <div className="space-y-2 text-center">
               <h1 className="text-4xl font-bold">
                 {firstName ? `Hello ${firstName}!` : "Hello there!"}
