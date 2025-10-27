@@ -13,20 +13,38 @@ import {
 } from "@/components/ui/sidebar";
 import {
   PromptInput,
+  PromptInputButton,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputModelSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
+  PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
 import { Suggestions, Suggestion } from "@/components/ui/shadcn-io/ai/suggestion";
+import { MicIcon, PaperclipIcon } from "lucide-react";
 
 const Chat = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [text, setText] = useState<string>("");
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
+  const [selectedModel, setSelectedModel] = useState<string>("google/gemini-2.5-flash");
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const models = [
+    { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+    { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro" },
+    { id: "google/gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
+    { id: "openai/gpt-5", name: "GPT-5" },
+    { id: "openai/gpt-5-mini", name: "GPT-5 Mini" },
+    { id: "openai/gpt-5-nano", name: "GPT-5 Nano" },
+  ];
 
   const suggestions = [
     "What is Vyten Apps?",
@@ -165,10 +183,33 @@ const Chat = () => {
                 <PromptInputTextarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Send a message..."
+                  placeholder="Type your message..."
                 />
                 <PromptInputToolbar>
-                  <div />
+                  <PromptInputTools>
+                    <PromptInputButton>
+                      <PaperclipIcon size={16} />
+                    </PromptInputButton>
+                    <PromptInputButton>
+                      <MicIcon size={16} />
+                      <span>Voice</span>
+                    </PromptInputButton>
+                    <PromptInputModelSelect
+                      value={selectedModel}
+                      onValueChange={setSelectedModel}
+                    >
+                      <PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectValue />
+                      </PromptInputModelSelectTrigger>
+                      <PromptInputModelSelectContent>
+                        {models.map((model) => (
+                          <PromptInputModelSelectItem key={model.id} value={model.id}>
+                            {model.name}
+                          </PromptInputModelSelectItem>
+                        ))}
+                      </PromptInputModelSelectContent>
+                    </PromptInputModelSelect>
+                  </PromptInputTools>
                   <PromptInputSubmit disabled={!text} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
