@@ -34,6 +34,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const isInitialLoad = useRef(true);
+  const previousProfileRef = useRef(profile);
 
   useEffect(() => {
     loadProfile();
@@ -114,10 +115,37 @@ const Profile = () => {
     }
   };
 
+  const getChangedField = () => {
+    const prev = previousProfileRef.current;
+    
+    if (prev.username !== profile.username) return "Username";
+    if (prev.first_name !== profile.first_name) return "First name";
+    if (prev.last_name !== profile.last_name) return "Last name";
+    if (prev.phone !== profile.phone) return "Phone number";
+    if (prev.bio !== profile.bio) return "Bio";
+    
+    // Check privacy settings
+    if (prev.privacy_settings.full_name !== profile.privacy_settings.full_name) return "Full name privacy";
+    if (prev.privacy_settings.email !== profile.privacy_settings.email) return "Email privacy";
+    if (prev.privacy_settings.phone !== profile.privacy_settings.phone) return "Phone privacy";
+    
+    // Check social links
+    if (prev.social.instagram !== profile.social.instagram) return "Instagram";
+    if (prev.social.linkedin !== profile.social.linkedin) return "LinkedIn";
+    if (prev.social.x !== profile.social.x) return "X (Twitter)";
+    if (prev.social.facebook !== profile.social.facebook) return "Facebook";
+    if (prev.social.youtube !== profile.social.youtube) return "YouTube";
+    if (prev.social.tiktok !== profile.social.tiktok) return "TikTok";
+    
+    return "Profile";
+  };
+
   const autoSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      const changedField = getChangedField();
 
       const { error } = await supabase
         .from("user_profiles")
@@ -135,7 +163,8 @@ const Profile = () => {
 
       if (error) throw error;
 
-      toast.success("Profile saved");
+      toast.success(`${changedField} saved`);
+      previousProfileRef.current = profile;
     } catch (error: any) {
       toast.error("Failed to save profile", {
         description: error.message,
