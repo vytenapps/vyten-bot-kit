@@ -13,6 +13,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   PromptInput,
+  PromptInputButton,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputModelSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
@@ -20,7 +26,7 @@ import {
 } from "@/components/ui/shadcn-io/ai/prompt-input";
 import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
-import { Bot } from "lucide-react";
+import { Bot, MicIcon, PaperclipIcon } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -39,6 +45,15 @@ const ConversationPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const models = [
+    { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+    { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro" },
+    { id: "google/gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
+    { id: "openai/gpt-5", name: "GPT-5" },
+    { id: "openai/gpt-5-mini", name: "GPT-5 Mini" },
+    { id: "openai/gpt-5-nano", name: "GPT-5 Nano" },
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -270,7 +285,7 @@ const ConversationPage = () => {
         <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
           <div className="flex-1 overflow-hidden">
             <Conversation>
-              <ConversationContent>
+              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
                 {messages.map((message) => (
                   <Message from={message.role} key={message.id}>
                     {message.role === "assistant" && (
@@ -290,8 +305,8 @@ const ConversationPage = () => {
               </ConversationContent>
             </Conversation>
           </div>
-          <div className="border-t p-4 bg-background">
-            <div className="max-w-3xl mx-auto">
+          <div className="border-t py-8 px-4 sm:px-6 md:px-8 bg-background">
+            <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
                   value={text}
@@ -299,7 +314,30 @@ const ConversationPage = () => {
                   placeholder="Type your message..."
                 />
                 <PromptInputToolbar>
-                  <PromptInputTools />
+                  <PromptInputTools>
+                    <PromptInputButton>
+                      <PaperclipIcon size={16} />
+                    </PromptInputButton>
+                    <PromptInputButton>
+                      <MicIcon size={16} />
+                      <span>Voice</span>
+                    </PromptInputButton>
+                    <PromptInputModelSelect
+                      value={model}
+                      onValueChange={setModel}
+                    >
+                      <PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectValue />
+                      </PromptInputModelSelectTrigger>
+                      <PromptInputModelSelectContent>
+                        {models.map((m) => (
+                          <PromptInputModelSelectItem key={m.id} value={m.id}>
+                            {m.name}
+                          </PromptInputModelSelectItem>
+                        ))}
+                      </PromptInputModelSelectContent>
+                    </PromptInputModelSelect>
+                  </PromptInputTools>
                   <PromptInputSubmit disabled={!text.trim()} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
