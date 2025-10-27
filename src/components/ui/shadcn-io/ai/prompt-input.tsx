@@ -126,17 +126,15 @@ export type PromptInputButtonProps = ComponentProps<typeof Button>;
 export const PromptInputButton = ({
   variant = 'ghost',
   className,
-  size,
+  size = 'sm',
   ...props
 }: PromptInputButtonProps) => {
-  const newSize =
-    (size ?? Children.count(props.children) > 1) ? 'default' : 'icon';
+  const newSize = size ?? (Children.count(props.children) > 1 ? 'sm' : 'icon');
   return (
     <Button
       className={cn(
-        'shrink-0 gap-1.5 rounded-lg',
+        'shrink-0 gap-1.5 rounded-lg h-8',
         variant === 'ghost' && 'text-muted-foreground',
-        newSize === 'default' && 'px-3',
         className
       )}
       size={newSize}
@@ -197,7 +195,7 @@ export const PromptInputModelSelectTrigger = ({
 }: PromptInputModelSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
-      'border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors',
+      'h-8 w-fit gap-2 rounded-lg border-none bg-transparent px-3 font-medium text-muted-foreground shadow-none transition-colors',
       'hover:bg-accent hover:text-foreground [&[aria-expanded="true"]]:bg-accent [&[aria-expanded="true"]]:text-foreground',
       className
     )}
