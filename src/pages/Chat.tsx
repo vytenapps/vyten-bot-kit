@@ -150,15 +150,17 @@ const Chat = () => {
               </p>
             </div>
 
-            <Suggestions>
-              {suggestions.map((suggestion, index) => (
-                <Suggestion
-                  key={index}
-                  suggestion={suggestion}
-                  onClick={handleSuggestionClick}
-                />
-              ))}
-            </Suggestions>
+            <div className="w-full overflow-hidden">
+              <Suggestions>
+                {suggestions.map((suggestion, index) => (
+                  <Suggestion
+                    key={index}
+                    suggestion={suggestion}
+                    onClick={handleSuggestionClick}
+                  />
+                ))}
+              </Suggestions>
+            </div>
 
             <div className="w-full">
               <PromptInput onSubmit={handleSubmit}>
