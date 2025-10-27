@@ -110,12 +110,14 @@ const ConversationPage = () => {
         // Clear URL params
         navigate(`/c/${chatId}`, { replace: true });
       }).catch((error) => {
-        console.error("Auto-trigger AI error:", error);
+        console.error("Auto-trigger AI error:", {
+          error,
+          message: error.message,
+          stack: error.stack
+        });
         setStatus("error");
         toast({
-          title: "Error",
           description: error instanceof Error ? error.message : "Failed to get AI response",
-          variant: "destructive",
         });
       });
     }
@@ -193,11 +195,21 @@ const ConversationPage = () => {
       messageLength: userMessage.length
     });
 
+    // Get the current session token
+    const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !currentSession) {
+      console.error("Failed to get session for edge function call:", sessionError);
+      throw new Error("Authentication required. Please sign in again.");
+    }
+
+    console.log("Using access token for edge function authentication");
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${currentSession.access_token}`,
       },
       body: JSON.stringify({ 
         conversationId: chatId,
@@ -210,8 +222,23 @@ const ConversationPage = () => {
 
     if (!resp.ok) {
       const errorData = await resp.json().catch(() => ({ error: "Unknown error" }));
-      console.error("Chat error response:", errorData);
-      throw new Error(errorData.error || "Failed to start stream");
+      console.error("Chat error response:", {
+        status: resp.status,
+        statusText: resp.statusText,
+        error: errorData,
+        headers: Object.fromEntries(resp.headers.entries())
+      });
+      
+      // More specific error messages
+      if (resp.status === 401) {
+        throw new Error("Authentication failed. Please refresh the page and try again.");
+      } else if (resp.status === 429) {
+        throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+      } else if (resp.status === 402) {
+        throw new Error("AI service payment required. Please check your Lovable workspace credits.");
+      }
+      
+      throw new Error(errorData.error || `Failed to get AI response (${resp.status})`);
     }
 
     if (!resp.body) throw new Error("No response body");
@@ -247,7 +274,7 @@ const ConversationPage = () => {
 
         const jsonStr = line.slice(6).trim();
         if (jsonStr === "[DONE]") {
-          console.log("Stream completed, total tokens:", assistantContent.length);
+          console.log("Stream completed, total characters:", assistantContent.length);
           streamDone = true;
           break;
         }
@@ -263,14 +290,15 @@ const ConversationPage = () => {
               )
             );
           }
-        } catch {
+        } catch (e) {
+          console.warn("Failed to parse SSE chunk:", e);
           textBuffer = line + "\n" + textBuffer;
           break;
         }
       }
     }
 
-    console.log("Reloading conversation to get saved messages...");
+    console.log("Reloading conversation to get saved messages from database...");
     // Reload conversation to get the saved message from DB
     if (session?.user?.id) {
       loadConversation(session.user.id);
@@ -298,12 +326,14 @@ const ConversationPage = () => {
       await streamChat(userMessage);
       setStatus("ready");
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Chat error:", {
+        error,
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setStatus("error");
       toast({
-        title: "Error",
         description: error instanceof Error ? error.message : "Failed to send message",
-        variant: "destructive",
       });
     }
   };
