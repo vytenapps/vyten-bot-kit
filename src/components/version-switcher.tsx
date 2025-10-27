@@ -56,10 +56,18 @@ export function VersionSwitcher() {
     return () => subscription.unsubscribe()
   }, [])
 
+  const handleClick = () => {
+    window.open(
+      'https://vyten.com?utm_campaign=vyten-bot-kit&utm_source=lovable',
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton size="lg">
+        <SidebarMenuButton size="lg" onClick={handleClick} className="cursor-pointer">
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
             <VytenIcon className="size-5" />
           </div>
