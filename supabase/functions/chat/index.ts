@@ -28,7 +28,7 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { conversationId, message, system } = await req.json();
+    const { conversationId, message, system, model } = await req.json();
 
     // Rate limiting check
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
@@ -112,7 +112,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: model || "google/gemini-2.5-flash",
         messages,
         stream: true,
       }),

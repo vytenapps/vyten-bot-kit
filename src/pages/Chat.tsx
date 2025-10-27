@@ -116,20 +116,54 @@ const Chat = () => {
     return () => subscription.unsubscribe();
   }, [navigate, searchParams, setSearchParams]);
 
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
-    if (!text) {
+    if (!text.trim() || !session?.user?.id) {
       return;
     }
+    
     setStatus('submitted');
-    // TODO: Implement actual chat logic
-    setTimeout(() => {
-      setStatus('streaming');
-    }, 200);
-    setTimeout(() => {
-      setStatus('ready');
-      setText('');
-    }, 2000);
+
+    try {
+      // Create a new conversation
+      const { data: conversation, error: convError } = await supabase
+        .from("conversations")
+        .insert({
+          user_id: session.user.id,
+          title: text.substring(0, 50), // Use first 50 chars as title
+        })
+        .select()
+        .single();
+
+      if (convError) {
+        throw convError;
+      }
+
+      // Save the first message
+      const { error: msgError } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversation.id,
+          user_id: session.user.id,
+          role: "user",
+          content: text,
+        });
+
+      if (msgError) {
+        throw msgError;
+      }
+
+      // Navigate to the conversation page with selected model in state
+      navigate(`/c/${conversation.id}`, { state: { model: selectedModel, firstMessage: text } });
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create conversation",
+        variant: "destructive",
+      });
+      setStatus('error');
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
