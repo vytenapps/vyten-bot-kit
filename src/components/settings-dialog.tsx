@@ -458,13 +458,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <div className="flex flex-wrap gap-3">
                   {(Object.keys(baseColors) as BaseColor[]).map((color) => {
                     const colorMap: Record<BaseColor, string> = {
-                      neutral: "hsl(0 0% 50%)",
-                      zinc: "hsl(240 5% 50%)",
-                      slate: "hsl(215 20% 50%)",
+                      black: "hsl(240 5% 10%)",
                       gray: "hsl(220 15% 50%)",
-                      stone: "hsl(25 10% 50%)",
                       red: "hsl(0 72% 51%)",
-                      rose: "hsl(347 77% 50%)",
                       orange: "hsl(25 95% 53%)",
                       green: "hsl(142 76% 36%)",
                       blue: "hsl(221 83% 53%)",
