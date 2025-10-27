@@ -40,6 +40,7 @@ export const PromptInput = ({ className, ...props }: PromptInputProps) => (
   <form
     className={cn(
       'w-full overflow-hidden rounded-xl border bg-background shadow-sm',
+      'focus-within:border focus-within:border-border',
       className
     )}
     {...props}
