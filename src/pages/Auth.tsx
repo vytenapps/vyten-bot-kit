@@ -1,96 +1,36 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { LoginForm } from "@/components/login-form";
 
 const Auth = () => {
-  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
   const [checkingLogin, setCheckingLogin] = useState(false);
-  const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.debug('[Auth] mount');
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.debug('[Auth] initial getSession', { hasSession: !!session });
       if (session) {
         navigate("/chat");
       }
     });
 
-    // Listen for auth state changes in this tab
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.debug('[Auth] onAuthStateChange', { event, hasSession: !!session });
       if (event === "SIGNED_IN" && session) {
         navigate("/chat");
       }
     });
 
-    // Listen for storage changes from other tabs (cross-tab session sync)
-    const handleStorageChange = (e: StorageEvent) => {
-      const key = e.key || '';
-      const looksLikeSupabaseAuth = key.startsWith('sb-') && key.endsWith('-auth-token');
-      console.debug('[Auth] storage event', { key, looksLikeSupabaseAuth, newValue: !!e.newValue });
-      if (looksLikeSupabaseAuth && e.newValue) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          console.debug('[Auth] storage-triggered getSession', { hasSession: !!session });
-          if (session) {
-            navigate("/chat");
-          }
-        });
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    // Aggressive polling to detect session (checks every 2 seconds)
-    const interval = setInterval(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        const now = new Date();
-        setLastCheckTime(now);
-        console.debug('[Auth] poll getSession', { 
-          hasSession: !!session, 
-          timestamp: now.toISOString() 
-        });
-        if (session) {
-          console.debug('[Auth] Session detected via polling! Navigating to /chat');
-          clearInterval(interval);
-          setCheckingLogin(false);
-          navigate('/chat');
-        }
-      });
-    }, 2000); // Check every 2 seconds
-
-    // Recheck session when window gains focus (in case user logged in via another tab)
-    const handleFocus = () => {
-      console.debug('[Auth] window focus - rechecking session');
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        console.debug('[Auth] focus-triggered getSession', { hasSession: !!session });
-        if (session) {
-          navigate('/chat');
-        }
-      });
-    };
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleFocus);
-      clearInterval(interval);
     };
   }, [navigate]);
 
-  const handleSendMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAuth = async (email: string) => {
     setIsLoading(true);
 
     try {
@@ -131,19 +71,10 @@ const Auth = () => {
 
       if (error) throw error;
 
-      setCodeSent(true);
-      setCheckingLogin(true);
-      setLastCheckTime(new Date());
-      
       toast({
         title: "Check your email!",
-        description: "Click the magic link to sign in. This window will automatically log you in.",
+        description: "We sent you a login link. Click it to sign in.",
       });
-
-      // Set 5 minute timeout
-      setTimeout(() => {
-        setCheckingLogin(false);
-      }, 5 * 60 * 1000);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -156,70 +87,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 p-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold">Welcome</h1>
-          <p className="mt-2 text-muted-foreground">Sign in to start chatting</p>
-        </div>
-
-        {!codeSent ? (
-          <form onSubmit={handleSendMagicLink} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send magic link
-            </Button>
-          </form>
-        ) : (
-          <div className="space-y-6 text-center">
-            <div className="rounded-lg border bg-accent/50 p-6 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                We sent a magic link to:
-              </p>
-              <p className="font-medium">{email}</p>
-              <p className="text-sm text-muted-foreground">
-                Click the link in your email. This window will automatically sign you in!
-              </p>
-              {checkingLogin && (
-                <div className="pt-3 border-t">
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Checking for login...</span>
-                  </div>
-                  {lastCheckTime && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Last checked: {lastCheckTime.toLocaleTimeString()}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => {
-                setCodeSent(false);
-                setCheckingLogin(false);
-              }}
-            >
-              Use different email
-            </Button>
-          </div>
-        )}
+    <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <LoginForm 
+          onSubmit={handleAuth}
+          isLoading={isLoading}
+          checkingLogin={checkingLogin}
+        />
       </div>
     </div>
   );
