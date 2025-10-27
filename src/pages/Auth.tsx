@@ -22,14 +22,30 @@ const Auth = () => {
       }
     });
 
-    // Listen for auth state changes
+    // Listen for auth state changes in this tab
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/chat");
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for storage changes from other tabs (cross-tab session sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.includes('supabase.auth.token')) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            navigate("/chat");
+          }
+        });
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [navigate]);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
