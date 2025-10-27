@@ -174,8 +174,8 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -192,11 +192,11 @@ const Profile = () => {
           Back to chat
         </Button>
 
-        <h1 className="mb-8 text-3xl font-bold">Profile Settings</h1>
+        <h1 className="mb-8 text-3xl font-bold text-foreground">Profile Settings</h1>
 
         <div className="space-y-8">
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Basic Information</h2>
+            <h2 className="text-xl font-semibold text-foreground">Basic Information</h2>
             
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -254,7 +254,7 @@ const Profile = () => {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Bio</h2>
+            <h2 className="text-xl font-semibold text-foreground">Bio</h2>
             <Textarea
               value={profile.bio}
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
@@ -264,7 +264,7 @@ const Profile = () => {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Social Links</h2>
+            <h2 className="text-xl font-semibold text-foreground">Social Links</h2>
             
             <div className="space-y-2">
               <Label htmlFor="instagram">Instagram</Label>
