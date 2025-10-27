@@ -1,30 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEventHandler } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from "@supabase/supabase-js";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import {
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputToolbar,
+} from "@/components/ui/shadcn-io/ai/prompt-input";
+import { Suggestion } from "@/components/ui/shadcn-io/ai/suggestion";
 
 const Chat = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [text, setText] = useState<string>("");
+  const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const suggestions = [
+    "What is Vyten Apps?",
+    "What are the latest trends in AI?",
+    "Explain best practices for Lovable development?",
+  ];
 
   useEffect(() => {
     // Get initial session
@@ -33,6 +41,20 @@ const Chat = () => {
         navigate("/auth");
       } else {
         setSession(session);
+        
+        // Fetch user profile for first name
+        if (session.user?.id) {
+          supabase
+            .from('user_profiles')
+            .select('first_name')
+            .eq('user_id', session.user.id)
+            .single()
+            .then(({ data }) => {
+              if (data?.first_name) {
+                setFirstName(data.first_name);
+              }
+            });
+        }
         
         // Handle magic link login - broadcast tokens for cross-origin sync
         const loginState = searchParams.get('login_state');
@@ -76,20 +98,24 @@ const Chat = () => {
     return () => subscription.unsubscribe();
   }, [navigate, searchParams, setSearchParams]);
 
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Signed out",
-        description: "You've been successfully signed out.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    if (!text) {
+      return;
     }
+    setStatus('submitted');
+    // TODO: Implement actual chat logic
+    setTimeout(() => {
+      setStatus('streaming');
+    }, 200);
+    setTimeout(() => {
+      setStatus('ready');
+      setText('');
+    }, 2000);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setText(suggestion);
   };
 
   if (!session) {
@@ -106,19 +132,6 @@ const Chat = () => {
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Building Your Application
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
           <div className="ml-auto">
             <UserAvatarMenu 
               isLoggedIn={!!session} 
@@ -126,13 +139,42 @@ const Chat = () => {
             />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
+        <div className="flex flex-1 flex-col items-center justify-center p-8">
+          <div className="w-full max-w-3xl space-y-8">
+            <div className="space-y-2 text-center">
+              <h1 className="text-4xl font-bold">
+                {firstName ? `Hello ${firstName}!` : "Hello there!"}
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {suggestions.map((suggestion, index) => (
+                <Suggestion
+                  key={index}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </Suggestion>
+              ))}
+            </div>
+
+            <div className="w-full">
+              <PromptInput onSubmit={handleSubmit}>
+                <PromptInputTextarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Send a message..."
+                />
+                <PromptInputToolbar>
+                  <div />
+                  <PromptInputSubmit disabled={!text} status={status} />
+                </PromptInputToolbar>
+              </PromptInput>
+            </div>
           </div>
-          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
         </div>
       </SidebarInset>
     </SidebarProvider>
