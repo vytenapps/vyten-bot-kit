@@ -15,8 +15,10 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.debug('[Auth] mount');
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.debug('[Auth] initial getSession', { hasSession: !!session });
       if (session) {
         navigate("/chat");
       }
@@ -24,6 +26,7 @@ const Auth = () => {
 
     // Listen for auth state changes in this tab
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.debug('[Auth] onAuthStateChange', { event, hasSession: !!session });
       if (event === "SIGNED_IN" && session) {
         navigate("/chat");
       }
@@ -33,8 +36,10 @@ const Auth = () => {
     const handleStorageChange = (e: StorageEvent) => {
       const key = e.key || '';
       const looksLikeSupabaseAuth = key.startsWith('sb-') && key.endsWith('-auth-token');
+      console.debug('[Auth] storage event', { key, looksLikeSupabaseAuth, newValue: !!e.newValue });
       if (looksLikeSupabaseAuth && e.newValue) {
         supabase.auth.getSession().then(({ data: { session } }) => {
+          console.debug('[Auth] storage-triggered getSession', { hasSession: !!session });
           if (session) {
             navigate("/chat");
           }
@@ -47,6 +52,7 @@ const Auth = () => {
     // Poll as a safety net in case storage event doesn't fire
     const interval = setInterval(() => {
       supabase.auth.getSession().then(({ data: { session } }) => {
+        console.debug('[Auth] poll getSession', { hasSession: !!session });
         if (session) {
           clearInterval(interval);
           navigate('/chat');
@@ -66,11 +72,23 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      const loginSyncId = crypto.randomUUID();
+      sessionStorage.setItem('loginSyncId', loginSyncId);
+      console.debug('[Auth] generated loginSyncId', loginSyncId);
+
+      // Subscribe to a Realtime channel waiting for the new tab to signal success
+      const channel = supabase.channel(`auth-sync:${loginSyncId}`, { config: { broadcast: { self: true } } });
+      channel.on('broadcast', { event: 'signed_in' }, (payload) => {
+        console.debug('[Auth] received Realtime broadcast signed_in', payload);
+        navigate('/chat');
+      });
+      channel.subscribe((status) => console.debug('[Auth] Realtime subscribe status', status));
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/chat`,
+          emailRedirectTo: `${window.location.origin}/chat?login_state=${loginSyncId}`,
         },
       });
 
