@@ -9,7 +9,6 @@ import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const { toast } = useToast();
@@ -33,49 +32,24 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSendCode = async (e: React.FormEvent) => {
+  const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
+        options: {
+          shouldCreateUser: true,
+        },
       });
 
       if (error) throw error;
 
       setCodeSent(true);
       toast({
-        title: "Code sent!",
-        description: "Check your email for the 6-digit verification code.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: "email",
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success!",
-        description: "You're now signed in.",
+        title: "Check your email!",
+        description: "Click the magic link to sign in. This window will automatically log you in.",
       });
     } catch (error: any) {
       toast({
@@ -97,7 +71,7 @@ const Auth = () => {
         </div>
 
         {!codeSent ? (
-          <form onSubmit={handleSendCode} className="space-y-6">
+          <form onSubmit={handleSendMagicLink} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -112,28 +86,20 @@ const Auth = () => {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send verification code
+              Send magic link
             </Button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyCode} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="code">Verification code</Label>
-              <Input
-                id="code"
-                type="text"
-                placeholder="Enter 6-digit code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                required
-                maxLength={6}
-              />
+          <div className="space-y-6 text-center">
+            <div className="rounded-lg border bg-accent/50 p-6 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                We sent a magic link to:
+              </p>
+              <p className="font-medium">{email}</p>
+              <p className="text-sm text-muted-foreground">
+                Click the link in your email. This window will automatically sign you in!
+              </p>
             </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Verify code
-            </Button>
 
             <Button
               type="button"
@@ -143,7 +109,7 @@ const Auth = () => {
             >
               Use different email
             </Button>
-          </form>
+          </div>
         )}
       </div>
     </div>
