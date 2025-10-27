@@ -104,6 +104,8 @@ export type Database = {
           email: string
           first_name: string | null
           last_name: string | null
+          phone: string | null
+          privacy_settings: Json | null
           social: Json | null
           updated_at: string | null
           user_id: string
@@ -115,6 +117,8 @@ export type Database = {
           email: string
           first_name?: string | null
           last_name?: string | null
+          phone?: string | null
+          privacy_settings?: Json | null
           social?: Json | null
           updated_at?: string | null
           user_id: string
@@ -126,6 +130,8 @@ export type Database = {
           email?: string
           first_name?: string | null
           last_name?: string | null
+          phone?: string | null
+          privacy_settings?: Json | null
           social?: Json | null
           updated_at?: string | null
           user_id?: string

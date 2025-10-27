@@ -15,7 +15,13 @@ const Profile = () => {
     first_name: "",
     last_name: "",
     email: "",
+    phone: "",
     bio: "",
+    privacy_settings: {
+      full_name: "only_me",
+      email: "only_me",
+      phone: "only_me",
+    },
     social: {
       instagram: "",
       linkedin: "",
@@ -76,12 +82,19 @@ const Profile = () => {
 
       if (data) {
         const socialData = data.social as any;
+        const privacyData = data.privacy_settings as any;
         setProfile({
           username: data.username || "",
           first_name: data.first_name || "",
           last_name: data.last_name || "",
           email: data.email || "",
+          phone: data.phone || "",
           bio: data.bio || "",
+          privacy_settings: {
+            full_name: privacyData?.full_name || "only_me",
+            email: privacyData?.email || "only_me",
+            phone: privacyData?.phone || "only_me",
+          },
           social: {
             instagram: socialData?.instagram || "",
             linkedin: socialData?.linkedin || "",
@@ -114,7 +127,9 @@ const Profile = () => {
           first_name: profile.first_name,
           last_name: profile.last_name,
           email: profile.email,
+          phone: profile.phone,
           bio: profile.bio,
+          privacy_settings: profile.privacy_settings,
           social: profile.social,
         });
 
@@ -195,6 +210,125 @@ const Profile = () => {
                 disabled
                 className="bg-muted"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={profile.phone}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Privacy Settings</h2>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Full Name Visibility</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="full_name_privacy"
+                      value="only_me"
+                      checked={profile.privacy_settings.full_name === "only_me"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        privacy_settings: { ...profile.privacy_settings, full_name: e.target.value as "only_me" | "public" }
+                      })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Only Me</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="full_name_privacy"
+                      value="public"
+                      checked={profile.privacy_settings.full_name === "public"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        privacy_settings: { ...profile.privacy_settings, full_name: e.target.value as "only_me" | "public" }
+                      })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Public</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Email Visibility</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="email_privacy"
+                      value="only_me"
+                      checked={profile.privacy_settings.email === "only_me"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        privacy_settings: { ...profile.privacy_settings, email: e.target.value as "only_me" | "public" }
+                      })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Only Me</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="email_privacy"
+                      value="public"
+                      checked={profile.privacy_settings.email === "public"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        privacy_settings: { ...profile.privacy_settings, email: e.target.value as "only_me" | "public" }
+                      })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Public</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Phone Visibility</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="phone_privacy"
+                      value="only_me"
+                      checked={profile.privacy_settings.phone === "only_me"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        privacy_settings: { ...profile.privacy_settings, phone: e.target.value as "only_me" | "public" }
+                      })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Only Me</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="phone_privacy"
+                      value="public"
+                      checked={profile.privacy_settings.phone === "public"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        privacy_settings: { ...profile.privacy_settings, phone: e.target.value as "only_me" | "public" }
+                      })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Public</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
