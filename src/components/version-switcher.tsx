@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { GalleryVerticalEnd } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { VytenIcon } from "@/components/VytenIcon"
 
 import {
   SidebarMenu,
@@ -61,7 +61,7 @@ export function VersionSwitcher() {
       <SidebarMenuItem>
         <SidebarMenuButton size="lg">
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-            <GalleryVerticalEnd className="size-4" />
+            <VytenIcon className="size-5" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
             <span className="font-medium">Vyten Bot Kit</span>
