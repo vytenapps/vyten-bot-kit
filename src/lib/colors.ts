@@ -1,92 +1,6 @@
-export type BaseColor = "black" | "gray" | "red" | "orange" | "green" | "blue" | "yellow" | "violet";
+export type BaseColor = "red" | "orange" | "yellow" | "green" | "blue" | "violet";
 
 export const baseColors: Record<BaseColor, { name: string; cssVars: { light: Record<string, string>; dark: Record<string, string> } }> = {
-  black: {
-    name: "Black",
-    cssVars: {
-      light: {
-        "--background": "0 0% 100%",
-        "--foreground": "240 10% 3.9%",
-        "--card": "0 0% 100%",
-        "--card-foreground": "240 10% 3.9%",
-        "--popover": "0 0% 100%",
-        "--popover-foreground": "240 10% 3.9%",
-        "--primary": "240 5.9% 10%",
-        "--primary-foreground": "0 0% 98%",
-        "--secondary": "240 4.8% 95.9%",
-        "--secondary-foreground": "240 5.9% 10%",
-        "--muted": "240 4.8% 95.9%",
-        "--muted-foreground": "240 3.8% 46.1%",
-        "--accent": "240 4.8% 95.9%",
-        "--accent-foreground": "240 5.9% 10%",
-        "--border": "240 5.9% 90%",
-        "--input": "240 5.9% 90%",
-        "--ring": "240 10% 3.9%",
-      },
-      dark: {
-        "--background": "240 10% 3.9%",
-        "--foreground": "0 0% 98%",
-        "--card": "240 10% 3.9%",
-        "--card-foreground": "0 0% 98%",
-        "--popover": "240 10% 3.9%",
-        "--popover-foreground": "0 0% 98%",
-        "--primary": "0 0% 98%",
-        "--primary-foreground": "240 5.9% 10%",
-        "--secondary": "240 3.7% 15.9%",
-        "--secondary-foreground": "0 0% 98%",
-        "--muted": "240 3.7% 15.9%",
-        "--muted-foreground": "240 5% 64.9%",
-        "--accent": "240 3.7% 15.9%",
-        "--accent-foreground": "0 0% 98%",
-        "--border": "240 3.7% 15.9%",
-        "--input": "240 3.7% 15.9%",
-        "--ring": "240 4.9% 83.9%",
-      },
-    },
-  },
-  gray: {
-    name: "Gray",
-    cssVars: {
-      light: {
-        "--background": "0 0% 100%",
-        "--foreground": "224 71.4% 4.1%",
-        "--card": "0 0% 100%",
-        "--card-foreground": "224 71.4% 4.1%",
-        "--popover": "0 0% 100%",
-        "--popover-foreground": "224 71.4% 4.1%",
-        "--primary": "220.9 39.3% 11%",
-        "--primary-foreground": "210 20% 98%",
-        "--secondary": "220 14.3% 95.9%",
-        "--secondary-foreground": "220.9 39.3% 11%",
-        "--muted": "220 14.3% 95.9%",
-        "--muted-foreground": "220 8.9% 46.1%",
-        "--accent": "220 14.3% 95.9%",
-        "--accent-foreground": "220.9 39.3% 11%",
-        "--border": "220 13% 91%",
-        "--input": "220 13% 91%",
-        "--ring": "224 71.4% 4.1%",
-      },
-      dark: {
-        "--background": "224 71.4% 4.1%",
-        "--foreground": "210 20% 98%",
-        "--card": "224 71.4% 4.1%",
-        "--card-foreground": "210 20% 98%",
-        "--popover": "224 71.4% 4.1%",
-        "--popover-foreground": "210 20% 98%",
-        "--primary": "210 20% 98%",
-        "--primary-foreground": "220.9 39.3% 11%",
-        "--secondary": "215 27.9% 16.9%",
-        "--secondary-foreground": "210 20% 98%",
-        "--muted": "215 27.9% 16.9%",
-        "--muted-foreground": "217.9 10.6% 64.9%",
-        "--accent": "215 27.9% 16.9%",
-        "--accent-foreground": "210 20% 98%",
-        "--border": "215 27.9% 16.9%",
-        "--input": "215 27.9% 16.9%",
-        "--ring": "216 12.2% 83.9%",
-      },
-    },
-  },
   red: {
     name: "Red",
     cssVars: {
@@ -173,7 +87,7 @@ export const baseColors: Record<BaseColor, { name: string; cssVars: { light: Rec
       },
     },
   },
-  green: {
+  yellow: {
     name: "Green",
     cssVars: {
       light: {
@@ -216,7 +130,7 @@ export const baseColors: Record<BaseColor, { name: string; cssVars: { light: Rec
       },
     },
   },
-  blue: {
+  green: {
     name: "Blue",
     cssVars: {
       light: {
@@ -259,7 +173,7 @@ export const baseColors: Record<BaseColor, { name: string; cssVars: { light: Rec
       },
     },
   },
-  yellow: {
+  blue: {
     name: "Yellow",
     cssVars: {
       light: {
@@ -360,5 +274,5 @@ export function applyBaseColor(color: BaseColor) {
 }
 
 export function getStoredBaseColor(): BaseColor {
-  return (localStorage.getItem("base-color") as BaseColor) || "black";
+  return (localStorage.getItem("base-color") as BaseColor) || "blue";
 }
