@@ -22,11 +22,33 @@ const Chat = () => {
       } else {
         setSession(session);
         
-        // Handle successful magic link login - just clean up URL
-        const loginComplete = searchParams.get('login_complete');
-        if (loginComplete) {
-          console.debug('[Chat] Magic link login complete, cleaning up URL');
-          setSearchParams({});
+        // Handle magic link login - broadcast tokens for cross-origin sync
+        const loginState = searchParams.get('login_state');
+        if (loginState && session) {
+          console.debug('[Chat] Broadcasting session tokens for loginState', loginState);
+          
+          const channel = supabase.channel(`auth-sync:${loginState}`, { config: { broadcast: { self: true } } });
+          
+          channel.subscribe((status) => {
+            console.debug('[Chat] Realtime subscribe status', status);
+            if (status === 'SUBSCRIBED') {
+              // Broadcast session tokens
+              channel.send({
+                type: 'broadcast',
+                event: 'session_tokens',
+                payload: { 
+                  access_token: session.access_token, 
+                  refresh_token: session.refresh_token 
+                }
+              }).then(() => {
+                console.debug('[Chat] Session tokens broadcasted successfully');
+                // Clean up URL
+                setSearchParams({});
+                // Unsubscribe after delay
+                setTimeout(() => channel.unsubscribe(), 2000);
+              });
+            }
+          });
         }
       }
     });
