@@ -1,16 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -26,12 +25,38 @@ const Profile = () => {
       tiktok: "",
     },
   });
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  // Autosave effect
+  useEffect(() => {
+    // Skip autosave on initial load
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout for autosave
+    saveTimeoutRef.current = setTimeout(async () => {
+      await autoSave();
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [profile]);
 
   const loadProfile = async () => {
     try {
@@ -68,23 +93,18 @@ const Profile = () => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to load profile", {
         description: error.message,
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-
+  const autoSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) return;
 
       const { error } = await supabase
         .from("user_profiles")
@@ -100,18 +120,11 @@ const Profile = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Profile updated successfully.",
-      });
+      toast.success("Profile saved");
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to save profile", {
         description: error.message,
-        variant: "destructive",
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -137,7 +150,7 @@ const Profile = () => {
 
         <h1 className="mb-8 text-3xl font-bold">Profile Settings</h1>
 
-        <form onSubmit={handleSave} className="space-y-8">
+        <div className="space-y-8">
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Basic Information</h2>
             
@@ -282,12 +295,7 @@ const Profile = () => {
               />
             </div>
           </div>
-
-          <Button type="submit" disabled={saving}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
-          </Button>
-        </form>
+        </div>
       </div>
     </div>
   );

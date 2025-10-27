@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   User,
   Bell,
@@ -11,7 +11,7 @@ import {
   Settings,
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 import {
   Breadcrumb,
@@ -61,7 +61,6 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = React.useState("profile")
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -77,13 +76,40 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       tiktok: "",
     },
   })
-  const { toast } = useToast()
+  const saveTimeoutRef = useRef<NodeJS.Timeout>()
+  const isInitialLoad = useRef(true)
 
   useEffect(() => {
     if (open) {
       loadProfile()
+      isInitialLoad.current = true
     }
   }, [open])
+
+  // Autosave effect
+  useEffect(() => {
+    // Skip autosave if dialog is closed or on initial load
+    if (!open || isInitialLoad.current) {
+      isInitialLoad.current = false
+      return
+    }
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    // Set new timeout for autosave
+    saveTimeoutRef.current = setTimeout(async () => {
+      await autoSave()
+    }, 1000)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [profile, open])
 
   const loadProfile = async () => {
     setLoading(true)
@@ -118,21 +144,18 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         })
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to load profile", {
         description: error.message,
-        variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSave = async () => {
-    setSaving(true)
+  const autoSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not authenticated")
+      if (!user) return
 
       const { error } = await supabase
         .from("user_profiles")
@@ -148,18 +171,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
       if (error) throw error
 
-      toast({
-        title: "Success",
-        description: "Profile updated successfully.",
-      })
+      toast.success("Profile saved")
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to save profile", {
         description: error.message,
-        variant: "destructive",
       })
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -328,14 +344,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   />
                 </div>
               </div>
-
-              <Button 
-                onClick={handleSave} 
-                disabled={saving}
-                className="w-full sm:w-auto"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
             </div>
           </div>
         )
