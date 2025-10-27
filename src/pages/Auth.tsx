@@ -11,6 +11,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const [checkingLogin, setCheckingLogin] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -49,16 +51,23 @@ const Auth = () => {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Poll as a safety net in case storage event doesn't fire
+    // Aggressive polling to detect session (checks every 2 seconds)
     const interval = setInterval(() => {
       supabase.auth.getSession().then(({ data: { session } }) => {
-        console.debug('[Auth] poll getSession', { hasSession: !!session });
+        const now = new Date();
+        setLastCheckTime(now);
+        console.debug('[Auth] poll getSession', { 
+          hasSession: !!session, 
+          timestamp: now.toISOString() 
+        });
         if (session) {
+          console.debug('[Auth] Session detected via polling! Navigating to /chat');
           clearInterval(interval);
+          setCheckingLogin(false);
           navigate('/chat');
         }
       });
-    }, 1000);
+    }, 2000); // Check every 2 seconds
 
     // Recheck session when window gains focus (in case user logged in via another tab)
     const handleFocus = () => {
@@ -85,50 +94,29 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const loginSyncId = crypto.randomUUID();
-      sessionStorage.setItem('loginSyncId', loginSyncId);
-      console.debug('[Auth] generated loginSyncId', loginSyncId);
-
-      // Subscribe to a Realtime channel waiting for the new tab to signal success
-      const channel = supabase.channel(`auth-sync:${loginSyncId}`, { config: { broadcast: { self: true } } });
-      channel.on('broadcast', { event: 'signed_in' }, (payload) => {
-        console.debug('[Auth] received Realtime broadcast signed_in', payload);
-        // Wait for session tokens event to ensure this origin gets a session
-      });
-      channel.on('broadcast', { event: 'session_tokens' }, async (payload) => {
-        try {
-          console.debug('[Auth] received session_tokens broadcast');
-          const { access_token, refresh_token } = (payload as any)?.payload || {};
-          if (access_token && refresh_token) {
-            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-            console.debug('[Auth] setSession result', { hasSession: !!data?.session, error: !!error });
-            if (!error) {
-              navigate('/chat');
-            }
-          } else {
-            console.warn('[Auth] session_tokens payload missing tokens', payload);
-          }
-        } catch (err) {
-          console.error('[Auth] setSession failed', err);
-        }
-      });
-      channel.subscribe((status) => console.debug('[Auth] Realtime subscribe status', status));
-
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/chat?login_state=${loginSyncId}`,
+          emailRedirectTo: `${window.location.origin}/auth?login_complete=true`,
         },
       });
 
       if (error) throw error;
 
       setCodeSent(true);
+      setCheckingLogin(true);
+      setLastCheckTime(new Date());
+      
       toast({
         title: "Check your email!",
         description: "Click the magic link to sign in. This window will automatically log you in.",
       });
+
+      // Set 5 minute timeout
+      setTimeout(() => {
+        setCheckingLogin(false);
+      }, 5 * 60 * 1000);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -177,13 +165,29 @@ const Auth = () => {
               <p className="text-sm text-muted-foreground">
                 Click the link in your email. This window will automatically sign you in!
               </p>
+              {checkingLogin && (
+                <div className="pt-3 border-t">
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Checking for login...</span>
+                  </div>
+                  {lastCheckTime && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Last checked: {lastCheckTime.toLocaleTimeString()}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <Button
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => setCodeSent(false)}
+              onClick={() => {
+                setCodeSent(false);
+                setCheckingLogin(false);
+              }}
             >
               Use different email
             </Button>

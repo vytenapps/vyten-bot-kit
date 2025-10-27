@@ -22,40 +22,11 @@ const Chat = () => {
       } else {
         setSession(session);
         
-        // If we arrived here from a magic link, broadcast to the original window
-        const loginState = searchParams.get('login_state');
-        if (loginState) {
-          console.debug('[Chat] broadcasting signed_in for loginState', loginState);
-          const channel = supabase.channel(`auth-sync:${loginState}`, { config: { broadcast: { self: true } } });
-          channel.subscribe((status) => {
-            console.debug('[Chat] Realtime subscribe status', status);
-            if (status === 'SUBSCRIBED') {
-              supabase.auth.getSession().then(({ data: { session } }) => {
-                const access_token = session?.access_token;
-                const refresh_token = session?.refresh_token;
-                if (access_token && refresh_token) {
-                  channel.send({
-                    type: 'broadcast',
-                    event: 'session_tokens',
-                    payload: { access_token, refresh_token }
-                  }).then(() => console.debug('[Chat] session_tokens broadcast sent'));
-                } else {
-                  console.warn('[Chat] no tokens found to broadcast');
-                }
-                channel.send({
-                  type: 'broadcast',
-                  event: 'signed_in',
-                  payload: { success: true }
-                }).then(() => {
-                  console.debug('[Chat] signed_in broadcast sent successfully');
-                  // Clean up the URL
-                  setSearchParams({});
-                  // Unsubscribe after a short delay
-                  setTimeout(() => channel.unsubscribe(), 1000);
-                });
-              });
-            }
-          });
+        // Handle successful magic link login - just clean up URL
+        const loginComplete = searchParams.get('login_complete');
+        if (loginComplete) {
+          console.debug('[Chat] Magic link login complete, cleaning up URL');
+          setSearchParams({});
         }
       }
     });
