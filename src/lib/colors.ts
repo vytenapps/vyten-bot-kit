@@ -264,6 +264,13 @@ export const baseColors: Record<BaseColor, { name: string; cssVars: { light: Rec
 export function applyBaseColor(color: BaseColor) {
   const root = document.documentElement;
   const isDark = root.classList.contains("dark");
+  
+  // Validate that color exists in baseColors
+  if (!baseColors[color]) {
+    console.warn(`Color "${color}" not found, using default "blue"`);
+    color = "blue" as BaseColor;
+  }
+  
   const vars = baseColors[color].cssVars[isDark ? "dark" : "light"];
 
   Object.entries(vars).forEach(([key, value]) => {
@@ -274,5 +281,10 @@ export function applyBaseColor(color: BaseColor) {
 }
 
 export function getStoredBaseColor(): BaseColor {
-  return (localStorage.getItem("base-color") as BaseColor) || "blue";
+  const stored = localStorage.getItem("base-color") as BaseColor;
+  // Validate that stored color still exists, otherwise use default
+  if (stored && baseColors[stored]) {
+    return stored;
+  }
+  return "blue";
 }
