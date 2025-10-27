@@ -1,4 +1,4 @@
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Monitor } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,7 +94,7 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
             </Avatar>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuLabel>
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">My Account</p>
@@ -109,7 +109,11 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
             Profile
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <div className="px-2 py-2">
+          <div className="flex items-center justify-between px-2 py-2">
+            <div className="flex items-center gap-2">
+              <Monitor className="h-4 w-4" />
+              <span className="text-sm font-medium">Theme</span>
+            </div>
             <ThemeSwitcher />
           </div>
           <DropdownMenuSeparator />
