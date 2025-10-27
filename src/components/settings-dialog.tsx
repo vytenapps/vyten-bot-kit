@@ -58,10 +58,11 @@ const data = {
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  initialSection?: string
 }
 
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [activeSection, setActiveSection] = React.useState("profile")
+export function SettingsDialog({ open, onOpenChange, initialSection = "profile" }: SettingsDialogProps) {
+  const [activeSection, setActiveSection] = React.useState(initialSection)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState({
     username: "",
@@ -100,8 +101,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (open) {
       loadProfile()
       isInitialLoad.current = true
+      // Set active section when dialog opens
+      if (initialSection) {
+        setActiveSection(initialSection)
+      }
     }
-  }, [open])
+  }, [open, initialSection])
 
   // Autosave effect
   useEffect(() => {

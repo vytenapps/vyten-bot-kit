@@ -28,6 +28,7 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<string>("profile");
 
   const handleSignOut = async () => {
     try {
@@ -47,6 +48,12 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
   };
 
   const handleProfileClick = () => {
+    setSettingsSection("profile");
+    setSettingsOpen(true);
+  };
+
+  const handleThemeClick = () => {
+    setSettingsSection("appearance");
     setSettingsOpen(true);
   };
 
@@ -104,12 +111,12 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="flex items-center justify-between px-2 py-1">
+          <div className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm" onClick={handleThemeClick}>
             <div className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               <span className="text-sm">Theme</span>
             </div>
-            <ThemeSwitcher className="scale-75" />
+            <ThemeSwitcher className="scale-75" iconSize={14} />
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleProfileClick}>
@@ -124,7 +131,11 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
         </DropdownMenuContent>
       </DropdownMenu>
       
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+        initialSection={settingsSection}
+      />
     </>
   );
 }
