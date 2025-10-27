@@ -68,7 +68,7 @@ export function VersionSwitcher() {
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" onClick={handleClick} className="cursor-pointer">
-          <div className="bg-accent text-accent-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+          <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
             <VytenIcon className="size-5" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
