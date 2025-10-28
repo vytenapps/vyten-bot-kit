@@ -219,9 +219,9 @@ const ConversationPage = () => {
   }
 
   return (
-    <SidebarProvider className="overflow-hidden"> 
+    <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="bg-background">
+      <SidebarInset className="flex flex-col flex-1 overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -238,8 +238,8 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <Conversation className="flex-1 min-h-0 overscroll-contain">
+        <div className="flex-1 flex flex-col relative">
+          <Conversation className="absolute inset-0 overscroll-contain">
             <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
@@ -326,7 +326,8 @@ const ConversationPage = () => {
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
-          <div className="shrink-0 px-4 sm:px-6 md:px-8 pb-4 bg-background">
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 md:px-8 pb-4 bg-background pointer-events-none">
+            <div className="pointer-events-auto">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
@@ -365,6 +366,7 @@ const ConversationPage = () => {
               <p className="text-xs text-center text-muted-foreground mt-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
+            </div>
             </div>
           </div>
         </div>

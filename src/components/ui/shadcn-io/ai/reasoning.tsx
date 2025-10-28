@@ -137,9 +137,7 @@ export const ReasoningTrigger = memo(
     children,
     ...props
   }: ReasoningTriggerProps) => {
-    const { isStreaming, duration } = useReasoning();
-
-    const label = isStreaming ? 'Thinking' : `Thought for ${duration}s`;
+    const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
       <div
@@ -152,7 +150,7 @@ export const ReasoningTrigger = memo(
         {children ?? (
           <>
             <BrainIcon className="size-4" />
-            <p>{label}</p>
+            <p>Thinking</p>
           </>
         )}
       </div>
