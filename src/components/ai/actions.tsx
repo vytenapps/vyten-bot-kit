@@ -10,10 +10,11 @@ interface ActionsProps extends React.HTMLAttributes<HTMLDivElement> {
   onThumbsDown?: () => void;
   onEdit?: () => void;
   feedbackState?: "up" | "down" | null;
+  showOnHover?: boolean;
 }
 
 const Actions = React.forwardRef<HTMLDivElement, ActionsProps>(
-  ({ className, onCopy, onThumbsUp, onThumbsDown, onEdit, feedbackState, ...props }, ref) => {
+  ({ className, onCopy, onThumbsUp, onThumbsDown, onEdit, feedbackState, showOnHover = false, ...props }, ref) => {
     const [copied, setCopied] = React.useState(false);
 
     const handleCopy = () => {
@@ -25,7 +26,11 @@ const Actions = React.forwardRef<HTMLDivElement, ActionsProps>(
     return (
       <div
         ref={ref}
-        className={cn("flex items-center gap-1 mt-2", className)}
+        className={cn(
+          "flex items-center gap-1 mt-2 min-h-[32px]",
+          showOnHover && "opacity-0 group-hover:opacity-100 transition-opacity",
+          className
+        )}
         {...props}
       >
         <Button

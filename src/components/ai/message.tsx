@@ -12,7 +12,7 @@ const Message = React.forwardRef<HTMLDivElement, MessageProps>(
       <div
         ref={ref}
         className={cn(
-          "flex gap-3 mb-4",
+          "flex gap-3 mb-6 group",
           from === "user" ? "justify-end" : "justify-start",
           className
         )}
@@ -32,8 +32,7 @@ const MessageContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg px-4 py-2 max-w-[85%] sm:max-w-[75%] break-words",
-      "bg-muted text-foreground",
+      "rounded-2xl px-4 py-3 max-w-[80%]",
       className
     )}
     {...props}

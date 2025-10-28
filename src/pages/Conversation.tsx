@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
 import { VytenIcon } from "@/components/VytenIcon";
+import { cn } from "@/lib/utils";
 import {
   SidebarInset,
   SidebarProvider,
@@ -490,7 +491,7 @@ const ConversationPage = () => {
         <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
           <div className="flex-1 overflow-hidden">
             <Conversation>
-              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
+              <ConversationContent className="max-w-3xl mx-auto px-4">
                 {messages.map((message) => (
                   <Message from={message.role} key={message.id}>
                     {message.role === "assistant" && (
@@ -498,8 +499,14 @@ const ConversationPage = () => {
                         <VytenIcon className="h-4 w-4 text-white" />
                       </MessageAvatar>
                     )}
-                    <div>
-                      <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
+                    <div className="flex-1 min-w-0">
+                      <MessageContent 
+                        className={cn(
+                          message.role === "user" 
+                            ? "bg-primary text-primary-foreground ml-auto" 
+                            : "bg-transparent"
+                        )}
+                      >
                         {message.role === "assistant" ? (
                           <Response>{message.content}</Response>
                         ) : (
@@ -518,6 +525,7 @@ const ConversationPage = () => {
                         <Actions
                           onCopy={() => handleCopy(message.content)}
                           onEdit={() => handleEdit(message.id, message.content)}
+                          showOnHover={true}
                         />
                       )}
                     </div>
@@ -540,8 +548,8 @@ const ConversationPage = () => {
               </ConversationContent>
             </Conversation>
           </div>
-          <div className="px-4 sm:px-6 md:px-8">
-            <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
+          <div className="border-t bg-background px-4 py-4">
+            <div className="w-full max-w-3xl mx-auto">
               {editingMessageId ? (
                 <PromptInput onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }}>
                   <PromptInputTextarea
