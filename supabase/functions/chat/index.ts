@@ -153,7 +153,7 @@ serve(async (req) => {
       throw new Error(`AI Gateway error: ${response.status}`);
     }
 
-    // Stream the response and collect full content
+    // Stream the response and collect full content with robust SSE parsing
     console.log("AI Gateway ok, starting stream");
     let fullResponse = "";
     const reader = response.body?.getReader();
@@ -163,28 +163,61 @@ serve(async (req) => {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          while (reader) {
+          let buffer = "";
+          let streamDone = false;
+
+          while (reader && !streamDone) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
+            buffer += decoder.decode(value, { stream: true });
 
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") continue;
+            // Process line by line
+            let nlIndex: number;
+            while ((nlIndex = buffer.indexOf("\n")) !== -1) {
+              let line = buffer.slice(0, nlIndex);
+              buffer = buffer.slice(nlIndex + 1);
 
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    fullResponse += content;
-                    controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-                  }
-                } catch (e) {
-                  console.error("Error parsing SSE data:", e);
+              if (line.endsWith("\r")) line = line.slice(0, -1);
+              if (line === "" || line.startsWith(":")) continue;
+              if (!line.startsWith("data: ")) continue;
+
+              const dataStr = line.slice(6).trim();
+              if (dataStr === "[DONE]") {
+                streamDone = true;
+                break;
+              }
+
+              try {
+                const parsed = JSON.parse(dataStr);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  controller.enqueue(encoder.encode(`data: ${dataStr}\n\n`));
                 }
+              } catch (e) {
+                // Partial JSON - put line back and wait for more data
+                buffer = line + "\n" + buffer;
+                break;
+              }
+            }
+          }
+
+          // Final flush
+          if (buffer.trim()) {
+            for (let raw of buffer.split("\n")) {
+              if (!raw || raw.startsWith(":") || !raw.startsWith("data: ")) continue;
+              const dataStr = raw.slice(6).trim();
+              if (dataStr === "[DONE]") continue;
+              try {
+                const parsed = JSON.parse(dataStr);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  controller.enqueue(encoder.encode(`data: ${dataStr}\n\n`));
+                }
+              } catch {
+                // Ignore leftover partial JSON
               }
             }
           }
