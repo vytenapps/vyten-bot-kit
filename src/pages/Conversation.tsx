@@ -473,17 +473,17 @@ const ConversationPage = () => {
                     type="button"
                     size="icon"
                     variant="default"
-                    className="rounded-sm h-5 w-5 min-w-5 shrink-0 ml-2"
+                    className="rounded-sm h-6 w-6 min-w-6 shrink-0 ml-2"
                     onClick={stopStreaming}
                   >
-                    <SquareIcon className="size-3" />
+                    <SquareIcon className="size-3.5" />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
                     size="icon"
                     variant="default"
-                    className="rounded-full h-5 w-5 min-w-5 shrink-0 ml-2"
+                    className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2"
                     disabled={!text.trim()}
                   >
                     <svg width="10" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
