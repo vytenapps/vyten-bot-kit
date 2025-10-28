@@ -233,7 +233,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex h-svh w-full min-h-0 flex-col overflow-hidden overscroll-none bg-background">
+      <SidebarInset className="flex h-svh w-full flex-col bg-background fixed inset-0 overflow-hidden touch-none">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
