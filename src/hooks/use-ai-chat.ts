@@ -67,28 +67,41 @@ export const useAIChat = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            messages: apiMessages,
-            conversationId,
-            model,
-          }),
-        }
-      );
+      const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+      console.debug("[AIChat] POST", { chatUrl, conversationId, model, msgCount: apiMessages.length });
+      const response = await fetch(chatUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          conversationId,
+          model,
+        }),
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to get AI response");
+        let errMsg = "Unknown error";
+        let bodyText = "";
+        try {
+          const data = await response.json();
+          errMsg = data?.error || JSON.stringify(data);
+        } catch {
+          try { bodyText = await response.text(); errMsg = bodyText || errMsg; } catch { /* ignore */ }
+        }
+        console.error("[AIChat] Function error", { status: response.status, errMsg, bodyText });
+        if (response.status === 429 || response.status === 402) {
+          toast.error(errMsg);
+        } else {
+          toast.error(`Chat failed (${response.status}): ${errMsg}`);
+        }
+        throw new Error(errMsg);
       }
 
       if (!response.body) {
+        console.error("[AIChat] No response body from function");
         throw new Error("No response body");
       }
 

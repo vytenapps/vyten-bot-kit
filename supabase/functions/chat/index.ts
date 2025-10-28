@@ -80,6 +80,10 @@ serve(async (req) => {
 
     if (userMsgError) {
       console.error("Error saving user message:", userMsgError);
+      return new Response(
+        JSON.stringify({ error: userMsgError.message || "Failed to save user message" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Call Lovable AI Gateway
@@ -129,6 +133,7 @@ serve(async (req) => {
     }
 
     // Stream the response and collect full content
+    console.log("AI Gateway ok, starting stream");
     let fullResponse = "";
     const reader = response.body?.getReader();
     const encoder = new TextEncoder();
