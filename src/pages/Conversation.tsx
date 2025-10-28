@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment, type FormEventHandler } from "react";
+import { useState, useEffect, Fragment, type FormEventHandler } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -47,8 +47,6 @@ const ConversationPage = () => {
   const [searchParams] = useSearchParams();
   
   const debugEnabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || searchParams.get("debugScroll") === '1';
-  const outerRef = useRef<HTMLDivElement | null>(null);
-  const contentRef = useRef<HTMLDivElement | null>(null);
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
 
@@ -117,8 +115,8 @@ const ConversationPage = () => {
   // Extra logs specifically for chat containers
   useEffect(() => {
     if (!debugEnabled) return;
-    const outer = outerRef.current;
-    const inner = contentRef.current;
+    const outer = document.querySelector('[data-chat-outer]') as HTMLElement | null;
+    const inner = document.querySelector('[data-chat-inner]') as HTMLElement | null;
     const logEl = (name: string, el: HTMLElement | null) => {
       if (!el) return;
       const cs = window.getComputedStyle(el);

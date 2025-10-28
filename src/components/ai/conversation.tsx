@@ -19,42 +19,36 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowDownIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useCallback, forwardRef } from 'react';
+import { useCallback } from 'react';
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom';
 
 export type ConversationProps = ComponentProps<typeof StickToBottom> & { debug?: boolean };
 
-export const Conversation = forwardRef<HTMLDivElement, ConversationProps>(
-  ({ className, debug, ...props }, ref) => (
-    <StickToBottom
-      ref={ref}
-      className={cn(
-        'relative flex-1 overflow-y-auto overscroll-contain',
-        debug && 'bg-accent/10 outline outline-1 outline-accent/40',
-        className
-      )}
-      initial="smooth"
-      resize="smooth"
-      role="log"
-      style={{ scrollbarGutter: 'stable both-edges' }}
-      {...props}
-    />
-  )
+export const Conversation = ({ className, debug, ...props }: ConversationProps) => (
+  <StickToBottom
+    className={cn(
+      'relative flex-1 overflow-y-auto overscroll-contain',
+      debug && 'bg-accent/10 outline outline-1 outline-accent/40',
+      className
+    )}
+    initial="smooth"
+    resize="smooth"
+    role="log"
+    style={{ scrollbarGutter: 'stable both-edges' }}
+    {...props}
+  />
 );
 
 export type ConversationContentProps = ComponentProps<
   typeof StickToBottom.Content
 > & { debug?: boolean };
 
-export const ConversationContent = forwardRef<HTMLDivElement, ConversationContentProps>(
-  ({ className, debug, style, ...props }, ref) => (
-    <StickToBottom.Content
-      ref={ref}
-      className={cn('p-4', debug && 'bg-destructive/10 outline outline-1 outline-destructive/40', className)}
-      style={{ ...style, overflow: 'visible' }}
-      {...props}
-    />
-  )
+export const ConversationContent = ({ className, debug, style, ...props }: ConversationContentProps) => (
+  <StickToBottom.Content
+    className={cn('p-4', debug && 'bg-destructive/10 outline outline-1 outline-destructive/40', className)}
+    style={{ ...style, overflow: 'visible' }}
+    {...props}
+  />
 );
 
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
