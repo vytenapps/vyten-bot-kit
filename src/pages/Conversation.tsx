@@ -230,7 +230,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="overflow-hidden bg-background">
+      <SidebarInset className="flex flex-col h-screen overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -247,9 +247,8 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col flex-1 min-h-0 bg-background overflow-hidden">
-          <Conversation className="flex-1 min-h-0">
-            <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
+        <Conversation className="flex-1 min-h-0">
+          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
@@ -335,12 +334,12 @@ const ConversationPage = () => {
                   <ReasoningTrigger />
                 </Reasoning>
               )}
-              <div ref={messagesEndRef} />
-            </ConversationContent>
-          </Conversation>
-          <div className="px-4 sm:px-6 md:px-8 pb-4">
-            <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
-              <PromptInput onSubmit={handleSubmit}>
+            <div ref={messagesEndRef} />
+          </ConversationContent>
+        </Conversation>
+        <div className="shrink-0 px-4 sm:px-6 md:px-8 pb-4 bg-background border-t">
+          <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto pt-4">
+            <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -377,7 +376,6 @@ const ConversationPage = () => {
               <p className="text-xs text-center text-muted-foreground mt-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
-            </div>
           </div>
         </div>
       </SidebarInset>
