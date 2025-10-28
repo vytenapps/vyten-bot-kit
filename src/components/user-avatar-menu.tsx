@@ -34,23 +34,24 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
   // Load user profile data for avatar
   useEffect(() => {
     if (isLoggedIn && userEmail) {
-      const loadProfile = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data } = await supabase
-            .from("user_profiles")
-            .select("avatar_url, username, first_name, last_name")
-            .eq("user_id", user.id)
-            .single();
-
-          if (data) {
-            setProfile(data);
-          }
-        }
-      };
       loadProfile();
     }
   }, [isLoggedIn, userEmail]);
+
+  const loadProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("avatar_url, username, first_name, last_name")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data) {
+        setProfile(data);
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -146,6 +147,7 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
         open={settingsOpen} 
         onOpenChange={setSettingsOpen}
         initialSection={settingsSection}
+        onProfileUpdate={loadProfile}
       />
     </>
   );

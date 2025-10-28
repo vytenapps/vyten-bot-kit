@@ -60,12 +60,14 @@ interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialSection?: string
+  onProfileUpdate?: () => void
 }
 
-export function SettingsDialog({ open, onOpenChange, initialSection = "profile" }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, initialSection = "profile", onProfileUpdate }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = React.useState(initialSection)
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string>("")
+  const [profileChanged, setProfileChanged] = useState(false)
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -103,13 +105,17 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
   useEffect(() => {
     if (open) {
       loadProfile()
+      setProfileChanged(false)
       isInitialLoad.current = true
       // Set active section when dialog opens
       if (initialSection) {
         setActiveSection(initialSection)
       }
+    } else if (profileChanged && onProfileUpdate) {
+      // When dialog closes and profile was changed, notify parent
+      onProfileUpdate()
     }
-  }, [open, initialSection])
+  }, [open, initialSection, profileChanged, onProfileUpdate])
 
   // Autosave effect
   useEffect(() => {
@@ -155,7 +161,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
       if (data) {
         const socialData = data.social as any
         const privacyData = data.privacy_settings as any
-        setProfile({
+        const loadedProfile = {
           username: data.username || "",
           first_name: data.first_name || "",
           last_name: data.last_name || "",
@@ -176,7 +182,10 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
             youtube: socialData?.youtube || "",
             tiktok: socialData?.tiktok || "",
           },
-        })
+        }
+        setProfile(loadedProfile)
+        // Set as previous profile to prevent autosave on initial load
+        previousProfileRef.current = loadedProfile
       }
     } catch (error: any) {
       toast.error("Failed to load profile", {
@@ -217,7 +226,20 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // Check if anything actually changed
       const changedField = getChangedField()
+      const hasChanges = 
+        previousProfileRef.current.username !== profile.username ||
+        previousProfileRef.current.first_name !== profile.first_name ||
+        previousProfileRef.current.last_name !== profile.last_name ||
+        previousProfileRef.current.phone !== profile.phone ||
+        previousProfileRef.current.bio !== profile.bio ||
+        previousProfileRef.current.avatar_url !== profile.avatar_url ||
+        JSON.stringify(previousProfileRef.current.privacy_settings) !== JSON.stringify(profile.privacy_settings) ||
+        JSON.stringify(previousProfileRef.current.social) !== JSON.stringify(profile.social);
+
+      // Don't save if nothing changed
+      if (!hasChanges) return;
 
       const { error } = await supabase
         .from("user_profiles")
@@ -238,6 +260,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
 
       toast.success(`${changedField} saved`)
       previousProfileRef.current = profile
+      setProfileChanged(true)
     } catch (error: any) {
       toast.error("Failed to save profile", {
         description: error.message,
@@ -274,7 +297,10 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
                   username={profile.username}
                   firstName={profile.first_name}
                   lastName={profile.last_name}
-                  onAvatarChange={(url) => setProfile({ ...profile, avatar_url: url })}
+                  onAvatarChange={(url) => {
+                    setProfile({ ...profile, avatar_url: url })
+                    setProfileChanged(true)
+                  }}
                 />
               </div>
 
