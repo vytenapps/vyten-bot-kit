@@ -2,7 +2,6 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
-import { useStickToBottom } from "use-stick-to-bottom";
 
 interface ConversationContextValue {
   isAtBottom: boolean;
@@ -23,7 +22,33 @@ interface ConversationProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const Conversation = React.forwardRef<HTMLDivElement, ConversationProps>(
   ({ className, children, ...props }, ref) => {
-    const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom();
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const [isAtBottom, setIsAtBottom] = React.useState(true);
+
+    const scrollToBottom = React.useCallback(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth"
+        });
+      }
+    }, []);
+
+    const handleScroll = React.useCallback(() => {
+      if (scrollRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+        const atBottom = scrollHeight - scrollTop - clientHeight < 50;
+        setIsAtBottom(atBottom);
+      }
+    }, []);
+
+    React.useEffect(() => {
+      const scrollEl = scrollRef.current;
+      if (scrollEl) {
+        scrollEl.addEventListener('scroll', handleScroll);
+        return () => scrollEl.removeEventListener('scroll', handleScroll);
+      }
+    }, [handleScroll]);
 
     return (
       <ConversationContext.Provider value={{ isAtBottom, scrollToBottom }}>
@@ -32,9 +57,7 @@ const Conversation = React.forwardRef<HTMLDivElement, ConversationProps>(
           className={cn("flex-1 overflow-y-auto relative", className)}
           {...props}
         >
-          <div ref={contentRef}>
-            {children}
-          </div>
+          {children}
         </div>
       </ConversationContext.Provider>
     );

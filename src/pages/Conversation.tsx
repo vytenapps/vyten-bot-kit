@@ -50,7 +50,6 @@ const ConversationPage = () => {
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const models = [
     { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
@@ -61,12 +60,16 @@ const ConversationPage = () => {
     { id: "openai/gpt-5-nano", name: "GPT-5 Nano" },
   ];
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const conversationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
+    // Auto-scroll to bottom when new messages arrive
+    if (conversationRef.current) {
+      const scrollEl = conversationRef.current.querySelector('[class*="overflow-y-auto"]');
+      if (scrollEl) {
+        scrollEl.scrollTop = scrollEl.scrollHeight;
+      }
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -381,7 +384,7 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden" ref={conversationRef}>
           <Conversation>
             <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
               {status === 'streaming' && messages.length === 0 && (
@@ -420,7 +423,6 @@ const ConversationPage = () => {
                   )}
                 </Message>
               ))}
-              <div ref={messagesEndRef} />
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
