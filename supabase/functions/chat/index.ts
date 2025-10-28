@@ -144,19 +144,23 @@ serve(async (req) => {
             }
           }
 
-          // Save assistant message to database
-          console.log("Saving assistant message, length:", fullResponse.length);
-          const { error: assistantMsgError } = await supabaseClient
-            .from("messages")
-            .insert({
-              conversation_id: conversationId,
-              user_id: user.id,
-              role: "assistant",
-              content: fullResponse,
-            });
+          // Save assistant message to database only if we have content
+          if (fullResponse && fullResponse.trim().length > 0) {
+            console.log("Saving assistant message, length:", fullResponse.length);
+            const { error: assistantMsgError } = await supabaseClient
+              .from("messages")
+              .insert({
+                conversation_id: conversationId,
+                user_id: user.id,
+                role: "assistant",
+                content: fullResponse.trim(),
+              });
 
-          if (assistantMsgError) {
-            console.error("Error saving assistant message:", assistantMsgError);
+            if (assistantMsgError) {
+              console.error("Error saving assistant message:", assistantMsgError);
+            }
+          } else {
+            console.error("No assistant response content to save");
           }
 
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
