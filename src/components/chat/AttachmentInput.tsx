@@ -1,8 +1,14 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
-import { X, FileIcon, Upload } from "lucide-react";
+import { X, FileIcon, Upload, Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+
+interface FileWithPreview extends File {
+  preview?: string;
+}
 
 interface AttachmentInputProps {
   onFilesSelected: (files: File[]) => void;
@@ -26,7 +32,28 @@ export function AttachmentInput({
   className,
 }: AttachmentInputProps) {
   const [isDragActive, setIsDragActive] = useState(false);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Generate preview URLs for image files
+  useEffect(() => {
+    const previews = files.map((file) => {
+      if (file.type.startsWith("image/")) {
+        return URL.createObjectURL(file);
+      }
+      return "";
+    });
+    setFilePreviews(previews);
+
+    // Cleanup preview URLs
+    return () => {
+      previews.forEach((preview) => {
+        if (preview) URL.revokeObjectURL(preview);
+      });
+    };
+  }, [files]);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -58,6 +85,25 @@ export function AttachmentInput({
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
+  };
+
+  const isImageFile = (file: File) => file.type.startsWith("image/");
+
+  const handleDownload = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("File downloaded");
+  };
+
+  const handleCopyFileName = (fileName: string) => {
+    navigator.clipboard.writeText(fileName);
+    toast.success("Filename copied");
   };
 
   return (
@@ -99,31 +145,115 @@ export function AttachmentInput({
       </div>
 
       {files.length > 0 && (
-        <div className="mt-2 space-y-1">
-          {files.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 rounded-md border bg-muted/50 px-2 py-1.5 text-sm"
-            >
-              <FileIcon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="flex-1 truncate text-xs font-medium">
-                {file.name}
-              </span>
-              <span className="text-xs text-muted-foreground flex-shrink-0">
-                {(file.size / 1024).toFixed(0)} KB
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 flex-shrink-0"
-                onClick={() => onRemoveFile(index)}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {files.map((file, index) => {
+            const isImage = isImageFile(file);
+            const preview = filePreviews[index];
+
+            return (
+              <div
+                key={index}
+                className="relative group"
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
               >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
+                {isImage ? (
+                  <div
+                    className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted cursor-pointer"
+                    onClick={() => setLightboxFile({ file, index })}
+                  >
+                    <img
+                      src={preview}
+                      alt={file.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {hoveredIndex === index && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveFile(index);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 pr-8 relative">
+                    <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-medium truncate max-w-[120px]">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {(file.size / 1024).toFixed(0)} KB
+                      </span>
+                    </div>
+                    {hoveredIndex === index && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 absolute right-1 top-1/2 -translate-y-1/2"
+                        onClick={() => onRemoveFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
+
+      {/* Lightbox Dialog */}
+      <Dialog open={!!lightboxFile} onOpenChange={() => setLightboxFile(null)}>
+        <DialogContent className="max-w-4xl">
+          {lightboxFile && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-sm font-normal flex items-center justify-between">
+                  <span className="truncate">{lightboxFile.file.name}</span>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(lightboxFile.file)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download File
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopyFileName(lightboxFile.file.name)}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </Button>
+                  </div>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
+                <img
+                  src={filePreviews[lightboxFile.index]}
+                  alt={lightboxFile.file.name}
+                  className="max-w-full max-h-[70vh] object-contain"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Image • {(lightboxFile.file.size / 1024).toFixed(1)} KB
+              </p>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
