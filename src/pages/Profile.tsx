@@ -206,9 +206,10 @@ const Profile = () => {
             <AvatarUpload
               userId={userId}
               currentAvatarUrl={profile.avatar_url}
-              username={profile.username || profile.first_name || "User"}
+              username={profile.username}
+              firstName={profile.first_name}
+              lastName={profile.last_name}
               onAvatarChange={(url) => setProfile({ ...profile, avatar_url: url })}
-              size="xl"
             />
           </div>
 

@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, X, User } from "lucide-react";
+import { Loader2, X, User } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
 
@@ -12,24 +12,20 @@ interface AvatarUploadProps {
   userId: string;
   currentAvatarUrl?: string | null;
   username?: string;
+  firstName?: string;
+  lastName?: string;
   onAvatarChange?: (url: string | null) => void;
-  size?: "sm" | "md" | "lg" | "xl";
 }
-
-const sizeClasses = {
-  sm: "h-16 w-16",
-  md: "h-24 w-24",
-  lg: "h-32 w-32",
-  xl: "h-40 w-40",
-};
 
 export function AvatarUpload({
   userId,
   currentAvatarUrl,
   username = "User",
+  firstName = "",
+  lastName = "",
   onAvatarChange,
-  size = "lg",
 }: AvatarUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatarUrl || null);
@@ -139,33 +135,37 @@ export function AvatarUpload({
     maxFiles: 1,
     maxSize: 5242880, // 5MB
     disabled: uploading,
+    noClick: true,
   });
 
-  const getInitials = () => {
-    return username
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
   return (
     <>
-      <div className="flex flex-col items-center gap-4">
-        <div
-          {...getRootProps()}
-          className={cn(
-            "relative cursor-pointer group",
-            isDragActive && "opacity-50"
-          )}
-        >
-          <input {...getInputProps()} />
+      <div
+        {...getRootProps()}
+        className={cn(
+          "flex items-center gap-4 p-6 bg-muted/50 rounded-lg",
+          isDragActive && "border-2 border-primary border-dashed"
+        )}
+      >
+        <input {...getInputProps()} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) uploadAvatar(file);
+          }}
+        />
+        
+        <div className="relative group">
           <Avatar
-            className={cn(sizeClasses[size], "transition-opacity")}
-            onClick={(e) => {
+            className="h-20 w-20 cursor-pointer"
+            onClick={() => {
               if (previewUrl && !uploading) {
-                e.stopPropagation();
                 setShowModal(true);
               }
             }}
@@ -175,39 +175,46 @@ export function AvatarUpload({
             ) : null}
             <AvatarFallback className="bg-muted text-muted-foreground">
               {uploading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
-                <User className="h-8 w-8" />
+                <User className="h-6 w-6" />
               )}
             </AvatarFallback>
           </Avatar>
 
-          {!uploading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-              <Upload className="h-6 w-6 text-white" />
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-2">
           {previewUrl && !uploading && (
             <Button
-              variant="outline"
-              size="sm"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-1 -right-1 h-6 w-6 rounded-full shadow-lg"
               onClick={deleteAvatar}
-              disabled={uploading}
             >
-              <X className="h-4 w-4 mr-2" />
-              Delete
+              <X className="h-3 w-3" />
             </Button>
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground text-center">
-          {isDragActive
-            ? "Drop your avatar here"
-            : "Click or drag to upload an avatar"}
-        </p>
+        <div className="flex-1">
+          <div className="font-semibold text-foreground">{username}</div>
+          {fullName && (
+            <div className="text-sm text-muted-foreground">{fullName}</div>
+          )}
+        </div>
+
+        <Button
+          variant="default"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            "Change photo"
+          )}
+        </Button>
       </div>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
