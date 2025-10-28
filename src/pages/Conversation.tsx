@@ -31,8 +31,9 @@ import { Conversation, ConversationContent } from "@/components/ai/conversation"
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
+import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
 
-import { MicIcon, PaperclipIcon } from "lucide-react";
+import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon } from "lucide-react";
 
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -153,6 +154,11 @@ const ConversationPage = () => {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const handleCopy = async (content: string) => {
+    await navigator.clipboard.writeText(content);
+    toast.success("Copied to clipboard");
+  };
+
   if (!session) {
     return null;
   }
@@ -204,7 +210,32 @@ const ConversationPage = () => {
                         </MessageAvatar>
                       )}
                       {message.role === "assistant" ? (
-                        <Response className="flex-1">{message.content}</Response>
+                        <div className="flex-1">
+                          <Response>{message.content}</Response>
+                          <Actions className="mt-2">
+                            <Action 
+                              label="Copy" 
+                              tooltip="Copy to clipboard"
+                              onClick={() => handleCopy(message.content)}
+                            >
+                              <CopyIcon className="size-4" />
+                            </Action>
+                            <Action 
+                              label="Like" 
+                              tooltip="Like this response"
+                              onClick={() => toast.success("Thanks for the feedback!")}
+                            >
+                              <ThumbsUpIcon className="size-4" />
+                            </Action>
+                            <Action 
+                              label="Dislike" 
+                              tooltip="Dislike this response"
+                              onClick={() => toast.info("Thanks for the feedback!")}
+                            >
+                              <ThumbsDownIcon className="size-4" />
+                            </Action>
+                          </Actions>
+                        </div>
                       ) : (
                         <MessageContent className="bg-primary text-primary-foreground">
                           {message.content}
