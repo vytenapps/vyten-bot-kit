@@ -274,9 +274,9 @@ const ConversationPage = () => {
                         </MessageAvatar>
                       )}
                       {message.role === "assistant" ? (
-                        <div className="flex-1 border-2 border-red-500">
-                          <Response className="mb-0 border-2 border-blue-500">{message.content}</Response>
-                          <Actions className="mt-1 border-2 border-green-500">
+                        <div className="flex-1">
+                          <Response className="mb-0">{message.content}</Response>
+                          <Actions className="-mt-2">
                             <Action 
                               label="Copy" 
                               tooltip="Copy to clipboard"
