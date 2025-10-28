@@ -473,20 +473,22 @@ const ConversationPage = () => {
                     type="button"
                     size="sm"
                     variant="default"
-                    className="rounded-sm h-8 w-8 p-0"
+                    className="rounded-sm h-5 w-5 p-0"
                     onClick={stopStreaming}
                   >
-                    <SquareIcon className="size-3.5" />
+                    <SquareIcon className="size-2.5" />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
                     size="sm"
                     variant="default"
-                    className="rounded-full h-8 w-8 p-0"
+                    className="rounded-full h-5 w-5 p-0"
                     disabled={!text.trim()}
                   >
-                    <ArrowUpIcon className="size-3.5" strokeWidth={2.5} />
+                    <svg width="10" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
+                    </svg>
                   </Button>
                 )}
               </PromptInputToolbar>
