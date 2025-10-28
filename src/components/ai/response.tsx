@@ -308,45 +308,60 @@ const components: Options['components'] = {
       {children}
     </blockquote>
   ),
-  code: ({ node, className, ...props }) => {
-    const inline = node?.position?.start.line === node?.position?.end.line;
-    if (!inline) {
-      return <code className={className} {...props} />;
+  code: (props: any) => {
+    const { inline, className, children, ...rest } = props ?? {};
+    // Inline code gets styled pill; block code is handled by the `pre` renderer
+    if (inline) {
+      return (
+        <code
+          className={cn(
+            'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
+            className
+          )}
+          {...rest}
+        >
+          {children}
+        </code>
+      );
     }
     return (
-      <code
-        className={cn(
-          'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
-          className
-        )}
-        {...props}
-      />
+      <code className={className} {...rest}>
+        {children}
+      </code>
     );
   },
-  pre: ({ node, className, children }) => {
-    let language = 'javascript';
-    if (typeof node?.properties?.className === 'string') {
-      language = node.properties.className.replace('language-', '');
-    }
+  pre: ({ className, children }) => {
+    // Find the <code> child and extract language + text
+    const childArray = Array.isArray(children) ? children : [children];
+    const codeElement: any = childArray.find(
+      (child) => isValidElement(child) && (child as any).type === 'code'
+    );
 
-    // Extract code content from children safely
+    let language = 'text';
     let code = '';
-    if (
-      isValidElement(children) &&
-      children.props &&
-      typeof (children.props as any).children === 'string'
-    ) {
-      code = (children.props as any).children;
+
+    if (codeElement) {
+      const cls = codeElement.props?.className ?? '';
+      const match = /language-([\w-]+)/.exec(cls);
+      if (match) language = match[1];
+
+      const codeChildren = codeElement.props?.children;
+      if (Array.isArray(codeChildren)) {
+        code = codeChildren.join('');
+      } else if (typeof codeChildren === 'string') {
+        code = codeChildren;
+      } else if (codeChildren != null) {
+        code = String(codeChildren);
+      }
     } else if (typeof children === 'string') {
       code = children;
     }
 
+    // Trim trailing newline that react-markdown adds
+    code = code.replace(/\n$/, '');
+
     return (
-      <CodeBlock
-        className={cn('my-4 h-auto', className)}
-        code={code}
-        language={language}
-      >
+      <CodeBlock className={cn('my-4 h-auto', className)} code={code} language={language}>
         <CodeBlockCopyButton
           onCopy={() => console.log('Copied code to clipboard')}
           onError={() => console.error('Failed to copy code to clipboard')}
