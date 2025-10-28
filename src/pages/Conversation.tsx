@@ -219,9 +219,9 @@ const ConversationPage = () => {
   }
 
   return (
-    <SidebarProvider className="h-svh overflow-hidden">
+    <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col flex-1 overflow-hidden bg-background">
+      <SidebarInset className="flex h-svh w-full flex-col overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -238,136 +238,136 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex-1 flex flex-col relative">
-          <Conversation className="absolute inset-0 overscroll-contain">
-            <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
-              {messages.map((message, index) => {
-                const isLastMessage = index === messages.length - 1;
-                const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
-                
-                return (
-                  <Fragment key={message.id}>
-                    {isStreamingThisMessage && (
-                      <Reasoning 
-                        isStreaming={true}
-                        defaultOpen={true}
-                      >
-                        <ReasoningTrigger />
-                      </Reasoning>
-                    )}
-                    <Message from={message.role}>
-                      {message.role === "assistant" && (
-                        <MessageAvatar name="AI">
-                          <VytenIcon className="h-4 w-4 text-white" />
-                        </MessageAvatar>
-                      )}
-                      {message.role === "assistant" ? (
-                        <div className="flex-1">
-                          <Response className="mb-0">{message.content}</Response>
-                          <Actions className="-mt-2">
-                            <Action 
-                              label="Copy" 
-                              tooltip="Copy to clipboard"
-                              onClick={() => handleCopy(message.content)}
-                            >
-                              <CopyIcon className="size-4" />
-                            </Action>
-                            <Action 
-                              label="Like" 
-                              tooltip="Like this response"
-                              onClick={() => handleFeedback(message.id, 'positive')}
-                              className={messageFeedback[message.id] === 'positive' ? 'text-foreground' : ''}
-                            >
-                              <ThumbsUpIcon 
-                                className="size-4" 
-                                strokeWidth={messageFeedback[message.id] === 'positive' ? 2.5 : 2}
-                                fill={messageFeedback[message.id] === 'positive' ? 'currentColor' : 'none'}
-                                fillOpacity={messageFeedback[message.id] === 'positive' ? 0.2 : 0}
-                              />
-                            </Action>
-                            <Action 
-                              label="Dislike" 
-                              tooltip="Dislike this response"
-                              onClick={() => handleFeedback(message.id, 'negative')}
-                              className={messageFeedback[message.id] === 'negative' ? 'text-foreground' : ''}
-                            >
-                              <ThumbsDownIcon 
-                                className="size-4"
-                                strokeWidth={messageFeedback[message.id] === 'negative' ? 2.5 : 2}
-                                fill={messageFeedback[message.id] === 'negative' ? 'currentColor' : 'none'}
-                                fillOpacity={messageFeedback[message.id] === 'negative' ? 0.2 : 0}
-                              />
-                            </Action>
-                          </Actions>
-                        </div>
-                      ) : (
-                        <MessageContent className="bg-primary text-primary-foreground">
-                          {message.content}
-                        </MessageContent>
-                      )}
-                      {message.role === "user" && (
-                        <MessageAvatar 
-                          name={getInitials(session?.user?.email)}
-                        />
-                      )}
-                    </Message>
-                  </Fragment>
-                );
-              })}
-              {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
-              {status === "streaming" && messages[messages.length - 1]?.role === "user" && (
-                <Reasoning 
-                  isStreaming={true}
-                  defaultOpen={true}
-                >
-                  <ReasoningTrigger />
-                </Reasoning>
-              )}
-            </ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 md:px-8 pb-4 bg-background pointer-events-none">
-            <div className="pointer-events-auto">
-            <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
-              <PromptInput onSubmit={handleSubmit}>
-                <PromptInputTextarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type your message..."
-                />
-                <PromptInputToolbar>
-                  <PromptInputTools>
-                    <PromptInputButton>
-                      <PaperclipIcon size={16} />
-                    </PromptInputButton>
-                    <PromptInputButton>
-                      <MicIcon size={16} />
-                      <span>Voice</span>
-                    </PromptInputButton>
-                    <PromptInputModelSelect
-                      value={model}
-                      onValueChange={setModel}
+        
+        {/* Conversation Area - flex-1 takes remaining space */}
+        <Conversation className="flex-1">
+          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
+            {messages.map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+              const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
+              
+              return (
+                <Fragment key={message.id}>
+                  {isStreamingThisMessage && (
+                    <Reasoning 
+                      isStreaming={true}
+                      defaultOpen={true}
                     >
-                      <PromptInputModelSelectTrigger>
-                        <PromptInputModelSelectValue />
-                      </PromptInputModelSelectTrigger>
-                      <PromptInputModelSelectContent>
-                        {AI_MODELS.map((m) => (
-                          <PromptInputModelSelectItem key={m.id} value={m.id}>
-                            {m.name}
-                          </PromptInputModelSelectItem>
-                        ))}
-                      </PromptInputModelSelectContent>
-                    </PromptInputModelSelect>
-                  </PromptInputTools>
-                  <PromptInputSubmit disabled={!text.trim()} status={status} />
-                </PromptInputToolbar>
-              </PromptInput>
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                AI Chatbot can make mistakes. Check important info.
-              </p>
-            </div>
-            </div>
+                      <ReasoningTrigger />
+                    </Reasoning>
+                  )}
+                  <Message from={message.role}>
+                    {message.role === "assistant" && (
+                      <MessageAvatar name="AI">
+                        <VytenIcon className="h-4 w-4 text-white" />
+                      </MessageAvatar>
+                    )}
+                    {message.role === "assistant" ? (
+                      <div className="flex-1">
+                        <Response className="mb-0">{message.content}</Response>
+                        <Actions className="-mt-2">
+                          <Action 
+                            label="Copy" 
+                            tooltip="Copy to clipboard"
+                            onClick={() => handleCopy(message.content)}
+                          >
+                            <CopyIcon className="size-4" />
+                          </Action>
+                          <Action 
+                            label="Like" 
+                            tooltip="Like this response"
+                            onClick={() => handleFeedback(message.id, 'positive')}
+                            className={messageFeedback[message.id] === 'positive' ? 'text-foreground' : ''}
+                          >
+                            <ThumbsUpIcon 
+                              className="size-4" 
+                              strokeWidth={messageFeedback[message.id] === 'positive' ? 2.5 : 2}
+                              fill={messageFeedback[message.id] === 'positive' ? 'currentColor' : 'none'}
+                              fillOpacity={messageFeedback[message.id] === 'positive' ? 0.2 : 0}
+                            />
+                          </Action>
+                          <Action 
+                            label="Dislike" 
+                            tooltip="Dislike this response"
+                            onClick={() => handleFeedback(message.id, 'negative')}
+                            className={messageFeedback[message.id] === 'negative' ? 'text-foreground' : ''}
+                          >
+                            <ThumbsDownIcon 
+                              className="size-4"
+                              strokeWidth={messageFeedback[message.id] === 'negative' ? 2.5 : 2}
+                              fill={messageFeedback[message.id] === 'negative' ? 'currentColor' : 'none'}
+                              fillOpacity={messageFeedback[message.id] === 'negative' ? 0.2 : 0}
+                            />
+                          </Action>
+                        </Actions>
+                      </div>
+                    ) : (
+                      <MessageContent className="bg-primary text-primary-foreground">
+                        {message.content}
+                      </MessageContent>
+                    )}
+                    {message.role === "user" && (
+                      <MessageAvatar 
+                        name={getInitials(session?.user?.email)}
+                      />
+                    )}
+                  </Message>
+                </Fragment>
+              );
+            })}
+            {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
+            {status === "streaming" && messages[messages.length - 1]?.role === "user" && (
+              <Reasoning 
+                isStreaming={true}
+                defaultOpen={true}
+              >
+                <ReasoningTrigger />
+              </Reasoning>
+            )}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+        
+        {/* Input Area - sibling to Conversation */}
+        <div className="border-t p-4">
+          <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
+            <PromptInput onSubmit={handleSubmit}>
+              <PromptInputTextarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Type your message..."
+              />
+              <PromptInputToolbar>
+                <PromptInputTools>
+                  <PromptInputButton>
+                    <PaperclipIcon size={16} />
+                  </PromptInputButton>
+                  <PromptInputButton>
+                    <MicIcon size={16} />
+                    <span>Voice</span>
+                  </PromptInputButton>
+                  <PromptInputModelSelect
+                    value={model}
+                    onValueChange={setModel}
+                  >
+                    <PromptInputModelSelectTrigger>
+                      <PromptInputModelSelectValue />
+                    </PromptInputModelSelectTrigger>
+                    <PromptInputModelSelectContent>
+                      {AI_MODELS.map((m) => (
+                        <PromptInputModelSelectItem key={m.id} value={m.id}>
+                          {m.name}
+                        </PromptInputModelSelectItem>
+                      ))}
+                    </PromptInputModelSelectContent>
+                  </PromptInputModelSelect>
+                </PromptInputTools>
+                <PromptInputSubmit disabled={!text.trim()} status={status} />
+              </PromptInputToolbar>
+            </PromptInput>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              AI Chatbot can make mistakes. Check important info.
+            </p>
           </div>
         </div>
       </SidebarInset>
