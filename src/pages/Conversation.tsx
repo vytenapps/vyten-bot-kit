@@ -255,7 +255,7 @@ const ConversationPage = () => {
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
                 
                 return (
-                  <div key={message.id} className="space-y-4">
+                  <div key={message.id} className={`space-y-4 ${message.role === "user" ? "mb-6" : ""}`}>
                     {isStreamingThisMessage && (
                       <Reasoning 
                         isStreaming={true}
