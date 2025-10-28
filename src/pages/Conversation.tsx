@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 import { AI_MODELS } from "@/lib/ai-config";
 import { useAIChat } from "@/hooks/use-ai-chat";
+import { useScrollDebug } from "@/hooks/use-scroll-debug";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
@@ -46,6 +47,9 @@ const ConversationPage = () => {
   const [searchParams] = useSearchParams();
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
+  
+  // Debug: Log all scrollable elements
+  useScrollDebug("ConversationPage");
 
   useEffect(() => {
     // Get initial session
@@ -221,7 +225,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="flex flex-col h-svh overflow-hidden bg-background">
+      <SidebarInset className="flex flex-col flex-1 overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -246,10 +250,9 @@ const ConversationPage = () => {
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
                 
                 return (
-                  <>
+                  <Fragment key={message.id}>
                     {isStreamingThisMessage && (
                       <Reasoning 
-                        key={`reasoning-${message.id}`}
                         isStreaming={true}
                         defaultOpen={true}
                       >
@@ -259,7 +262,7 @@ const ConversationPage = () => {
                         </ReasoningContent>
                       </Reasoning>
                     )}
-                    <Message key={message.id} from={message.role}>
+                    <Message from={message.role}>
                       {message.role === "assistant" && (
                         <MessageAvatar name="AI">
                           <VytenIcon className="h-4 w-4 text-white" />
@@ -315,7 +318,7 @@ const ConversationPage = () => {
                         />
                       )}
                     </Message>
-                  </>
+                  </Fragment>
                 );
               })}
               {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
