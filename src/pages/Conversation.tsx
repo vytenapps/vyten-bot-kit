@@ -443,8 +443,8 @@ const ConversationPage = () => {
                       </MessageAvatar>
                     )}
                     {message.role === "assistant" ? (
-                      <div className={cn("flex-1", debugEnabled && "bg-yellow-500/10 outline outline-1 outline-yellow-500/40")}>
-                        <Response className={cn("mb-0", debugEnabled && "bg-blue-500/10 outline outline-1 outline-blue-500/40")}>{message.content}</Response>
+                      <>
+                        <Response className={cn("flex-1 mb-0", debugEnabled && "bg-blue-500/10 outline outline-1 outline-blue-500/40")}>{message.content}</Response>
                         <Actions 
                           className={cn("mt-2", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
                           data-debug-actions
@@ -483,7 +483,7 @@ const ConversationPage = () => {
                             />
                           </Action>
                         </Actions>
-                      </div>
+                      </>
                     ) : (
                       <MessageContent className="bg-primary text-primary-foreground">
                         {message.content}
