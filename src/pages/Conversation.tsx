@@ -179,6 +179,26 @@ const ConversationPage = () => {
       const gap = Math.max(0, Math.round(outerRect.bottom - innerRect.bottom));
       setGapPx(gap);
 
+      // Get inner's actual padding
+      const innerCs = getComputedStyle(inner);
+      const paddingBottom = parseFloat(innerCs.paddingBottom);
+      setInnerPaddingPx(paddingBottom);
+
+      // Check for sentinel elements or hidden spacing
+      const outerChildren = Array.from(outer.children);
+      console.warn('[ChatDebug] Outer children count:', outerChildren.length);
+      outerChildren.forEach((child, idx) => {
+        const childEl = child as HTMLElement;
+        const childRect = childEl.getBoundingClientRect();
+        console.info(`[ChatDebug] Child ${idx}:`, {
+          tagName: childEl.tagName,
+          className: childEl.className,
+          height: childRect.height,
+          bottom: childRect.bottom,
+          isScrollButton: childEl.hasAttribute('data-debug-scroll-btn'),
+        });
+      });
+
       // Inspect last message margin collapse
       const msgNodes = inner.querySelectorAll('[data-debug-message]');
       const lastMsg = msgNodes[msgNodes.length - 1] as HTMLElement | undefined;
@@ -459,24 +479,44 @@ const ConversationPage = () => {
             )}
           </ConversationContent>
           
-          {/* Debug overlay to visualize gap between RED inner bottom and GREEN outer bottom */}
+          {/* Debug overlays to visualize all spacing sources */}
           {debugEnabled && gapPx > 0 && (
-            <div
-              className="pointer-events-none"
-              style={{
-                height: `${gapPx}px`,
-                background: 'repeating-linear-gradient(45deg, rgba(255, 165, 0, 0.5), rgba(255, 165, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 20px)',
-                border: '3px solid orange',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-              }}
-            >
-              <div className="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                GAP: {gapPx}px (between RED bottom ↑ and GREEN bottom ↓)
+            <>
+              {/* Overlay 1: Inner padding-bottom (should be 16px = pb-4) */}
+              <div
+                className="pointer-events-none absolute left-0 right-0"
+                style={{
+                  bottom: `${gapPx}px`,
+                  height: `${innerPaddingPx}px`,
+                  background: 'repeating-linear-gradient(45deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.3) 5px, rgba(0, 200, 255, 0.3) 5px, rgba(0, 200, 255, 0.3) 10px)',
+                  border: '2px solid cyan',
+                  zIndex: 40,
+                }}
+              >
+                <div className="bg-cyan-600 text-white px-2 py-0.5 rounded text-xs font-bold inline-block">
+                  Inner pb-4: {innerPaddingPx}px
+                </div>
               </div>
-            </div>
+              
+              {/* Overlay 2: The mysterious gap (everything else) */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  height: `${gapPx}px`,
+                  background: 'repeating-linear-gradient(45deg, rgba(255, 165, 0, 0.5), rgba(255, 165, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 20px)',
+                  border: '3px solid orange',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  zIndex: 50,
+                }}
+              >
+                <div className="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                  TOTAL GAP: {gapPx}px (RED bottom ↑ to GREEN bottom ↓)
+                </div>
+              </div>
+            </>
           )}
           
           <ConversationScrollButton 
