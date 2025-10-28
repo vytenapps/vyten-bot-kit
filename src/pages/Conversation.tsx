@@ -12,7 +12,7 @@ import { VytenIcon } from "@/components/VytenIcon";
 import { cn } from "@/lib/utils";
 import { AttachmentInput, AttachmentPreviews } from "@/components/chat/AttachmentInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -310,6 +310,11 @@ const ConversationPage = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.success("File downloaded");
+  };
+
+  const handleCopyText = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast.success("Text copied to clipboard");
   };
 
   const handleFileClick = async (file: File, index: number) => {
@@ -645,6 +650,16 @@ const ConversationPage = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                    {lightboxFile.content && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopyText(lightboxFile.content!)}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Text
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
