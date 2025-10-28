@@ -436,7 +436,7 @@ const ConversationPage = () => {
                       <ReasoningTrigger />
                     </Reasoning>
                   )}
-                  <Message from={message.role} data-debug-message className={debugEnabled ? "bg-purple-500/10 outline outline-1 outline-purple-500/40" : ""}>
+                  <Message from={message.role} data-debug-message className={cn(debugEnabled ? "bg-purple-500/10 outline outline-1 outline-purple-500/40" : "", message.role === "user" && "group")}>
                     {message.role === "assistant" && (
                       <MessageAvatar name="AI">
                         <VytenIcon className="h-4 w-4 text-white" />
@@ -490,7 +490,7 @@ const ConversationPage = () => {
                           {message.content}
                         </MessageContent>
                         <Actions 
-                          className={cn("mt-2 justify-end", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
+                          className={cn("mt-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
                           data-debug-actions
                         >
                           <Action 
