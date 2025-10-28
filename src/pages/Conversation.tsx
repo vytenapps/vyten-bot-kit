@@ -485,9 +485,23 @@ const ConversationPage = () => {
                         </Actions>
                       </div>
                     ) : (
-                      <MessageContent className="bg-primary text-primary-foreground">
-                        {message.content}
-                      </MessageContent>
+                      <div className="flex-1 flex flex-col items-end">
+                        <MessageContent className="bg-primary text-primary-foreground">
+                          {message.content}
+                        </MessageContent>
+                        <Actions 
+                          className={cn("mt-2 justify-end", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
+                          data-debug-actions
+                        >
+                          <Action 
+                            label="Copy" 
+                            tooltip="Copy to clipboard"
+                            onClick={() => handleCopy(message.content)}
+                          >
+                            <CopyIcon className="size-4" />
+                          </Action>
+                        </Actions>
+                      </div>
                     )}
                     {message.role === "user" && (
                       <MessageAvatar 
