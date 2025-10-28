@@ -313,24 +313,20 @@ const ConversationPage = () => {
                           </Actions>
                         </div>
                       ) : (
-                        <div className="flex-1 flex flex-col items-end group">
-                          <div className="relative pb-5">
-                            <MessageContent className="bg-primary text-primary-foreground">
-                              {message.content}
-                            </MessageContent>
-                            <div className="absolute left-4 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Action 
-                                label="Copy" 
-                                tooltip="Copy to clipboard"
-                                onClick={() => handleCopy(message.content)}
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-1"
-                              >
-                                <CopyIcon className="size-4" />
-                              </Action>
-                            </div>
+                        <div className="flex-1 flex flex-col items-end relative group">
+                          <div className="absolute top-0 right-0 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <Action 
+                              label="Copy" 
+                              tooltip="Copy to clipboard"
+                              onClick={() => handleCopy(message.content)}
+                              className="bg-background shadow-sm border border-border"
+                            >
+                              <CopyIcon className="size-4" />
+                            </Action>
                           </div>
+                          <MessageContent className="bg-primary text-primary-foreground">
+                            {message.content}
+                          </MessageContent>
                         </div>
                       )}
                       {message.role === "user" && (
