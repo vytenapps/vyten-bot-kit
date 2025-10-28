@@ -275,8 +275,8 @@ const ConversationPage = () => {
                       )}
                       {message.role === "assistant" ? (
                         <div className="flex-1">
-                          <Response>{message.content}</Response>
-                          <Actions className="mt-0">
+                          <Response className="mb-0">{message.content}</Response>
+                          <Actions className="mt-1">
                             <Action 
                               label="Copy" 
                               tooltip="Copy to clipboard"
