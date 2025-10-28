@@ -38,7 +38,7 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
         .from("posts")
         .select(`
           *,
-          user_profiles!posts_user_id_fkey (
+          user_profiles!inner (
             username,
             first_name,
             last_name
