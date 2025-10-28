@@ -60,7 +60,11 @@ const ConversationPage = () => {
         navigate("/auth");
       } else {
         setSession(session);
-        loadConversationData(session.user.id);
+        // Only load conversation if we're not auto-triggering
+        const messageFromUrl = searchParams.get("message");
+        if (!messageFromUrl) {
+          loadConversationData(session.user.id);
+        }
       }
     });
 
@@ -73,7 +77,7 @@ const ConversationPage = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, chatId]);
+  }, [navigate, chatId, searchParams]);
 
   // Auto-trigger AI response for new conversations from URL params
   useEffect(() => {
@@ -88,13 +92,18 @@ const ConversationPage = () => {
         setModel(modelFromUrl);
       }
       
-      // Trigger AI response
+      // Trigger AI response - messages will be loaded after streaming completes
       sendMessage(messageFromUrl).then(() => {
+        console.log("Auto-trigger completed, reloading conversation from DB");
+        // Reload from database to get properly saved messages
+        if (session?.user?.id && chatId) {
+          loadMessages(session.user.id, chatId);
+        }
         // Clear URL params
         navigate(`/c/${chatId}`, { replace: true });
       });
     }
-  }, [searchParams, hasTriggeredAI, session, chatId, sendMessage, navigate]);
+  }, [searchParams, hasTriggeredAI, session, chatId, sendMessage, loadMessages, setModel, navigate]);
 
   const loadConversationData = async (userId: string) => {
     if (!chatId) return;
@@ -136,6 +145,12 @@ const ConversationPage = () => {
     setText("");
     
     await sendMessage(userMessage);
+    
+    // Reload conversation from DB to get properly saved messages
+    console.log("Manual message sent, reloading from DB");
+    if (session?.user?.id && chatId) {
+      await loadMessages(session.user.id, chatId);
+    }
   };
 
   const getInitials = (email?: string) => {

@@ -229,6 +229,7 @@ serve(async (req) => {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
+                  console.log("Received content token:", JSON.stringify(content));
                   fullResponse += content;
                   controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
                 }
@@ -256,7 +257,9 @@ serve(async (req) => {
             }
           }
 
-          // Save assistant message
+          // Save assistant message to database
+          console.log("Saving assistant message to database, length:", fullResponse.length);
+          console.log("Full response preview:", fullResponse.substring(0, 200));
           await supabaseClient.from("messages").insert({
             conversation_id: currentConversationId,
             user_id: user.id,
