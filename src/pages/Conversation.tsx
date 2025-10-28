@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment, type FormEventHandler } from "react";
+import { useState, useEffect, useRef, type FormEventHandler } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -221,7 +221,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="flex flex-col flex-1 min-h-0 overflow-hidden bg-background">
+      <SidebarInset className="flex flex-col h-svh overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -246,7 +246,7 @@ const ConversationPage = () => {
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
                 
                 return (
-                  <Fragment key={message.id}>
+                  <div key={message.id} className="space-y-4">
                     {isStreamingThisMessage && (
                       <Reasoning 
                         isStreaming={true}
@@ -314,7 +314,7 @@ const ConversationPage = () => {
                         />
                       )}
                     </Message>
-                  </Fragment>
+                  </div>
                 );
               })}
               {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
