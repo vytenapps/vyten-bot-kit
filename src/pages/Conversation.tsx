@@ -226,6 +226,19 @@ const ConversationPage = () => {
                     </div>
                   );
                 })}
+                {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
+                {status === "streaming" && messages[messages.length - 1]?.role === "user" && (
+                  <Reasoning 
+                    isStreaming={true}
+                    defaultOpen={true}
+                    className="mb-2"
+                  >
+                    <ReasoningTrigger />
+                    <ReasoningContent>
+                      Analyzing your question and generating a thoughtful response...
+                    </ReasoningContent>
+                  </Reasoning>
+                )}
                 <div ref={messagesEndRef} />
               </ConversationContent>
             </Conversation>
