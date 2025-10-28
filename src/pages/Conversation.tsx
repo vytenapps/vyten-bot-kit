@@ -103,12 +103,34 @@ const ConversationPage = () => {
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
     const enabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || qs.get('debugScroll') === '1';
+    let cleanup: (() => void) | undefined;
     if (enabled) {
-      const cleanup = highlightScrollContainers({ allowedAttr: 'data-allowed-scroll', showOverlay: true });
-      // Re-run when message list size or status changes since height changes
-      return () => cleanup?.();
+      cleanup = highlightScrollContainers({ allowedAttr: 'data-allowed-scroll', showOverlay: true });
     }
+    return () => cleanup?.();
   }, [messages.length, status]);
+
+  // Lock page scroll so only the conversation area can scroll
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlHeight = html.style.height;
+    const prevBodyHeight = body.style.height;
+
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    html.style.height = '100%';
+    body.style.height = '100%';
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      html.style.height = prevHtmlHeight;
+      body.style.height = prevBodyHeight;
+    };
+  }, []);
 
   const loadConversationData = async (userId: string) => {
     if (!chatId) return;
@@ -233,7 +255,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex h-svh w-full flex-col bg-background fixed inset-0 overflow-hidden touch-none">
+      <SidebarInset className="flex h-svh w-full flex-col bg-background fixed inset-0 overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
