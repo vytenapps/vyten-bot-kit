@@ -311,7 +311,7 @@ const Chat = () => {
                   />
                   <PromptInputToolbar>
                     <PromptInputTools>
-                      <PromptInputButton onClick={handleAttachClick}>
+                      <PromptInputButton onClick={handleAttachClick} type="button">
                         <PaperclipIcon size={16} />
                       </PromptInputButton>
                       <PromptInputButton>

@@ -595,16 +595,18 @@ const ConversationPage = () => {
           </div>
         </div>
         
-        {/* Scroll to bottom button - positioned between scroll area and input */}
+        {/* Scroll to bottom button - positioned above input area */}
         {showScrollButton && (
-          <Button
-            onClick={() => scrollToBottom()}
-            size="icon"
-            variant="outline"
-            className="absolute bottom-[120px] -mt-8 left-[50%] translate-x-[-50%] rounded-full shadow-lg z-10"
-          >
-            <ArrowDownIcon className="size-4" />
-          </Button>
+          <div className="shrink-0 flex justify-center py-2">
+            <Button
+              onClick={() => scrollToBottom()}
+              size="icon"
+              variant="outline"
+              className="rounded-full shadow-lg"
+            >
+              <ArrowDownIcon className="size-4" />
+            </Button>
+          </div>
         )}
         
         {/* Input Area - sibling to Conversation */}
@@ -634,7 +636,7 @@ const ConversationPage = () => {
                 />
                 <PromptInputToolbar>
                   <PromptInputTools>
-                    <PromptInputButton onClick={handleAttachClick}>
+                    <PromptInputButton onClick={handleAttachClick} type="button">
                       <PaperclipIcon size={16} />
                     </PromptInputButton>
                     <PromptInputButton>
