@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
+import { AI_MODELS } from "@/lib/ai-config";
+import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
@@ -14,6 +16,11 @@ import {
 import {
   PromptInput,
   PromptInputButton,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputModelSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
@@ -28,6 +35,8 @@ const Chat = () => {
   const [text, setText] = useState<string>("");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  const { model, setModel, status } = useAIChat();
 
   const suggestions = [
     "What is Vyten Apps?",
@@ -118,8 +127,8 @@ const Chat = () => {
 
       if (convError) throw convError;
 
-      // Navigate to conversation page
-      navigate(`/c/${conversation.id}`);
+      // Navigate to conversation page with message and model
+      navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${model}`);
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to create conversation");
@@ -188,8 +197,23 @@ const Chat = () => {
                       <MicIcon size={16} />
                       <span>Voice</span>
                     </PromptInputButton>
+                    <PromptInputModelSelect
+                      value={model}
+                      onValueChange={setModel}
+                    >
+                      <PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectValue />
+                      </PromptInputModelSelectTrigger>
+                      <PromptInputModelSelectContent>
+                        {AI_MODELS.map((m) => (
+                          <PromptInputModelSelectItem key={m.id} value={m.id}>
+                            {m.name}
+                          </PromptInputModelSelectItem>
+                        ))}
+                      </PromptInputModelSelectContent>
+                    </PromptInputModelSelect>
                   </PromptInputTools>
-                  <PromptInputSubmit disabled={!text} status="ready" />
+                  <PromptInputSubmit disabled={!text} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
               <p className="text-xs text-center text-muted-foreground mt-2 mb-2">

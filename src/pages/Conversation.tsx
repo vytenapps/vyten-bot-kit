@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useRef, type FormEventHandler } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
+import { AI_MODELS } from "@/lib/ai-config";
+import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
@@ -14,6 +17,11 @@ import {
 import {
   PromptInput,
   PromptInputButton,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputModelSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
@@ -29,8 +37,21 @@ const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const [session, setSession] = useState<Session | null>(null);
   const [text, setText] = useState<string>("");
-  const [conversationTitle] = useState<string>("New Conversation");
+  const [conversationTitle, setConversationTitle] = useState<string>("");
+  const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     // Get initial session
@@ -39,6 +60,11 @@ const ConversationPage = () => {
         navigate("/auth");
       } else {
         setSession(session);
+        // Only load conversation if we're not auto-triggering
+        const messageFromUrl = searchParams.get("message");
+        if (!messageFromUrl) {
+          loadConversationData(session.user.id);
+        }
       }
     });
 
@@ -51,15 +77,78 @@ const ConversationPage = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, chatId]);
+  }, [navigate, chatId, searchParams]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  // Auto-trigger AI response for new conversations from URL params
+  useEffect(() => {
+    const messageFromUrl = searchParams.get("message");
+    const modelFromUrl = searchParams.get("model");
+    
+    if (messageFromUrl && !hasTriggeredAI && session?.user?.id && chatId) {
+      console.log("Auto-triggering AI response from URL params");
+      setHasTriggeredAI(true);
+      
+      if (modelFromUrl) {
+        setModel(modelFromUrl);
+      }
+      
+      // Trigger AI response
+      sendMessage(messageFromUrl, chatId).then(() => {
+        console.log("Auto-trigger completed, reloading from DB");
+        if (session?.user?.id && chatId) {
+          loadConversation(session.user.id, chatId);
+        }
+        // Clear URL params
+        navigate(`/c/${chatId}`, { replace: true });
+      });
+    }
+  }, [searchParams, hasTriggeredAI, session, chatId, sendMessage, loadConversation, setModel, navigate]);
+
+  const loadConversationData = async (userId: string) => {
+    if (!chatId) return;
+
+    // Load conversation details
+    const { data: conversation, error: convError } = await supabase
+      .from("conversations")
+      .select("*")
+      .eq("id", chatId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (convError) {
+      console.error("Error loading conversation:", convError);
+      toast.error("Failed to load conversation");
+      navigate("/chat");
+      return;
+    }
+
+    if (!conversation) {
+      toast.error("Conversation not found");
+      navigate("/chat");
+      return;
+    }
+
+    setConversationTitle(conversation.title);
+
+    // Load messages using the hook
+    if (chatId) {
+      await loadConversation(userId, chatId);
+    }
+  };
+
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || !chatId) return;
 
-    // TODO: Implement chat functionality
-    console.log("Message to send:", text);
+    const userMessage = text.trim();
     setText("");
+    
+    await sendMessage(userMessage, chatId);
+    
+    // Reload from DB after sending
+    if (session?.user?.id && chatId) {
+      await loadConversation(session.user.id, chatId);
+    }
   };
 
   const getInitials = (email?: string) => {
@@ -83,7 +172,7 @@ const ConversationPage = () => {
             className="mr-2 data-[orientation=vertical]:h-4"
           />
           <h2 className="text-sm font-medium text-muted-foreground truncate">
-            {conversationTitle}
+            {conversationTitle || "New Conversation"}
           </h2>
           <div className="ml-auto">
             <UserAvatarMenu 
@@ -96,39 +185,28 @@ const ConversationPage = () => {
           <div className="flex-1 overflow-hidden">
             <Conversation>
               <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
-                {/* Example messages showing the UI components */}
-                <Message from="assistant">
-                  <MessageAvatar name="AI">
-                    <VytenIcon className="h-4 w-4 text-white" />
-                  </MessageAvatar>
-                  <Response>
-                    {`# Welcome to Vyten Bot Kit
-
-This is a clean slate ready for your AI chatbot implementation.
-
-## Features Available
-- **Markdown rendering** with syntax highlighting
-- **Code blocks** with copy buttons
-- **Tables, lists, and rich formatting**
-
-\`\`\`javascript
-// Example code block
-const greeting = "Hello, world!";
-console.log(greeting);
-\`\`\`
-
-Ready to implement your AI logic!`}
-                  </Response>
-                </Message>
-                
-                <Message from="user">
-                  <MessageContent className="bg-primary text-primary-foreground">
-                    Hello! This is an example user message.
-                  </MessageContent>
-                  <MessageAvatar 
-                    name={getInitials(session?.user?.email)}
-                  />
-                </Message>
+                {messages.map((message) => (
+                  <Message from={message.role} key={message.id}>
+                    {message.role === "assistant" && (
+                      <MessageAvatar name="AI">
+                        <VytenIcon className="h-4 w-4 text-white" />
+                      </MessageAvatar>
+                    )}
+                    {message.role === "assistant" ? (
+                      <Response className="flex-1">{message.content}</Response>
+                    ) : (
+                      <MessageContent className="bg-primary text-primary-foreground">
+                        {message.content}
+                      </MessageContent>
+                    )}
+                    {message.role === "user" && (
+                      <MessageAvatar 
+                        name={getInitials(session?.user?.email)}
+                      />
+                    )}
+                  </Message>
+                ))}
+                <div ref={messagesEndRef} />
               </ConversationContent>
             </Conversation>
           </div>
@@ -149,8 +227,23 @@ Ready to implement your AI logic!`}
                       <MicIcon size={16} />
                       <span>Voice</span>
                     </PromptInputButton>
+                    <PromptInputModelSelect
+                      value={model}
+                      onValueChange={setModel}
+                    >
+                      <PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectValue />
+                      </PromptInputModelSelectTrigger>
+                      <PromptInputModelSelectContent>
+                        {AI_MODELS.map((m) => (
+                          <PromptInputModelSelectItem key={m.id} value={m.id}>
+                            {m.name}
+                          </PromptInputModelSelectItem>
+                        ))}
+                      </PromptInputModelSelectContent>
+                    </PromptInputModelSelect>
                   </PromptInputTools>
-                  <PromptInputSubmit disabled={!text.trim()} status="ready" />
+                  <PromptInputSubmit disabled={!text.trim()} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
               <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
