@@ -8,6 +8,7 @@ import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import { applyBaseColor, getStoredBaseColor } from "@/lib/colors";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import CheckEmail from "./pages/CheckEmail";
 import Chat from "./pages/Chat";
 import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
@@ -34,6 +35,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/check-email" element={<CheckEmail />} />
           <Route path="/chat" element={<Protected><Chat /></Protected>} />
           <Route path="/c/:chatId" element={<Protected><Conversation /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />

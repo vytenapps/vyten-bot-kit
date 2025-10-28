@@ -6,7 +6,6 @@ import { LoginForm } from "@/components/login-form";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [checkingLogin, setCheckingLogin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,30 +35,6 @@ const Auth = () => {
       const loginSyncId = crypto.randomUUID();
       console.debug('[Auth] generated loginSyncId', loginSyncId);
 
-      // Subscribe to Realtime channel for cross-origin session sync
-      const channel = supabase.channel(`auth-sync:${loginSyncId}`, { config: { broadcast: { self: true } } });
-      
-      channel.on('broadcast', { event: 'session_tokens' }, async (payload) => {
-        try {
-          console.debug('[Auth] received session_tokens broadcast', payload);
-          const { access_token, refresh_token } = (payload as any)?.payload || {};
-          if (access_token && refresh_token) {
-            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-            console.debug('[Auth] setSession result', { hasSession: !!data?.session, error: !!error });
-            if (!error && data?.session) {
-              setCheckingLogin(false);
-              navigate('/chat');
-            }
-          }
-        } catch (err) {
-          console.error('[Auth] setSession failed', err);
-        }
-      });
-      
-      channel.subscribe((status) => {
-        console.debug('[Auth] Realtime subscribe status', status);
-      });
-
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -70,9 +45,8 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast.success("Check your email!", {
-        description: "We sent you a login link. Click it to sign in.",
-      });
+      // Navigate to check email page with loginSyncId for cross-origin sync
+      navigate("/check-email", { state: { email, loginSyncId } });
     } catch (error: any) {
       toast.error("Authentication failed", {
         description: error.message,
@@ -88,7 +62,7 @@ const Auth = () => {
         <LoginForm 
           onSubmit={handleAuth}
           isLoading={isLoading}
-          checkingLogin={checkingLogin}
+          checkingLogin={false}
         />
       </div>
     </div>
