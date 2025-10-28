@@ -14,16 +14,28 @@ serve(async (req) => {
   try {
     const { messages, conversationId, model } = await req.json();
 
-    console.log("Chat request:", { conversationId, model, messageCount: messages.length });
+    console.log("Chat request:", { conversationId, model, messageCount: messages?.length ?? 0 });
 
     // Validate input
-    if (!messages || messages.length === 0) {
-      throw new Error("No messages provided");
+    if (!conversationId) {
+      return new Response(
+        JSON.stringify({ error: "Missing conversationId" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "No messages provided" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const lastUserMessage = messages[messages.length - 1];
-    if (!lastUserMessage?.content || lastUserMessage.content.trim() === "") {
-      throw new Error("Message content is empty");
+    if (!lastUserMessage?.content || String(lastUserMessage.content).trim() === "") {
+      return new Response(
+        JSON.stringify({ error: "Message content is empty" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Initialize Supabase client
@@ -189,8 +201,11 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Chat error:", error);
+    const errMsg = (typeof error === "object" && error !== null && (error as any).message)
+      ? (error as any).message
+      : (error instanceof Error ? error.message : "Unknown error");
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: errMsg }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

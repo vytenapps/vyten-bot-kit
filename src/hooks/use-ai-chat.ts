@@ -92,49 +92,79 @@ export const useAIChat = () => {
         throw new Error("No response body");
       }
 
-      // Stream the response
+      // Stream the response with robust SSE parsing
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";
       let assistantMessageId = crypto.randomUUID();
+      let buffer = "";
+      let doneStreaming = false;
 
-      while (true) {
+      while (!doneStreaming) {
         const { done, value } = await reader.read();
         if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        let nlIndex: number;
+        while ((nlIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, nlIndex);
+          buffer = buffer.slice(nlIndex + 1);
 
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") continue;
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line === "" || line.startsWith(":")) continue;
+          if (!line.startsWith("data: ")) continue;
 
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              
-              if (content) {
-                assistantContent += content;
-                
-                // Update or add assistant message
-                setMessages(prev => {
-                  const lastMsg = prev[prev.length - 1];
-                  if (lastMsg?.role === "assistant" && lastMsg.id === assistantMessageId) {
-                    return [
-                      ...prev.slice(0, -1),
-                      { ...lastMsg, content: assistantContent }
-                    ];
-                  }
-                  return [
-                    ...prev,
-                    { id: assistantMessageId, role: "assistant", content: assistantContent }
-                  ];
-                });
-              }
-            } catch (e) {
-              console.error("Error parsing SSE:", e);
+          const dataStr = line.slice(6).trim();
+          if (dataStr === "[DONE]") {
+            doneStreaming = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(dataStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant" && last.id === assistantMessageId) {
+                  return [...prev.slice(0, -1), { ...last, content: assistantContent }];
+                }
+                return [...prev, { id: assistantMessageId, role: "assistant", content: assistantContent }];
+              });
             }
+          } catch {
+            // Partial JSON, prepend back and wait for more
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+
+      // Final flush for any remaining buffered lines
+      if (buffer.trim()) {
+        for (let raw of buffer.split("\n")) {
+          if (!raw) continue;
+          if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+          if (raw.startsWith(":")) continue;
+          if (!raw.startsWith("data: ")) continue;
+          const dataStr = raw.slice(6).trim();
+          if (dataStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(dataStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant" && last.id === assistantMessageId) {
+                  return [...prev.slice(0, -1), { ...last, content: assistantContent }];
+                }
+                return [...prev, { id: assistantMessageId, role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch {
+            // Ignore leftovers
           }
         }
       }
