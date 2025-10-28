@@ -428,7 +428,7 @@ const ConversationPage = () => {
             onClick={() => scrollToBottom()}
             size="icon"
             variant="outline"
-            className="absolute bottom-[120px] left-[50%] translate-x-[-50%] rounded-full shadow-lg z-10"
+            className="absolute bottom-[120px] -mt-8 left-[50%] translate-x-[-50%] rounded-full shadow-lg z-10"
           >
             <ArrowDownIcon className="size-4" />
           </Button>
