@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEventHandler } from "react";
+import { useState, useEffect, useRef, Fragment, type FormEventHandler } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -246,9 +246,10 @@ const ConversationPage = () => {
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
                 
                 return (
-                  <div key={message.id} className="space-y-4">
+                  <>
                     {isStreamingThisMessage && (
                       <Reasoning 
+                        key={`reasoning-${message.id}`}
                         isStreaming={true}
                         defaultOpen={true}
                       >
@@ -258,7 +259,7 @@ const ConversationPage = () => {
                         </ReasoningContent>
                       </Reasoning>
                     )}
-                    <Message from={message.role}>
+                    <Message key={message.id} from={message.role}>
                       {message.role === "assistant" && (
                         <MessageAvatar name="AI">
                           <VytenIcon className="h-4 w-4 text-white" />
@@ -314,7 +315,7 @@ const ConversationPage = () => {
                         />
                       )}
                     </Message>
-                  </div>
+                  </>
                 );
               })}
               {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
