@@ -267,7 +267,7 @@ const ConversationPage = () => {
                         </ReasoningContent>
                       </Reasoning>
                     )}
-                    <Message from={message.role} className="group">
+                    <Message from={message.role}>
                       {message.role === "assistant" && (
                         <MessageAvatar name="AI">
                           <VytenIcon className="h-4 w-4 text-white" />
@@ -313,25 +313,9 @@ const ConversationPage = () => {
                           </Actions>
                         </div>
                       ) : (
-                        <div className="flex-1 flex flex-col items-end group">
-                          <div className="relative pb-5">
-                            <MessageContent className="bg-primary text-primary-foreground">
-                              {message.content}
-                            </MessageContent>
-                            <div className="absolute left-4 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Action 
-                                label="Copy" 
-                                tooltip="Copy to clipboard"
-                                onClick={() => handleCopy(message.content)}
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-1"
-                              >
-                                <CopyIcon className="size-4" />
-                              </Action>
-                            </div>
-                          </div>
-                        </div>
+                        <MessageContent className="bg-primary text-primary-foreground">
+                          {message.content}
+                        </MessageContent>
                       )}
                       {message.role === "user" && (
                         <MessageAvatar 
