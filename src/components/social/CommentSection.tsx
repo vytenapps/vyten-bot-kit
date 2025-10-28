@@ -37,7 +37,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
         .from("post_comments")
         .select(`
           *,
-          user_profiles!post_comments_user_id_fkey (
+          user_profiles!inner (
             username,
             first_name,
             last_name
