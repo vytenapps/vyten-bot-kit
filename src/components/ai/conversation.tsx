@@ -28,14 +28,12 @@ const Conversation = React.forwardRef<HTMLDivElement, ConversationProps>(
     return (
       <ConversationContext.Provider value={{ isAtBottom, scrollToBottom }}>
         <div
-          ref={ref}
-          className={cn("flex flex-col h-full relative", className)}
+          ref={scrollRef}
+          className={cn("flex-1 overflow-y-auto relative", className)}
           {...props}
         >
-          <div ref={scrollRef} className="flex-1 overflow-y-auto">
-            <div ref={contentRef}>
-              {children}
-            </div>
+          <div ref={contentRef}>
+            {children}
           </div>
         </div>
       </ConversationContext.Provider>
@@ -69,7 +67,7 @@ const ConversationScrollButton = React.forwardRef<
       size="icon"
       variant="outline"
       className={cn(
-        "absolute bottom-20 left-1/2 -translate-x-1/2 rounded-full shadow-lg",
+        "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full shadow-lg",
         "h-10 w-10 bg-background hover:bg-accent z-10",
         className
       )}
