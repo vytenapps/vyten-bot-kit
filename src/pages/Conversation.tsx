@@ -473,10 +473,10 @@ const ConversationPage = () => {
                     type="button"
                     size="icon"
                     variant="default"
-                    className="rounded-sm h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
+                    className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
                     onClick={stopStreaming}
                   >
-                    <SquareIcon className="size-3.5" />
+                    <div className="w-2.5 h-2.5 bg-current rounded-sm" />
                   </Button>
                 ) : (
                   <Button
