@@ -255,7 +255,7 @@ const ConversationPage = () => {
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
                 
                 return (
-                  <div key={message.id} className={`space-y-4 ${message.role === "user" ? "mb-6" : ""}`}>
+                  <div key={message.id} className="space-y-4">
                     {isStreamingThisMessage && (
                       <Reasoning 
                         isStreaming={true}
@@ -267,7 +267,7 @@ const ConversationPage = () => {
                         </ReasoningContent>
                       </Reasoning>
                     )}
-                    <Message from={message.role}>
+                    <Message from={message.role} className="group">
                       {message.role === "assistant" && (
                         <MessageAvatar name="AI">
                           <VytenIcon className="h-4 w-4 text-white" />
@@ -313,9 +313,22 @@ const ConversationPage = () => {
                           </Actions>
                         </div>
                       ) : (
-                        <MessageContent className="bg-primary text-primary-foreground">
-                          {message.content}
-                        </MessageContent>
+                        <div className="flex-1 flex flex-col items-end group">
+                          <div className="relative pb-8 max-w-[85%] sm:max-w-[75%]">
+                            <MessageContent className="bg-primary text-primary-foreground w-full">
+                              {message.content}
+                            </MessageContent>
+                            <div className="absolute bottom-0 left-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Action 
+                                label="Copy" 
+                                tooltip="Copy to clipboard"
+                                onClick={() => handleCopy(message.content)}
+                              >
+                                <CopyIcon className="size-4" />
+                              </Action>
+                            </div>
+                          </div>
+                        </div>
                       )}
                       {message.role === "user" && (
                         <MessageAvatar 
