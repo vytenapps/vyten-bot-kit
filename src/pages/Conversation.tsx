@@ -420,19 +420,19 @@ const ConversationPage = () => {
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />
           </div>
-          
-          {/* Scroll to bottom button */}
-          {showScrollButton && (
-            <Button
-              onClick={() => scrollToBottom()}
-              size="icon"
-              variant="outline"
-              className="absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full shadow-lg"
-            >
-              <ArrowDownIcon className="size-4" />
-            </Button>
-          )}
         </div>
+        
+        {/* Scroll to bottom button - positioned between scroll area and input */}
+        {showScrollButton && (
+          <Button
+            onClick={() => scrollToBottom()}
+            size="icon"
+            variant="outline"
+            className="absolute bottom-[120px] left-[50%] translate-x-[-50%] rounded-full shadow-lg z-10"
+          >
+            <ArrowDownIcon className="size-4" />
+          </Button>
+        )}
         
         {/* Input Area - sibling to Conversation */}
         <div className="shrink-0 border-t p-4" data-chat-input>
