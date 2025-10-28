@@ -276,7 +276,7 @@ const ConversationPage = () => {
                       {message.role === "assistant" ? (
                         <div className="flex-1">
                           <Response>{message.content}</Response>
-                          <Actions className="mt-2">
+                          <Actions className="mt-1">
                             <Action 
                               label="Copy" 
                               tooltip="Copy to clipboard"
@@ -292,7 +292,9 @@ const ConversationPage = () => {
                             >
                               <ThumbsUpIcon 
                                 className="size-4" 
+                                strokeWidth={messageFeedback[message.id] === 'positive' ? 2.5 : 2}
                                 fill={messageFeedback[message.id] === 'positive' ? 'currentColor' : 'none'}
+                                fillOpacity={messageFeedback[message.id] === 'positive' ? 0.2 : 0}
                               />
                             </Action>
                             <Action 
@@ -303,7 +305,9 @@ const ConversationPage = () => {
                             >
                               <ThumbsDownIcon 
                                 className="size-4"
+                                strokeWidth={messageFeedback[message.id] === 'negative' ? 2.5 : 2}
                                 fill={messageFeedback[message.id] === 'negative' ? 'currentColor' : 'none'}
+                                fillOpacity={messageFeedback[message.id] === 'negative' ? 0.2 : 0}
                               />
                             </Action>
                           </Actions>
