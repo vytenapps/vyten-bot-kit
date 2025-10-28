@@ -476,7 +476,7 @@ const ConversationPage = () => {
                     className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
                     onClick={stopStreaming}
                   >
-                    <div className="w-2.5 h-2.5 bg-current" />
+                    <div className="w-2 h-2 bg-current" />
                   </Button>
                 ) : (
                   <Button
