@@ -597,7 +597,7 @@ const ConversationPage = () => {
         
         {/* Scroll to bottom button - positioned above input area */}
         {showScrollButton && (
-          <div className="shrink-0 flex justify-center pb-0 -mb-6">
+          <div className="shrink-0 flex justify-center py-4">
             <Button
               onClick={() => scrollToBottom()}
               size="icon"
@@ -610,7 +610,7 @@ const ConversationPage = () => {
         )}
         
         {/* Input Area - sibling to Conversation */}
-        <div className="shrink-0 border-t p-4" data-chat-input>
+        <div className="shrink-0 bg-transparent p-4" data-chat-input>
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
             <AttachmentInput
               onFilesSelected={handleFilesSelected}
