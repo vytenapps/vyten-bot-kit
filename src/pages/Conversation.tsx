@@ -378,7 +378,7 @@ const ConversationPage = () => {
                   <Message from={message.role} key={message.id}>
                     {message.role === "assistant" && (
                       <MessageAvatar name="AI">
-                        <VytenIcon className="h-5 w-5 text-accent" />
+                        <VytenIcon className="h-4 w-4" />
                       </MessageAvatar>
                     )}
                     <MessageContent>{message.content}</MessageContent>

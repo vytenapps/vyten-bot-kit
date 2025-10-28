@@ -61,9 +61,12 @@ const MessageAvatar = React.forwardRef<
     : "AI";
 
   return (
-    <Avatar ref={ref} className={cn("h-8 w-8", className)} {...props}>
+    <Avatar ref={ref} className={cn("h-8 w-8 rounded-full", className)} {...props}>
       <AvatarImage src={src} alt={name} />
-      <AvatarFallback className="text-xs flex items-center justify-center">
+      <AvatarFallback className={cn(
+        "text-xs flex items-center justify-center rounded-full",
+        children && "bg-accent text-accent-foreground"
+      )}>
         {children || initials}
       </AvatarFallback>
     </Avatar>
