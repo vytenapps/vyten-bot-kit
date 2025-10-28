@@ -233,7 +233,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex h-svh w-full min-h-0 flex-col overflow-hidden bg-background">
+      <SidebarInset className="flex h-svh w-full min-h-0 flex-col overflow-hidden overscroll-none bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -252,7 +252,7 @@ const ConversationPage = () => {
         </header>
         
         {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1 min-h-0" data-allowed-scroll style={import.meta.env.VITE_DEBUG_DISABLE_GUTTER === '1' ? { scrollbarGutter: 'auto' } : undefined}>
+        <Conversation className="flex-1 min-h-0" data-allowed-scroll style={{ scrollbarGutter: 'auto' }}>
           <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
