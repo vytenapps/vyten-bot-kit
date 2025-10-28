@@ -229,6 +229,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
           email: profile.email,
           phone: profile.phone,
           bio: profile.bio,
+          avatar_url: profile.avatar_url,
           privacy_settings: profile.privacy_settings,
           social: profile.social,
         })
