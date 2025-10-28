@@ -592,22 +592,22 @@ const ConversationPage = () => {
             )}
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />
+            {showScrollButton && (
+              <div className="sticky bottom-2 left-0 right-0 flex justify-center pointer-events-none">
+                <Button
+                  onClick={() => scrollToBottom()}
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full shadow-md pointer-events-auto"
+                  type="button"
+                >
+                  <ArrowDownIcon className="size-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         
-        {/* Scroll to bottom button - positioned above input area */}
-        {showScrollButton && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10">
-            <Button
-              onClick={() => scrollToBottom()}
-              size="icon"
-              variant="outline"
-              className="rounded-full shadow-md"
-            >
-              <ArrowDownIcon className="size-4" />
-            </Button>
-          </div>
-        )}
         
         {/* Input Area - sibling to Conversation */}
         <div className="shrink-0 bg-transparent p-4" data-chat-input>
