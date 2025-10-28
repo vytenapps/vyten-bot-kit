@@ -257,9 +257,6 @@ const ConversationPage = () => {
                         defaultOpen={true}
                       >
                         <ReasoningTrigger />
-                        <ReasoningContent>
-                          Analyzing your question and generating a thoughtful response...
-                        </ReasoningContent>
                       </Reasoning>
                     )}
                     <Message from={message.role}>
