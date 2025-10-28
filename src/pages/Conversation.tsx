@@ -27,7 +27,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Conversation, ConversationContent } from "@/components/ai/conversation";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
@@ -44,17 +44,8 @@ const ConversationPage = () => {
   const [messageFeedback, setMessageFeedback] = useState<Record<string, 'positive' | 'negative'>>({});
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   useEffect(() => {
     // Get initial session
@@ -230,7 +221,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="overflow-x-hidden bg-background">
+      <SidebarInset className="flex flex-col h-screen overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -247,8 +238,8 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
-          <Conversation className="flex-1 min-h-0">
+        <div className="flex flex-col flex-1 min-h-0 bg-background">
+          <Conversation className="flex-1 min-h-0 overscroll-contain">
             <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
@@ -335,10 +326,10 @@ const ConversationPage = () => {
                   <ReasoningTrigger />
                 </Reasoning>
               )}
-              <div ref={messagesEndRef} />
             </ConversationContent>
+            <ConversationScrollButton />
           </Conversation>
-          <div className="px-4 sm:px-6 md:px-8 pb-4">
+          <div className="shrink-0 px-4 sm:px-6 md:px-8 pb-4">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
