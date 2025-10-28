@@ -65,7 +65,7 @@ const MessageAvatar = React.forwardRef<
       <AvatarImage src={src} alt={name} />
       <AvatarFallback className={cn(
         "text-xs flex items-center justify-center rounded-full",
-        children && "bg-accent text-accent-foreground"
+        children && "bg-primary text-primary-foreground"
       )}>
         {children || initials}
       </AvatarFallback>
