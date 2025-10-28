@@ -2,45 +2,56 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
-import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
+import { useStickToBottom } from "use-stick-to-bottom";
 
-type ScrollBehavior = "smooth" | "instant" | "auto";
-
-interface ConversationProps extends React.HTMLAttributes<HTMLDivElement> {
-  initial?: ScrollBehavior;
-  resize?: ScrollBehavior;
+interface ConversationContextValue {
+  isAtBottom: boolean;
+  scrollToBottom: () => void;
 }
 
-const Conversation: React.FC<ConversationProps> = ({ 
-  className, 
-  initial = "smooth", 
-  resize = "smooth",
-  children,
-  ...props 
-}) => (
-  <StickToBottom
-    className={cn("flex flex-col h-full relative", className)}
-    initial={initial}
-    resize={resize}
-    {...props}
-  >
-    {children}
-  </StickToBottom>
+const ConversationContext = React.createContext<ConversationContextValue | null>(null);
+
+const useConversationContext = () => {
+  const context = React.useContext(ConversationContext);
+  if (!context) {
+    throw new Error("Conversation components must be used within Conversation");
+  }
+  return context;
+};
+
+interface ConversationProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const Conversation = React.forwardRef<HTMLDivElement, ConversationProps>(
+  ({ className, children, ...props }, ref) => {
+    const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom();
+
+    return (
+      <ConversationContext.Provider value={{ isAtBottom, scrollToBottom }}>
+        <div
+          ref={ref}
+          className={cn("flex flex-col h-full relative", className)}
+          {...props}
+        >
+          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+            <div ref={contentRef}>
+              {children}
+            </div>
+          </div>
+        </div>
+      </ConversationContext.Provider>
+    );
+  }
 );
 Conversation.displayName = "Conversation";
 
 interface ConversationContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-const ConversationContent: React.FC<ConversationContentProps> = ({ 
-  className, 
-  children,
-  ...props 
-}) => (
-  <StickToBottom.Content className={cn("flex-1 overflow-y-auto", className)} {...props}>
-    <div className="p-4 space-y-4">
+const ConversationContent = React.forwardRef<HTMLDivElement, ConversationContentProps>(
+  ({ className, children, ...props }, ref) => (
+    <div ref={ref} className={cn("p-4 space-y-4", className)} {...props}>
       {children}
     </div>
-  </StickToBottom.Content>
+  )
 );
 ConversationContent.displayName = "ConversationContent";
 
@@ -48,7 +59,7 @@ const ConversationScrollButton = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<typeof Button>
 >(({ className, ...props }, ref) => {
-  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+  const { isAtBottom, scrollToBottom } = useConversationContext();
 
   if (isAtBottom) return null;
 
@@ -58,8 +69,8 @@ const ConversationScrollButton = React.forwardRef<
       size="icon"
       variant="outline"
       className={cn(
-        "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full shadow-lg",
-        "h-10 w-10 bg-background hover:bg-accent",
+        "absolute bottom-20 left-1/2 -translate-x-1/2 rounded-full shadow-lg",
+        "h-10 w-10 bg-background hover:bg-accent z-10",
         className
       )}
       onClick={() => scrollToBottom()}

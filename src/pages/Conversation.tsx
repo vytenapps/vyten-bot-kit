@@ -360,41 +360,39 @@ const ConversationPage = () => {
           </div>
         </header>
         <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
-          <div className="flex-1 overflow-hidden">
-            <Conversation>
-              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
-                {status === 'streaming' && messages.length === 0 && (
-                  <Reasoning isStreaming={true}>
-                    <ReasoningTrigger title="Thinking" />
-                    <ReasoningContent>Processing your request...</ReasoningContent>
-                  </Reasoning>
-                )}
-                {messages.map((message) => (
-                  <Message from={message.role} key={message.id}>
-                    {message.role === "assistant" && (
-                      <MessageAvatar name="AI">
-                        <VytenIcon className="h-4 w-4 text-white" />
-                      </MessageAvatar>
+          <Conversation className="flex-1">
+            <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
+              {status === 'streaming' && messages.length === 0 && (
+                <Reasoning isStreaming={true}>
+                  <ReasoningTrigger title="Thinking" />
+                  <ReasoningContent>Processing your request...</ReasoningContent>
+                </Reasoning>
+              )}
+              {messages.map((message) => (
+                <Message from={message.role} key={message.id}>
+                  {message.role === "assistant" && (
+                    <MessageAvatar name="AI">
+                      <VytenIcon className="h-4 w-4 text-white" />
+                    </MessageAvatar>
+                  )}
+                  <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
+                    {message.role === "assistant" ? (
+                      <Response parseIncompleteMarkdown={status === 'streaming'}>{message.content}</Response>
+                    ) : (
+                      message.content
                     )}
-                    <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
-                      {message.role === "assistant" ? (
-                        <Response parseIncompleteMarkdown={status === 'streaming'}>{message.content}</Response>
-                      ) : (
-                        message.content
-                      )}
-                    </MessageContent>
-                    {message.role === "user" && (
-                      <MessageAvatar 
-                        name={getInitials(session?.user?.email)}
-                      />
-                    )}
-                  </Message>
-                ))}
-                <div ref={messagesEndRef} />
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
-          </div>
+                  </MessageContent>
+                  {message.role === "user" && (
+                    <MessageAvatar 
+                      name={getInitials(session?.user?.email)}
+                    />
+                  )}
+                </Message>
+              ))}
+              <div ref={messagesEndRef} />
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
           <div className="px-4 sm:px-6 md:px-8">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
