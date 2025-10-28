@@ -194,13 +194,13 @@ const ConversationPage = () => {
                         <VytenIcon className="h-4 w-4 text-white" />
                       </MessageAvatar>
                     )}
-                    <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
-                      {message.role === "assistant" ? (
-                        <Response>{message.content}</Response>
-                      ) : (
-                        message.content
-                      )}
-                    </MessageContent>
+                    {message.role === "assistant" ? (
+                      <Response className="flex-1">{message.content}</Response>
+                    ) : (
+                      <MessageContent className="bg-primary text-primary-foreground">
+                        {message.content}
+                      </MessageContent>
+                    )}
                     {message.role === "user" && (
                       <MessageAvatar 
                         name={getInitials(session?.user?.email)}
