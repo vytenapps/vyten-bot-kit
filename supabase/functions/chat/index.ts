@@ -14,18 +14,39 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("Missing authorization header");
+      console.error("Missing authorization header on request");
+      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.error("Missing Supabase env vars in function context", {
+        hasUrl: !!SUPABASE_URL,
+        hasAnon: !!SUPABASE_ANON_KEY,
+      });
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY } } }
     );
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      throw new Error("Unauthorized");
+      console.error("Auth.getUser failed", { hasUser: !!user, userError });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { conversationId, message, system, model } = await req.json();
