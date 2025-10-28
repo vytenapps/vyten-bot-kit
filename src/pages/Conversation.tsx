@@ -122,10 +122,12 @@ const ConversationPage = () => {
     const logEl = (name: string, el: HTMLElement | null) => {
       if (!el) return;
       const cs = window.getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
       console.info(`[ChatDebug] ${name}`, {
         clientHeight: el.clientHeight,
         scrollHeight: el.scrollHeight,
         offsetHeight: el.offsetHeight,
+        boundingRect: { top: rect.top, bottom: rect.bottom, height: rect.height },
         overflow: cs.overflow,
         overflowY: cs.overflowY,
         paddingTop: cs.paddingTop,
@@ -134,10 +136,20 @@ const ConversationPage = () => {
         marginBottom: cs.marginBottom,
         display: cs.display,
         flexDirection: cs.flexDirection,
+        gap: cs.gap,
       });
     };
-    logEl('Conversation (outer)', outer);
-    logEl('ConversationContent (inner)', inner);
+    logEl('Conversation (GREEN outer)', outer);
+    logEl('ConversationContent (RED inner)', inner);
+    
+    // Check if inner's bottom is far from outer's bottom
+    if (outer && inner) {
+      const outerRect = outer.getBoundingClientRect();
+      const innerRect = inner.getBoundingClientRect();
+      const gap = outerRect.bottom - innerRect.bottom;
+      console.warn(`[ChatDebug] GAP below red box: ${gap}px`);
+    }
+    
     messages.forEach((msg, idx) => logEl(`Message ${idx}`, msg as HTMLElement));
   }, [messages.length, status, debugEnabled]);
 
@@ -306,7 +318,7 @@ const ConversationPage = () => {
         
         {/* Conversation Area - flex-1 takes remaining space */}
         <Conversation className="flex-1 min-h-0" data-allowed-scroll data-chat-outer debug={debugEnabled}>
-          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 !overflow-visible" data-chat-inner debug={debugEnabled}>
+          <ConversationContent className={cn("max-w-screen-sm md:max-w-3xl mx-auto space-y-4 !overflow-visible", debugEnabled && "!pb-0")} data-chat-inner debug={debugEnabled}>
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
