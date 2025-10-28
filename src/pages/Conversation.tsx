@@ -390,8 +390,8 @@ const ConversationPage = () => {
         </header>
         
         {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1 min-h-0" data-allowed-scroll data-chat-outer debug={debugEnabled}>
-          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 pb-4" data-chat-inner debug={debugEnabled}>
+        <Conversation className="flex-1 min-h-0 [&>*:not([data-chat-inner]):not([data-debug-scroll-btn])]:!hidden" data-allowed-scroll data-chat-outer debug={debugEnabled}>
+          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 pb-4 flex-1 min-h-0" data-chat-inner debug={debugEnabled}>
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
