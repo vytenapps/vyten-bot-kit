@@ -423,7 +423,7 @@ const ConversationPage = () => {
                   <PromptInputSubmit disabled={!text.trim()} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
-              <p className="text-xs text-center text-muted-foreground mt-2">
+              <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
             </div>
