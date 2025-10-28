@@ -385,7 +385,7 @@ const ConversationPage = () => {
               </ConversationContent>
             </Conversation>
           </div>
-          <div className="border-t py-8 px-4 sm:px-6 md:px-8 bg-background">
+          <div className="py-8 px-4 sm:px-6 md:px-8">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
