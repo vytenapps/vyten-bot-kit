@@ -221,7 +221,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex h-svh w-full flex-col overflow-hidden bg-background">
+      <SidebarInset className="flex h-svh w-full min-h-0 flex-col overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -240,7 +240,7 @@ const ConversationPage = () => {
         </header>
         
         {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1">
+        <Conversation className="flex-1 min-h-0">
           <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
@@ -329,7 +329,7 @@ const ConversationPage = () => {
         </Conversation>
         
         {/* Input Area - sibling to Conversation */}
-        <div className="border-t p-4">
+        <div className="shrink-0 border-t p-4">
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputTextarea
