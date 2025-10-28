@@ -41,6 +41,7 @@ const ConversationPage = () => {
   const [text, setText] = useState<string>("");
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
+  const [messageFeedback, setMessageFeedback] = useState<Record<string, 'up' | 'down'>>({});
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -136,6 +137,20 @@ const ConversationPage = () => {
     if (chatId) {
       await loadConversation(userId, chatId);
     }
+
+    // Load feedback for messages
+    const { data: feedback } = await (supabase as any)
+      .from("message_feedback")
+      .select("message_id, feedback_type")
+      .eq("user_id", userId);
+
+    if (feedback) {
+      const feedbackMap: Record<string, 'up' | 'down'> = {};
+      feedback.forEach((f: any) => {
+        feedbackMap[f.message_id] = f.feedback_type as 'up' | 'down';
+      });
+      setMessageFeedback(feedbackMap);
+    }
   };
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
@@ -157,6 +172,55 @@ const ConversationPage = () => {
   const handleCopy = async (content: string) => {
     await navigator.clipboard.writeText(content);
     toast.success("Copied to clipboard");
+  };
+
+  const handleFeedback = async (messageId: string, feedbackType: 'up' | 'down') => {
+    if (!session?.user?.id) return;
+
+    const currentFeedback = messageFeedback[messageId];
+    
+    // If clicking the same feedback, remove it
+    if (currentFeedback === feedbackType) {
+      const { error } = await (supabase as any)
+        .from("message_feedback")
+        .delete()
+        .eq("message_id", messageId)
+        .eq("user_id", session.user.id);
+
+      if (error) {
+        toast.error("Failed to remove feedback");
+        return;
+      }
+
+      setMessageFeedback(prev => {
+        const updated = { ...prev };
+        delete updated[messageId];
+        return updated;
+      });
+      return;
+    }
+
+    // Otherwise, upsert the feedback
+    const { error } = await (supabase as any)
+      .from("message_feedback")
+      .upsert({
+        message_id: messageId,
+        user_id: session.user.id,
+        feedback_type: feedbackType,
+      }, {
+        onConflict: 'message_id,user_id'
+      });
+
+    if (error) {
+      toast.error("Failed to save feedback");
+      return;
+    }
+
+    setMessageFeedback(prev => ({
+      ...prev,
+      [messageId]: feedbackType
+    }));
+    toast.success("Thanks for the feedback!");
   };
 
   if (!session) {
@@ -223,16 +287,24 @@ const ConversationPage = () => {
                             <Action 
                               label="Like" 
                               tooltip="Like this response"
-                              onClick={() => toast.success("Thanks for the feedback!")}
+                              onClick={() => handleFeedback(message.id, 'up')}
+                              className={messageFeedback[message.id] === 'up' ? 'text-foreground' : ''}
                             >
-                              <ThumbsUpIcon className="size-4" />
+                              <ThumbsUpIcon 
+                                className="size-4" 
+                                fill={messageFeedback[message.id] === 'up' ? 'currentColor' : 'none'}
+                              />
                             </Action>
                             <Action 
                               label="Dislike" 
                               tooltip="Dislike this response"
-                              onClick={() => toast.info("Thanks for the feedback!")}
+                              onClick={() => handleFeedback(message.id, 'down')}
+                              className={messageFeedback[message.id] === 'down' ? 'text-foreground' : ''}
                             >
-                              <ThumbsDownIcon className="size-4" />
+                              <ThumbsDownIcon 
+                                className="size-4"
+                                fill={messageFeedback[message.id] === 'down' ? 'currentColor' : 'none'}
+                              />
                             </Action>
                           </Actions>
                         </div>
