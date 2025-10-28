@@ -51,7 +51,7 @@ serve(async (req) => {
       });
     }
 
-    const { conversationId, message, system, model } = await req.json();
+    const { conversationId, message, system, model, generateTitle } = await req.json();
 
     // Rate limiting check
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
@@ -84,18 +84,23 @@ serve(async (req) => {
 
     // Get or create conversation
     let currentConversationId = conversationId;
+    let shouldGenerateTitle = false;
+    
     if (!currentConversationId) {
       const { data: newConv, error: convError } = await supabaseClient
         .from("conversations")
         .insert({
           user_id: user.id,
-          title: message.slice(0, 50) + (message.length > 50 ? "..." : ""),
+          title: "New Conversation",
         })
         .select()
         .single();
 
       if (convError) throw convError;
       currentConversationId = newConv.id;
+      shouldGenerateTitle = true;
+    } else if (generateTitle) {
+      shouldGenerateTitle = true;
     }
 
     // Insert user message
@@ -218,6 +223,39 @@ serve(async (req) => {
             content: fullResponse,
             tokens: fullResponse.split(/\s+/).length,
           });
+
+          // Generate title if this is the first message
+          if (shouldGenerateTitle && fullResponse) {
+            try {
+              const titleResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "google/gemini-2.5-flash",
+                  messages: [
+                    { role: "system", content: "Generate a short 25 character or less title for this conversation. Only output the title, nothing else." },
+                    { role: "user", content: message },
+                  ],
+                  stream: false,
+                }),
+              });
+
+              if (titleResponse.ok) {
+                const titleData = await titleResponse.json();
+                const title = titleData.choices?.[0]?.message?.content?.slice(0, 25) || "New Chat";
+                
+                await supabaseClient
+                  .from("conversations")
+                  .update({ title })
+                  .eq("id", currentConversationId);
+              }
+            } catch (e) {
+              console.error("Failed to generate title:", e);
+            }
+          }
 
           controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
           controller.close();

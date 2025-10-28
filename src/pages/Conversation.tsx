@@ -28,6 +28,8 @@ import {
 import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
+import { Reasoning } from "@/components/ai/reasoning";
+import { Actions } from "@/components/ai/actions";
 
 import { MicIcon, PaperclipIcon } from "lucide-react";
 
@@ -35,6 +37,12 @@ interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  messageId?: string;
+}
+
+interface MessageFeedback {
+  messageId: string;
+  feedbackType: "up" | "down";
 }
 
 const ConversationPage = () => {
@@ -46,6 +54,10 @@ const ConversationPage = () => {
   const [model, setModel] = useState<string>("google/gemini-2.5-flash");
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<Map<string, "up" | "down">>(new Map());
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editText, setEditText] = useState<string>("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -164,11 +176,27 @@ const ConversationPage = () => {
 
     setMessages(
       messagesData.map((msg) => ({
-        id: msg.id,
+        id: crypto.randomUUID(),
+        messageId: msg.id,
         role: msg.role as "user" | "assistant",
         content: msg.content,
       }))
     );
+
+    // Load feedbacks
+    const { data: feedbackData } = await supabase
+      .from("message_feedback" as any)
+      .select("message_id, feedback_type")
+      .eq("user_id", userId)
+      .in("message_id", messagesData.map(m => m.id));
+
+    if (feedbackData) {
+      const feedbackMap = new Map<string, "up" | "down">();
+      feedbackData.forEach((f: any) => {
+        feedbackMap.set(f.message_id, f.feedback_type as "up" | "down");
+      });
+      setFeedbacks(feedbackMap);
+    }
   };
 
   const saveMessage = async (role: "user" | "assistant", content: string) => {
@@ -177,14 +205,15 @@ const ConversationPage = () => {
     return;
   };
 
-  const streamChat = async (userMessage: string) => {
+  const streamChat = async (userMessage: string, isFirstMessage = false) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
     console.log("Calling chat edge function:", {
       url: CHAT_URL,
       conversationId: chatId,
       model,
-      messageLength: userMessage.length
+      messageLength: userMessage.length,
+      isFirstMessage
     });
 
     // Get the current session token
@@ -197,6 +226,8 @@ const ConversationPage = () => {
 
     console.log("Using access token for edge function authentication");
 
+    setIsThinking(true);
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -206,7 +237,8 @@ const ConversationPage = () => {
       body: JSON.stringify({ 
         conversationId: chatId,
         message: userMessage,
-        model 
+        model,
+        generateTitle: isFirstMessage
       }),
     });
 
@@ -240,6 +272,8 @@ const ConversationPage = () => {
     let textBuffer = "";
     let streamDone = false;
     let assistantContent = "";
+
+    setIsThinking(false);
 
     // Add assistant message placeholder
     const assistantMsgId = crypto.randomUUID();
@@ -302,6 +336,7 @@ const ConversationPage = () => {
     if (!text.trim()) return;
 
     const userMessage = text.trim();
+    const isFirstMessage = messages.length === 0;
     setText("");
     setStatus("submitted");
 
@@ -315,7 +350,7 @@ const ConversationPage = () => {
     setStatus("streaming");
 
     try {
-      await streamChat(userMessage);
+      await streamChat(userMessage, isFirstMessage);
       setStatus("ready");
     } catch (error) {
       console.error("Chat error:", {
@@ -323,6 +358,84 @@ const ConversationPage = () => {
         message: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined
       });
+      setStatus("error");
+      toast.error(error instanceof Error ? error.message : "Failed to send message");
+    }
+  };
+
+  const handleFeedback = async (messageId: string | undefined, type: "up" | "down") => {
+    if (!messageId || !session?.user?.id) return;
+
+    const currentFeedback = feedbacks.get(messageId);
+    
+    if (currentFeedback === type) {
+      // Delete feedback if clicking same button
+      await supabase
+        .from("message_feedback" as any)
+        .delete()
+        .eq("message_id", messageId)
+        .eq("user_id", session.user.id);
+      
+      setFeedbacks(prev => {
+        const next = new Map(prev);
+        next.delete(messageId);
+        return next;
+      });
+    } else {
+      // Upsert feedback
+      await supabase
+        .from("message_feedback" as any)
+        .upsert({
+          message_id: messageId,
+          user_id: session.user.id,
+          feedback_type: type,
+        } as any, {
+          onConflict: "message_id,user_id"
+        });
+      
+      setFeedbacks(prev => new Map(prev).set(messageId, type));
+    }
+  };
+
+  const handleCopy = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast.success("Copied to clipboard");
+  };
+
+  const handleEdit = (messageId: string, content: string) => {
+    setEditingMessageId(messageId);
+    setEditText(content);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editText.trim() || !editingMessageId) return;
+
+    const messageIndex = messages.findIndex(m => m.id === editingMessageId);
+    if (messageIndex === -1) return;
+
+    // Remove all messages after the edited one
+    const newMessages = messages.slice(0, messageIndex);
+    setMessages(newMessages);
+    
+    setEditingMessageId(null);
+    const userMessage = editText.trim();
+    setEditText("");
+    setStatus("submitted");
+
+    // Add edited message
+    const userMsgId = crypto.randomUUID();
+    setMessages((prev) => [
+      ...prev,
+      { id: userMsgId, role: "user", content: userMessage },
+    ]);
+
+    setStatus("streaming");
+
+    try {
+      await streamChat(userMessage);
+      setStatus("ready");
+    } catch (error) {
+      console.error("Chat error:", error);
       setStatus("error");
       toast.error(error instanceof Error ? error.message : "Failed to send message");
     }
@@ -369,13 +482,29 @@ const ConversationPage = () => {
                         <VytenIcon className="h-4 w-4 text-white" />
                       </MessageAvatar>
                     )}
-                    <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
-                      {message.role === "assistant" ? (
-                        <Response>{message.content}</Response>
-                      ) : (
-                        message.content
+                    <div>
+                      <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
+                        {message.role === "assistant" ? (
+                          <Response>{message.content}</Response>
+                        ) : (
+                          message.content
+                        )}
+                      </MessageContent>
+                      {message.role === "assistant" && (
+                        <Actions
+                          onCopy={() => handleCopy(message.content)}
+                          onThumbsUp={() => handleFeedback(message.messageId, "up")}
+                          onThumbsDown={() => handleFeedback(message.messageId, "down")}
+                          feedbackState={message.messageId ? feedbacks.get(message.messageId) : null}
+                        />
                       )}
-                    </MessageContent>
+                      {message.role === "user" && (
+                        <Actions
+                          onCopy={() => handleCopy(message.content)}
+                          onEdit={() => handleEdit(message.id, message.content)}
+                        />
+                      )}
+                    </div>
                     {message.role === "user" && (
                       <MessageAvatar 
                         name={getInitials(session?.user?.email)}
@@ -383,46 +512,79 @@ const ConversationPage = () => {
                     )}
                   </Message>
                 ))}
+                {isThinking && (
+                  <Message from="assistant">
+                    <MessageAvatar name="AI">
+                      <VytenIcon className="h-4 w-4 text-white" />
+                    </MessageAvatar>
+                    <Reasoning />
+                  </Message>
+                )}
                 <div ref={messagesEndRef} />
               </ConversationContent>
             </Conversation>
           </div>
           <div className="px-4 sm:px-6 md:px-8">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
-              <PromptInput onSubmit={handleSubmit}>
-                <PromptInputTextarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type your message..."
-                />
-                <PromptInputToolbar>
-                  <PromptInputTools>
-                    <PromptInputButton>
-                      <PaperclipIcon size={16} />
-                    </PromptInputButton>
-                    <PromptInputButton>
-                      <MicIcon size={16} />
-                      <span>Voice</span>
-                    </PromptInputButton>
-                    <PromptInputModelSelect
-                      value={model}
-                      onValueChange={setModel}
-                    >
-                      <PromptInputModelSelectTrigger>
-                        <PromptInputModelSelectValue />
-                      </PromptInputModelSelectTrigger>
-                      <PromptInputModelSelectContent>
-                        {models.map((m) => (
-                          <PromptInputModelSelectItem key={m.id} value={m.id}>
-                            {m.name}
-                          </PromptInputModelSelectItem>
-                        ))}
-                      </PromptInputModelSelectContent>
-                    </PromptInputModelSelect>
-                  </PromptInputTools>
-                  <PromptInputSubmit disabled={!text.trim()} status={status} />
-                </PromptInputToolbar>
-              </PromptInput>
+              {editingMessageId ? (
+                <PromptInput onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }}>
+                  <PromptInputTextarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    placeholder="Edit your message..."
+                  />
+                  <PromptInputToolbar>
+                    <PromptInputTools>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingMessageId(null);
+                          setEditText("");
+                        }}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                    </PromptInputTools>
+                    <PromptInputSubmit disabled={!editText.trim()} status={status} />
+                  </PromptInputToolbar>
+                </PromptInput>
+              ) : (
+                <PromptInput onSubmit={handleSubmit}>
+                  <PromptInputTextarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Type your message..."
+                  />
+                  <PromptInputToolbar>
+                    <PromptInputTools>
+                      <PromptInputButton>
+                        <PaperclipIcon size={16} />
+                      </PromptInputButton>
+                      <PromptInputButton>
+                        <MicIcon size={16} />
+                        <span>Voice</span>
+                      </PromptInputButton>
+                      <PromptInputModelSelect
+                        value={model}
+                        onValueChange={setModel}
+                      >
+                        <PromptInputModelSelectTrigger>
+                          <PromptInputModelSelectValue />
+                        </PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectContent>
+                          {models.map((m) => (
+                            <PromptInputModelSelectItem key={m.id} value={m.id}>
+                              {m.name}
+                            </PromptInputModelSelectItem>
+                          ))}
+                        </PromptInputModelSelectContent>
+                      </PromptInputModelSelect>
+                    </PromptInputTools>
+                    <PromptInputSubmit disabled={!text.trim()} status={status} />
+                  </PromptInputToolbar>
+                </PromptInput>
+              )}
               <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
