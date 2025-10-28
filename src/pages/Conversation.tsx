@@ -12,7 +12,7 @@ import { VytenIcon } from "@/components/VytenIcon";
 import { cn } from "@/lib/utils";
 import { AttachmentInput, AttachmentPreviews } from "@/components/chat/AttachmentInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download, Copy } from "lucide-react";
+import { Download, Copy, File } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -49,7 +49,7 @@ const ConversationPage = () => {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number; content?: string } | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ fileName: string; fileType: string; index: number; content?: string; preview?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -333,9 +333,9 @@ const ConversationPage = () => {
     if (isText) {
       // Read text file content
       const content = await file.text();
-      setLightboxFile({ file, index, content });
+      setLightboxFile({ fileName: file.name, fileType: file.type, index, content });
     } else if (isImage) {
-      setLightboxFile({ file, index });
+      setLightboxFile({ fileName: file.name, fileType: file.type, index, preview: filePreviews[index] });
     }
   };
 
@@ -503,6 +503,59 @@ const ConversationPage = () => {
                     ) : (
                       <div className="flex-1 flex flex-col items-end">
                         <MessageContent className="bg-primary text-primary-foreground">
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {message.attachments.map((attachment, attIndex) => {
+                                const isImage = attachment.type.startsWith("image/");
+                                const isText = attachment.type.startsWith("text/") || 
+                                              attachment.name.endsWith(".json") || 
+                                              attachment.name.endsWith(".md") ||
+                                              attachment.name.endsWith(".txt");
+                                
+                                return (
+                                  <div
+                                    key={attIndex}
+                                    className="relative cursor-pointer"
+                                    onClick={async () => {
+                                      if (isText && attachment.data) {
+                                        // Decode base64 data URL to get text content
+                                        const base64Data = attachment.data.split(',')[1];
+                                        const content = atob(base64Data);
+                                        setLightboxFile({ 
+                                          fileName: attachment.name,
+                                          fileType: attachment.type,
+                                          index: attIndex,
+                                          content 
+                                        });
+                                      } else if (isImage && attachment.preview) {
+                                        setLightboxFile({ 
+                                          fileName: attachment.name,
+                                          fileType: attachment.type,
+                                          index: attIndex,
+                                          preview: attachment.preview
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    {isImage ? (
+                                      <img
+                                        src={attachment.preview}
+                                        alt={attachment.name}
+                                        className="w-16 h-16 object-cover rounded-lg border"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center gap-2 rounded-lg border bg-background/10 px-2 py-1">
+                                        <File className="h-4 w-4" />
+                                        <span className="text-xs truncate max-w-[100px]">
+                                          {attachment.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                           {message.content}
                         </MessageContent>
                         <Actions 
@@ -641,54 +694,74 @@ const ConversationPage = () => {
         <DialogContent className="max-w-4xl">
           {lightboxFile && (
             <>
-              <DialogHeader>
-                <DialogTitle className="text-sm font-normal flex items-center justify-between">
-                  <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <span className="truncate font-medium">{lightboxFile.file.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {lightboxFile.file.type.split('/')[1]?.toUpperCase() || 'FILE'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                    {lightboxFile.content && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCopyText(lightboxFile.content!)}
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy Text
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(lightboxFile.file)}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download File
-                    </Button>
-                  </div>
-                </DialogTitle>
-              </DialogHeader>
+                    <DialogHeader>
+                      <DialogTitle className="text-sm font-normal flex items-center justify-between">
+                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                          <span className="truncate font-medium">{lightboxFile.fileName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {lightboxFile.fileType.split('/')[1]?.toUpperCase() || 'FILE'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                          {lightboxFile.content && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyText(lightboxFile.content!)}
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copy Text
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (lightboxFile.content) {
+                                const blob = new Blob([lightboxFile.content], { type: lightboxFile.fileType });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = lightboxFile.fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                              } else if (lightboxFile.preview) {
+                                const a = document.createElement("a");
+                                a.href = lightboxFile.preview;
+                                a.download = lightboxFile.fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              }
+                              toast.success("File downloaded");
+                            }}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download File
+                          </Button>
+                        </div>
+                      </DialogTitle>
+                    </DialogHeader>
               {lightboxFile.content ? (
                 <div className="bg-muted/30 rounded-lg p-4 max-h-[70vh] overflow-auto">
                   <pre className="text-xs font-mono whitespace-pre-wrap">
                     {lightboxFile.content}
                   </pre>
                 </div>
-              ) : (
-                <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
-                  <img
-                    src={filePreviews[lightboxFile.index]}
-                    alt={lightboxFile.file.name}
-                    className="max-w-full max-h-[70vh] object-contain"
-                  />
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground text-center">
-                {lightboxFile.content ? 'Text File' : 'Image'} • {(lightboxFile.file.size / 1024).toFixed(1)} KB
-              </p>
+                    ) : (
+                      <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
+                        <img
+                          src={lightboxFile.preview || filePreviews[lightboxFile.index]}
+                          alt={lightboxFile.fileName}
+                          className="max-w-full max-h-[70vh] object-contain"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground text-center">
+                      {lightboxFile.content ? 'Text File' : 'Image'} • {lightboxFile.fileType}
+                    </p>
             </>
           )}
         </DialogContent>

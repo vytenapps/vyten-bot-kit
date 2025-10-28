@@ -7,6 +7,13 @@ interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  attachments?: {
+    name: string;
+    type: string;
+    size: number;
+    preview?: string;
+    data?: string;
+  }[];
 }
 
 type ChatStatus = "ready" | "streaming" | "error";
@@ -63,11 +70,21 @@ export const useAIChat = () => {
     abortControllerRef.current = new AbortController();
     setStatus("streaming");
 
+    // Process files to create attachment data
+    const attachments = files?.map(f => ({
+      name: f.name,
+      type: f.type,
+      size: f.size,
+      preview: f.data,
+      data: f.data
+    })) || [];
+
     // Add user message to UI immediately
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: content.trim(),
+      attachments: attachments.length > 0 ? attachments : undefined,
     };
     
     setMessages(prev => [...prev, userMessage]);

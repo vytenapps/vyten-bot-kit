@@ -40,7 +40,7 @@ const Chat = () => {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number; content?: string } | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number; content?: string; preview?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -378,21 +378,21 @@ const Chat = () => {
                   </div>
                       </DialogTitle>
                     </DialogHeader>
-                    {lightboxFile.content ? (
-                      <div className="bg-muted/30 rounded-lg p-4 max-h-[70vh] overflow-auto">
-                        <pre className="text-xs font-mono whitespace-pre-wrap">
-                          {lightboxFile.content}
-                        </pre>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
-                        <img
-                          src={filePreviews[lightboxFile.index]}
-                          alt={lightboxFile.file.name}
-                          className="max-w-full max-h-[70vh] object-contain"
-                        />
-                      </div>
-                    )}
+              {lightboxFile.content ? (
+                <div className="bg-muted/30 rounded-lg p-4 max-h-[70vh] overflow-auto">
+                  <pre className="text-xs font-mono whitespace-pre-wrap">
+                    {lightboxFile.content}
+                  </pre>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
+                  <img
+                    src={lightboxFile.preview || filePreviews[lightboxFile.index]}
+                    alt={lightboxFile.file.name}
+                    className="max-w-full max-h-[70vh] object-contain"
+                  />
+                </div>
+              )}
                     <p className="text-xs text-muted-foreground text-center">
                       {lightboxFile.content ? 'Text File' : 'Image'} • {(lightboxFile.file.size / 1024).toFixed(1)} KB
                     </p>
