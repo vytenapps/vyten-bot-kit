@@ -308,24 +308,27 @@ const components: Options['components'] = {
       {children}
     </blockquote>
   ),
-  code: (props: any) => {
-    const { inline, className, children, ...rest } = props ?? {};
-    // Inline code gets styled pill; block code is handled by the `pre` renderer
-    if (inline) {
+  code: ({ node, inline, className, children, ...props }: any) => {
+    // Check if this is inline code (no className with language prefix means inline)
+    const isInline = inline ?? !className?.startsWith('language-');
+    
+    if (isInline) {
       return (
         <code
           className={cn(
             'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
             className
           )}
-          {...rest}
+          {...props}
         >
           {children}
         </code>
       );
     }
+    
+    // Block code - will be wrapped by <pre>
     return (
-      <code className={className} {...rest}>
+      <code className={className} {...props}>
         {children}
       </code>
     );
