@@ -576,15 +576,15 @@ const ConversationPage = () => {
             <div ref={messagesEndRef} />
             {showScrollButton && (
               <div className="sticky bottom-2 left-0 right-0 flex justify-center pointer-events-none">
-                <div className="flex items-center justify-center h-11 w-11 pointer-events-auto">
+                <div className="flex items-center justify-center h-11 w-11 shrink-0 pointer-events-auto">
                   <Button
                     onClick={() => scrollToBottom()}
                     size="icon"
                     variant="outline"
-                    className="rounded-full h-[30px] w-[30px] shadow-md"
+                    className="rounded-full h-[30px] w-[30px] min-w-[30px] shadow-md"
                     type="button"
                   >
-                    <ArrowDownIcon className="size-4" />
+                    <ArrowDownIcon size={16} />
                   </Button>
                 </div>
               </div>

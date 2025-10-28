@@ -107,42 +107,42 @@ export const ChatInputBox = ({
             </PromptInputModelSelect>
           </PromptInputTools>
           <div className="flex items-center gap-1">
-            <div className="flex items-center justify-center h-11 w-11 shrink-0">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full h-11 w-11 shrink-0 p-0"
+            >
+              <div className="flex items-center justify-center h-[30px] w-[30px]">
+                <MicIcon size={16} />
+              </div>
+            </Button>
+            {status === "streaming" ? (
               <Button
                 type="button"
                 size="icon"
-                variant="ghost"
-                className="rounded-full h-[30px] w-[30px] min-w-[30px]"
+                variant="default"
+                className="rounded-full h-11 w-11 shrink-0 p-0"
+                onClick={onStopStreaming}
               >
-                <MicIcon size={16} />
-              </Button>
-            </div>
-            {status === "streaming" ? (
-              <div className="flex items-center justify-center h-11 w-11 shrink-0">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="default"
-                  className="rounded-full h-[30px] w-[30px] min-w-[30px]"
-                  onClick={onStopStreaming}
-                >
+                <div className="flex items-center justify-center h-[30px] w-[30px]">
                   <div className="w-2.5 h-2.5 bg-current" />
-                </Button>
-              </div>
+                </div>
+              </Button>
             ) : (
-              <div className="flex items-center justify-center h-11 w-11 shrink-0">
-                <Button
-                  type="submit"
-                  size="icon"
-                  variant="default"
-                  className="rounded-full h-[30px] w-[30px] min-w-[30px]"
-                  disabled={disabled || !text.trim()}
-                >
+              <Button
+                type="submit"
+                size="icon"
+                variant="default"
+                className="rounded-full h-11 w-11 shrink-0 p-0"
+                disabled={disabled || !text.trim()}
+              >
+                <div className="flex items-center justify-center h-[30px] w-[30px]">
                   <svg width="12" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
                     <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
                   </svg>
-                </Button>
-              </div>
+                </div>
+              </Button>
             )}
           </div>
         </PromptInputToolbar>
