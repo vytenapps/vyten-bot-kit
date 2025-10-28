@@ -141,74 +141,6 @@ export function AttachmentInput({
           </div>
         )}
 
-        {files.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {files.map((file, index) => {
-              const isImage = isImageFile(file);
-              const preview = filePreviews[index];
-
-              return (
-                <div
-                  key={index}
-                  className="relative group"
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                  {isImage ? (
-                    <div
-                      className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted cursor-pointer"
-                      onClick={() => setLightboxFile({ file, index })}
-                    >
-                      <img
-                        src={preview}
-                        alt={file.name}
-                        className="w-full h-full object-cover"
-                      />
-                      {hoveredIndex === index && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onRemoveFile(index);
-                            }}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 pr-8 relative">
-                      <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-medium truncate max-w-[120px]">
-                          {file.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {(file.size / 1024).toFixed(0)} KB
-                        </span>
-                      </div>
-                      {hoveredIndex === index && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 absolute right-1 top-1/2 -translate-y-1/2"
-                          onClick={() => onRemoveFile(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {children}
       </div>
 
@@ -254,6 +186,96 @@ export function AttachmentInput({
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+export function AttachmentPreviews({
+  files,
+  filePreviews,
+  onRemoveFile,
+  onFileClick,
+  hoveredIndex,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  files: File[];
+  filePreviews: string[];
+  onRemoveFile: (index: number) => void;
+  onFileClick: (file: File, index: number) => void;
+  hoveredIndex: number | null;
+  onMouseEnter: (index: number) => void;
+  onMouseLeave: () => void;
+}) {
+  if (files.length === 0) return null;
+
+  const isImageFile = (file: File) => file.type.startsWith("image/");
+
+  return (
+    <div className="flex flex-wrap gap-2 px-3 pt-3">
+      {files.map((file, index) => {
+        const isImage = isImageFile(file);
+        const preview = filePreviews[index];
+
+        return (
+          <div
+            key={index}
+            className="relative group"
+            onMouseEnter={() => onMouseEnter(index)}
+            onMouseLeave={onMouseLeave}
+          >
+            {isImage ? (
+              <div
+                className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted cursor-pointer"
+                onClick={() => onFileClick(file, index)}
+              >
+                <img
+                  src={preview}
+                  alt={file.name}
+                  className="w-full h-full object-cover"
+                />
+                {hoveredIndex === index && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFile(index);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 pr-8 relative">
+                <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-medium truncate max-w-[120px]">
+                    {file.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {(file.size / 1024).toFixed(0)} KB
+                  </span>
+                </div>
+                {hoveredIndex === index && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={() => onRemoveFile(index)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

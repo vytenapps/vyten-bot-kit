@@ -8,7 +8,10 @@ import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
-import { AttachmentInput } from "@/components/chat/AttachmentInput";
+import { AttachmentInput, AttachmentPreviews } from "@/components/chat/AttachmentInput";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Download, Copy } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -35,11 +38,32 @@ const Chat = () => {
   const [firstName, setFirstName] = useState<string | null>(null);
   const [text, setText] = useState<string>("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const { model, setModel, status } = useAIChat();
+
+  // Generate preview URLs for image files
+  useEffect(() => {
+    const previews = attachedFiles.map((file) => {
+      if (file.type.startsWith("image/")) {
+        return URL.createObjectURL(file);
+      }
+      return "";
+    });
+    setFilePreviews(previews);
+
+    // Cleanup preview URLs
+    return () => {
+      previews.forEach((preview) => {
+        if (preview) URL.revokeObjectURL(preview);
+      });
+    };
+  }, [attachedFiles]);
 
   const suggestions = [
     "What is Vyten Apps?",
@@ -154,6 +178,23 @@ const Chat = () => {
     fileInputRef.current?.click();
   };
 
+  const handleDownload = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("File downloaded");
+  };
+
+  const handleCopyFileName = (fileName: string) => {
+    navigator.clipboard.writeText(fileName);
+    toast.success("Filename copied");
+  };
+
   if (!session) {
     return null;
   }
@@ -205,6 +246,15 @@ const Chat = () => {
                 maxSize={20 * 1024 * 1024}
               >
                 <PromptInput onSubmit={handleSubmit}>
+                  <AttachmentPreviews
+                    files={attachedFiles}
+                    filePreviews={filePreviews}
+                    onRemoveFile={handleRemoveFile}
+                    onFileClick={(file, index) => setLightboxFile({ file, index })}
+                    hoveredIndex={hoveredIndex}
+                    onMouseEnter={setHoveredIndex}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  />
                   <PromptInputTextarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -243,6 +293,49 @@ const Chat = () => {
                 AI Chatbot can make mistakes. Check important info.
               </p>
             </div>
+
+            {/* Lightbox Dialog */}
+            <Dialog open={!!lightboxFile} onOpenChange={() => setLightboxFile(null)}>
+              <DialogContent className="max-w-4xl">
+                {lightboxFile && (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="text-sm font-normal flex items-center justify-between">
+                        <span className="truncate">{lightboxFile.file.name}</span>
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(lightboxFile.file)}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download File
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyFileName(lightboxFile.file.name)}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy
+                          </Button>
+                        </div>
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
+                      <img
+                        src={filePreviews[lightboxFile.index]}
+                        alt={lightboxFile.file.name}
+                        className="max-w-full max-h-[70vh] object-contain"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Image • {(lightboxFile.file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </SidebarInset>
