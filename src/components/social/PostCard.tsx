@@ -25,6 +25,8 @@ interface PostCardProps {
     content: string;
     created_at: string;
     user_id: string;
+    media_url: string | null;
+    media_type: string | null;
     user_profiles: {
       username: string;
       first_name: string | null;
@@ -149,6 +151,13 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-wrap break-words">{post.content}</p>
+        {post.media_url && post.media_type?.startsWith('image/') && (
+          <img 
+            src={post.media_url} 
+            alt="Post image" 
+            className="mt-4 rounded-lg max-h-96 w-full object-cover"
+          />
+        )}
       </CardContent>
       <CardFooter className="flex flex-col gap-4">
         <div className="flex items-center gap-4 w-full">

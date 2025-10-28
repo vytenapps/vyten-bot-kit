@@ -10,6 +10,8 @@ interface Post {
   content: string;
   created_at: string;
   user_id: string;
+  media_url: string | null;
+  media_type: string | null;
   user_profiles: {
     username: string;
     first_name: string | null;
