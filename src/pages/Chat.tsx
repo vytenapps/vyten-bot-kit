@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEventHandler } from "react";
+import { useState, useEffect, type FormEventHandler, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
+import { AttachmentInput } from "@/components/chat/AttachmentInput";
 import {
   SidebarInset,
   SidebarProvider,
@@ -33,6 +34,8 @@ const Chat = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [text, setText] = useState<string>("");
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -139,6 +142,18 @@ const Chat = () => {
     setText(suggestion);
   };
 
+  const handleFilesSelected = (files: File[]) => {
+    setAttachedFiles((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
   if (!session) {
     return null;
   }
@@ -182,40 +197,48 @@ const Chat = () => {
             </Suggestions>
 
             <div className="w-full">
-              <PromptInput onSubmit={handleSubmit}>
-                <PromptInputTextarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type your message..."
-                />
-                <PromptInputToolbar>
-                  <PromptInputTools>
-                    <PromptInputButton>
-                      <PaperclipIcon size={16} />
-                    </PromptInputButton>
-                    <PromptInputButton>
-                      <MicIcon size={16} />
-                      <span>Voice</span>
-                    </PromptInputButton>
-                    <PromptInputModelSelect
-                      value={model}
-                      onValueChange={setModel}
-                    >
-                      <PromptInputModelSelectTrigger>
-                        <PromptInputModelSelectValue />
-                      </PromptInputModelSelectTrigger>
-                      <PromptInputModelSelectContent>
-                        {AI_MODELS.map((m) => (
-                          <PromptInputModelSelectItem key={m.id} value={m.id}>
-                            {m.name}
-                          </PromptInputModelSelectItem>
-                        ))}
-                      </PromptInputModelSelectContent>
-                    </PromptInputModelSelect>
-                  </PromptInputTools>
-                  <PromptInputSubmit disabled={!text} status={status} />
-                </PromptInputToolbar>
-              </PromptInput>
+              <AttachmentInput
+                onFilesSelected={handleFilesSelected}
+                files={attachedFiles}
+                onRemoveFile={handleRemoveFile}
+                maxFiles={10}
+                maxSize={20 * 1024 * 1024}
+              >
+                <PromptInput onSubmit={handleSubmit}>
+                  <PromptInputTextarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Type your message..."
+                  />
+                  <PromptInputToolbar>
+                    <PromptInputTools>
+                      <PromptInputButton onClick={handleAttachClick}>
+                        <PaperclipIcon size={16} />
+                      </PromptInputButton>
+                      <PromptInputButton>
+                        <MicIcon size={16} />
+                        <span>Voice</span>
+                      </PromptInputButton>
+                      <PromptInputModelSelect
+                        value={model}
+                        onValueChange={setModel}
+                      >
+                        <PromptInputModelSelectTrigger>
+                          <PromptInputModelSelectValue />
+                        </PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectContent>
+                          {AI_MODELS.map((m) => (
+                            <PromptInputModelSelectItem key={m.id} value={m.id}>
+                              {m.name}
+                            </PromptInputModelSelectItem>
+                          ))}
+                        </PromptInputModelSelectContent>
+                      </PromptInputModelSelect>
+                    </PromptInputTools>
+                    <PromptInputSubmit disabled={!text} status={status} />
+                  </PromptInputToolbar>
+                </PromptInput>
+              </AttachmentInput>
               <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>

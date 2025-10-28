@@ -10,6 +10,7 @@ import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
 import { VytenIcon } from "@/components/VytenIcon";
 import { cn } from "@/lib/utils";
+import { AttachmentInput } from "@/components/chat/AttachmentInput";
 import {
   SidebarInset,
   SidebarProvider,
@@ -43,6 +44,8 @@ const ConversationPage = () => {
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const [messageFeedback, setMessageFeedback] = useState<Record<string, 'positive' | 'negative'>>({});
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -219,8 +222,21 @@ const ConversationPage = () => {
 
     const userMessage = text.trim();
     setText("");
+    setAttachedFiles([]);
     
     await sendMessage(userMessage, chatId);
+  };
+
+  const handleFilesSelected = (files: File[]) => {
+    setAttachedFiles((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
   };
 
   const getInitials = (email?: string) => {
@@ -441,62 +457,70 @@ const ConversationPage = () => {
         {/* Input Area - sibling to Conversation */}
         <div className="shrink-0 border-t p-4" data-chat-input>
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
-            <PromptInput onSubmit={handleSubmit}>
-              <PromptInputTextarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Type your message..."
-              />
-              <PromptInputToolbar>
-                <PromptInputTools>
-                  <PromptInputButton>
-                    <PaperclipIcon size={16} />
-                  </PromptInputButton>
-                  <PromptInputButton>
-                    <MicIcon size={16} />
-                    <span>Voice</span>
-                  </PromptInputButton>
-                  <PromptInputModelSelect
-                    value={model}
-                    onValueChange={setModel}
-                  >
-                    <PromptInputModelSelectTrigger>
-                      <PromptInputModelSelectValue />
-                    </PromptInputModelSelectTrigger>
-                    <PromptInputModelSelectContent>
-                      {AI_MODELS.map((m) => (
-                        <PromptInputModelSelectItem key={m.id} value={m.id}>
-                          {m.name}
-                        </PromptInputModelSelectItem>
-                      ))}
-                    </PromptInputModelSelectContent>
-                  </PromptInputModelSelect>
-                </PromptInputTools>
-                {status === "streaming" ? (
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="default"
-                    className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
-                    onClick={stopStreaming}
-                  >
-                    <div className="w-2 h-2 bg-current" />
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    size="icon"
-                    variant="default"
-                    className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
-                    disabled={!text.trim()}
-                  >
-                    <svg width="10" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                      <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
-                    </svg>
-                  </Button>
-                )}
-              </PromptInputToolbar>
-            </PromptInput>
+            <AttachmentInput
+              onFilesSelected={handleFilesSelected}
+              files={attachedFiles}
+              onRemoveFile={handleRemoveFile}
+              maxFiles={10}
+              maxSize={20 * 1024 * 1024}
+            >
+              <PromptInput onSubmit={handleSubmit}>
+                <PromptInputTextarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Type your message..."
+                />
+                <PromptInputToolbar>
+                  <PromptInputTools>
+                    <PromptInputButton onClick={handleAttachClick}>
+                      <PaperclipIcon size={16} />
+                    </PromptInputButton>
+                    <PromptInputButton>
+                      <MicIcon size={16} />
+                      <span>Voice</span>
+                    </PromptInputButton>
+                    <PromptInputModelSelect
+                      value={model}
+                      onValueChange={setModel}
+                    >
+                      <PromptInputModelSelectTrigger>
+                        <PromptInputModelSelectValue />
+                      </PromptInputModelSelectTrigger>
+                      <PromptInputModelSelectContent>
+                        {AI_MODELS.map((m) => (
+                          <PromptInputModelSelectItem key={m.id} value={m.id}>
+                            {m.name}
+                          </PromptInputModelSelectItem>
+                        ))}
+                      </PromptInputModelSelectContent>
+                    </PromptInputModelSelect>
+                  </PromptInputTools>
+                  {status === "streaming" ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="default"
+                      className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
+                      onClick={stopStreaming}
+                    >
+                      <div className="w-2 h-2 bg-current" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      size="icon"
+                      variant="default"
+                      className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
+                      disabled={!text.trim()}
+                    >
+                      <svg width="10" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                        <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
+                      </svg>
+                    </Button>
+                  )}
+                </PromptInputToolbar>
+              </PromptInput>
+            </AttachmentInput>
             <p className="text-xs text-center text-muted-foreground mt-2">
               AI Chatbot can make mistakes. Check important info.
             </p>
