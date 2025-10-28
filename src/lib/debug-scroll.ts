@@ -44,6 +44,28 @@ export function highlightScrollContainers(options?: { allowedAttr?: string; show
     }
   });
 
+  // Per-element markers to identify scrollables
+  const markers: HTMLDivElement[] = [];
+  scrollers.forEach((el, idx) => {
+    const rect = el.getBoundingClientRect();
+    const isAllowed = el.hasAttribute(allowedAttr);
+    const marker = document.createElement('div');
+    marker.style.position = 'fixed';
+    marker.style.top = `${Math.max(4, rect.top + 4)}px`;
+    marker.style.left = `${Math.max(4, rect.left + 4)}px`;
+    marker.style.zIndex = '9999';
+    marker.style.background = isAllowed ? 'rgba(0,255,0,0.85)' : 'rgba(255,0,0,0.85)';
+    marker.style.color = '#000';
+    marker.style.fontSize = '10px';
+    marker.style.lineHeight = '1';
+    marker.style.padding = '2px 4px';
+    marker.style.borderRadius = '4px';
+    marker.style.pointerEvents = 'none';
+    marker.textContent = `#${idx + 1}`;
+    document.body.appendChild(marker);
+    markers.push(marker);
+  });
+
   // Optional small overlay for mobile Safari (no console access)
   let overlay: HTMLDivElement | null = null;
   if (options?.showOverlay) {
@@ -63,7 +85,6 @@ export function highlightScrollContainers(options?: { allowedAttr?: string; show
     overlay.textContent = `[ScrollDebug] ${scrollers.length} scrollable element(s)`;
     document.body.appendChild(overlay);
   }
-
   // Console report
   // Grouped to avoid noise; expand when needed
   // eslint-disable-next-line no-console
@@ -87,8 +108,9 @@ export function highlightScrollContainers(options?: { allowedAttr?: string; show
       el.style.outline = '';
       el.style.outlineOffset = '';
     });
+    markers.forEach((m) => m.remove());
+    if (overlay) overlay.remove();
   };
-
   // Re-run on resize for dynamic layouts
   const rerun = () => {
     cleanup();

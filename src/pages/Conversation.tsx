@@ -274,7 +274,7 @@ const ConversationPage = () => {
         </header>
         
         {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1 min-h-0">
+        <Conversation className="flex-1 min-h-0" data-allowed-scroll>
           <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
