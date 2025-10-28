@@ -230,7 +230,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="overflow-x-hidden bg-background">
+      <SidebarInset className="overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -247,7 +247,7 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 bg-background overflow-hidden">
           <Conversation className="flex-1 min-h-0">
             <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
