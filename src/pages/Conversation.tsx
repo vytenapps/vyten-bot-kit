@@ -25,11 +25,9 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
+import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
-import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai/reasoning";
-import { Actions } from "@/components/ai/actions";
 
 import { MicIcon, PaperclipIcon } from "lucide-react";
 
@@ -50,6 +48,7 @@ const ConversationPage = () => {
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const models = [
     { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
@@ -60,16 +59,12 @@ const ConversationPage = () => {
     { id: "openai/gpt-5-nano", name: "GPT-5 Nano" },
   ];
 
-  const conversationRef = useRef<HTMLDivElement>(null);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
-    if (conversationRef.current) {
-      const scrollEl = conversationRef.current.querySelector('[class*="overflow-y-auto"]');
-      if (scrollEl) {
-        scrollEl.scrollTop = scrollEl.scrollHeight;
-      }
-    }
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -333,27 +328,6 @@ const ConversationPage = () => {
     }
   };
 
-  const handleFeedback = async (messageId: string, feedbackType: 'positive' | 'negative') => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('message_feedback')
-        .upsert({
-          message_id: messageId,
-          user_id: session.user.id,
-          feedback_type: feedbackType
-        }, {
-          onConflict: 'message_id,user_id'
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error("Failed to save feedback:", error);
-      throw error;
-    }
-  };
-
   const getInitials = (email?: string) => {
     if (!email) return "U";
     const name = email.split("@")[0];
@@ -368,7 +342,7 @@ const ConversationPage = () => {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="overflow-x-hidden bg-background">
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -384,49 +358,36 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col flex-1 overflow-hidden" ref={conversationRef}>
-          <Conversation>
-            <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
-              {status === 'streaming' && messages.length === 0 && (
-                <Reasoning isStreaming={true}>
-                  <ReasoningTrigger title="Thinking" />
-                  <ReasoningContent>Processing your request...</ReasoningContent>
-                </Reasoning>
-              )}
-              {messages.map((message) => (
-                <Message from={message.role} key={message.id}>
-                  {message.role === "assistant" && (
-                    <MessageAvatar name="AI">
-                      <VytenIcon className="h-4 w-4 text-white" />
-                    </MessageAvatar>
-                  )}
-                  <div className="flex flex-col flex-1">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+          <div className="flex-1 overflow-hidden">
+            <Conversation>
+              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
+                {messages.map((message) => (
+                  <Message from={message.role} key={message.id}>
+                    {message.role === "assistant" && (
+                      <MessageAvatar name="AI">
+                        <VytenIcon className="h-4 w-4 text-white" />
+                      </MessageAvatar>
+                    )}
                     <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
                       {message.role === "assistant" ? (
-                        <Response parseIncompleteMarkdown={status === 'streaming'}>{message.content}</Response>
+                        <Response>{message.content}</Response>
                       ) : (
                         message.content
                       )}
                     </MessageContent>
-                    {message.role === "assistant" && (
-                      <Actions 
-                        messageId={message.id}
-                        content={message.content}
-                        onFeedback={handleFeedback}
+                    {message.role === "user" && (
+                      <MessageAvatar 
+                        name={getInitials(session?.user?.email)}
                       />
                     )}
-                  </div>
-                  {message.role === "user" && (
-                    <MessageAvatar 
-                      name={getInitials(session?.user?.email)}
-                    />
-                  )}
-                </Message>
-              ))}
-            </ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
-          <div className="sticky bottom-0 z-10 bg-background border-t px-4 sm:px-6 md:px-8 py-4">
+                  </Message>
+                ))}
+                <div ref={messagesEndRef} />
+              </ConversationContent>
+            </Conversation>
+          </div>
+          <div className="px-4 sm:px-6 md:px-8">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
@@ -462,7 +423,7 @@ const ConversationPage = () => {
                   <PromptInputSubmit disabled={!text.trim()} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
-              <p className="text-xs text-center text-muted-foreground mt-2">
+              <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
             </div>

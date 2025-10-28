@@ -12,7 +12,7 @@ const Message = React.forwardRef<HTMLDivElement, MessageProps>(
       <div
         ref={ref}
         className={cn(
-          "group flex gap-3 mb-4",
+          "flex gap-3 mb-4",
           from === "user" ? "justify-end" : "justify-start",
           className
         )}
