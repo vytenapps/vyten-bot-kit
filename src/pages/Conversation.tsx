@@ -350,7 +350,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex h-svh w-full flex-col bg-background overflow-hidden">
+      <SidebarInset className="flex h-svh w-full flex-col bg-background overflow-hidden" data-debug-inset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -463,8 +463,28 @@ const ConversationPage = () => {
           />
         </Conversation>
         
+        {/* Debug overlay to visualize gap */}
+        {debugEnabled && gapPx > 0 && (
+          <div
+            className="absolute left-0 right-0 pointer-events-none z-50"
+            style={{
+              bottom: 0,
+              height: `${gapPx}px`,
+              background: 'repeating-linear-gradient(45deg, rgba(255, 165, 0, 0.3), rgba(255, 165, 0, 0.3) 10px, rgba(255, 200, 0, 0.3) 10px, rgba(255, 200, 0, 0.3) 20px)',
+              border: '2px dashed orange',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              BLANK GAP: {gapPx}px (margin collapse from last Message)
+            </div>
+          </div>
+        )}
+        
         {/* Input Area - sibling to Conversation */}
-        <div className="shrink-0 border-t p-4">
+        <div className="shrink-0 border-t p-4" data-chat-input>
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputTextarea
