@@ -196,7 +196,7 @@ const ConversationPage = () => {
         id: crypto.randomUUID(),
         messageId: msg.id,
         role: msg.role as "user" | "assistant",
-        content: msg.content,
+        content: msg.content || "", // Ensure content is never null
       }))
     );
 
@@ -317,7 +317,7 @@ const ConversationPage = () => {
 
         const jsonStr = line.slice(6).trim();
         if (jsonStr === "[DONE]") {
-          console.log("Stream completed, total characters:", assistantContent.length);
+          console.log("Stream completed successfully. Total content length:", assistantContent.length);
           streamDone = true;
           break;
         }
@@ -334,18 +334,44 @@ const ConversationPage = () => {
             );
           }
         } catch (e) {
-          console.warn("Failed to parse SSE chunk:", e);
+          console.warn("Failed to parse SSE chunk:", jsonStr.substring(0, 100), e);
           textBuffer = line + "\n" + textBuffer;
           break;
         }
       }
     }
 
-    console.log("Reloading conversation to get saved messages from database...");
-    // Reload conversation to get the saved message from DB
-    if (session?.user?.id) {
-      loadConversation(session.user.id);
+    // Final flush - process any remaining buffer
+    if (textBuffer.trim()) {
+      console.log("Processing final buffer content");
+      const lines = textBuffer.split("\n");
+      for (const line of lines) {
+        if (!line || line.startsWith(":") || !line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") continue;
+        
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            assistantContent += content;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMsgId ? { ...m, content: assistantContent } : m
+              )
+            );
+          }
+        } catch (e) {
+          console.warn("Failed to parse final chunk:", e);
+        }
+      }
     }
+
+    console.log("Stream processing complete. Final message length:", assistantContent.length);
+
+    console.log("Reloading conversation to get saved messages from database...");
+    // Don't reload - trust the streamed content
+    // The message is already saved in the database by the edge function
   };
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
@@ -508,7 +534,9 @@ const ConversationPage = () => {
                         )}
                       >
                         {message.role === "assistant" ? (
-                          <Response>{message.content}</Response>
+                          <Response parseIncompleteMarkdown={false}>
+                            {message.content}
+                          </Response>
                         ) : (
                           message.content
                         )}
