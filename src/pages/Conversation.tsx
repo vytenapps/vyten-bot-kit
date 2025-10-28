@@ -122,6 +122,29 @@ const ConversationPage = () => {
     }
   }, [searchParams, hasTriggeredAI, session, chatId, sendMessage, loadConversation, setModel, navigate]);
 
+  // Cleanup any leftover scroll-debug markers/overlays/outlines from previous sessions
+  useEffect(() => {
+    // Remove floating markers like "#1 DIV" and the overlay "[ScrollDebug] ..."
+    const fixedDivs = Array.from(document.body.querySelectorAll('div')) as HTMLElement[];
+    fixedDivs.forEach((el) => {
+      const style = getComputedStyle(el);
+      const text = (el.textContent || '').trim();
+      if (style.position === 'fixed' && style.zIndex === '9999') {
+        if (text.startsWith('[ScrollDebug]') || /^#\d+\s+[A-Z]+$/.test(text)) {
+          el.remove();
+        }
+      }
+    });
+    // Remove inline outlines added by the debug util
+    const allEls = Array.from(document.querySelectorAll('*')) as HTMLElement[];
+    allEls.forEach((el) => {
+      if (el.style && (el.style.outline || el.style.outlineOffset)) {
+        el.style.outline = '';
+        el.style.outlineOffset = '';
+      }
+    });
+  }, []);
+
   // Lock page scroll so only the conversation area can scroll
   useEffect(() => {
     const html = document.documentElement;
