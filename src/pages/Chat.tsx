@@ -32,7 +32,9 @@ const Chat = () => {
   const [firstName, setFirstName] = useState<string | null>(null);
   const [text, setText] = useState<string>("");
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
-  const [selectedModel, setSelectedModel] = useState<string>("google/gemini-2.5-flash");
+  const [selectedModel, setSelectedModel] = useState<string>(
+    localStorage.getItem("ai-model-preference") || "openai/gpt-5-mini"
+  );
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -50,6 +52,11 @@ const Chat = () => {
     "What are the latest trends in AI?",
     "Explain best practices for Lovable development?",
   ];
+
+  // Save selected model to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("ai-model-preference", selectedModel);
+  }, [selectedModel]);
 
   useEffect(() => {
     // Get initial session
