@@ -77,20 +77,8 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    // Verify conversation belongs to user
-    const { data: conversation, error: convError } = await supabaseClient
-      .from("conversations")
-      .select("*")
-      .eq("id", conversationId)
-      .eq("user_id", user.id)
-      .single();
-
-    if (convError || !conversation) {
-      throw new Error("Conversation not found");
-    }
-
-    // Save user message to database (already validated above)
-    const { error: userMsgError } = await supabaseClient
+    // Phase 2 Optimization: Parallelize user message save and AI Gateway call
+    const saveUserMessagePromise = supabaseClient
       .from("messages")
       .insert({
         conversation_id: conversationId,
@@ -98,14 +86,6 @@ serve(async (req) => {
         role: "user",
         content: lastUserMessage.content,
       });
-
-    if (userMsgError) {
-      console.error("Error saving user message:", userMsgError);
-      return new Response(
-        JSON.stringify({ error: userMsgError.message || "Failed to save user message" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // Call Lovable AI Gateway
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -120,7 +100,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: model || "openai/gpt-5-mini",
+        model: model || "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -131,6 +111,16 @@ serve(async (req) => {
         stream: true,
       }),
     });
+
+    // Wait for user message to be saved before proceeding with stream
+    const { error: userMsgError } = await saveUserMessagePromise;
+    if (userMsgError) {
+      console.error("Error saving user message:", userMsgError);
+      return new Response(
+        JSON.stringify({ error: userMsgError.message || "Failed to save user message" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -222,21 +212,23 @@ serve(async (req) => {
             }
           }
 
-          // Save assistant message to database only if we have content
+          // Phase 3 Optimization: Save assistant message without blocking stream completion
           if (fullResponse && fullResponse.trim().length > 0) {
-            console.log("Saving assistant message, length:", fullResponse.length);
-            const { error: assistantMsgError } = await supabaseClient
+            console.log("Saving assistant message in background, length:", fullResponse.length);
+            // Fire-and-forget - don't await to not block stream completion
+            supabaseClient
               .from("messages")
               .insert({
                 conversation_id: conversationId,
                 user_id: user.id,
                 role: "assistant",
                 content: fullResponse.trim(),
+              })
+              .then(({ error }) => {
+                if (error) {
+                  console.error("Error saving assistant message:", error);
+                }
               });
-
-            if (assistantMsgError) {
-              console.error("Error saving assistant message:", assistantMsgError);
-            }
           } else {
             console.error("No assistant response content to save");
           }

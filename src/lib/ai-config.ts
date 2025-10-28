@@ -5,7 +5,7 @@ export const AI_MODELS = [
   { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro" },
 ] as const;
 
-export const DEFAULT_AI_MODEL = "openai/gpt-5-mini";
+export const DEFAULT_AI_MODEL = "google/gemini-2.5-flash";
 
 export const getStoredModel = (): string => {
   return localStorage.getItem("preferred_ai_model") || DEFAULT_AI_MODEL;

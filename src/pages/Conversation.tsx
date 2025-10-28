@@ -145,11 +145,6 @@ const ConversationPage = () => {
     setText("");
     
     await sendMessage(userMessage, chatId);
-    
-    // Reload from DB after sending
-    if (session?.user?.id && chatId) {
-      await loadConversation(session.user.id, chatId);
-    }
   };
 
   const getInitials = (email?: string) => {
