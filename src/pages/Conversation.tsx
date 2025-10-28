@@ -597,12 +597,12 @@ const ConversationPage = () => {
         
         {/* Scroll to bottom button - positioned above input area */}
         {showScrollButton && (
-          <div className="shrink-0 flex justify-center py-2">
+          <div className="shrink-0 flex justify-center pb-0 -mb-6">
             <Button
               onClick={() => scrollToBottom()}
               size="icon"
               variant="outline"
-              className="rounded-full shadow-lg"
+              className="rounded-full shadow-md"
             >
               <ArrowDownIcon className="size-4" />
             </Button>
