@@ -35,7 +35,6 @@ import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
 import { Button } from "@/components/ui/button";
 
 import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon } from "lucide-react";
-import { highlightScrollContainers } from "@/lib/debug-scroll";
 
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -46,10 +45,6 @@ const ConversationPage = () => {
   const [messageFeedback, setMessageFeedback] = useState<Record<string, 'positive' | 'negative'>>({});
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
-  const debugEnabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || searchParams.get("debugScroll") === '1';
-  const [gapPx, setGapPx] = useState(0);
-  const [innerPaddingPx, setInnerPaddingPx] = useState(0);
   
   // Refs for scroll management
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -126,128 +121,6 @@ const ConversationPage = () => {
       });
     }
   }, [searchParams, hasTriggeredAI, session, chatId, sendMessage, loadConversation, setModel, navigate]);
-
-  // Debug: highlight unexpected scroll containers on this page when enabled
-  useEffect(() => {
-    const qs = new URLSearchParams(window.location.search);
-    const enabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || qs.get('debugScroll') === '1';
-    let cleanup: (() => void) | undefined;
-    if (enabled) {
-      cleanup = highlightScrollContainers({ allowedAttr: 'data-allowed-scroll', showOverlay: true });
-    }
-    return () => cleanup?.();
-  }, [messages.length, status]);
-
-  // Extra logs specifically for chat containers
-  useEffect(() => {
-    if (!debugEnabled) return;
-    const outer = document.querySelector('[data-chat-outer]') as HTMLElement | null;
-    const inner = document.querySelector('[data-chat-inner]') as HTMLElement | null;
-    const messages = document.querySelectorAll('[data-debug-message]');
-    const actions = document.querySelectorAll('[data-debug-actions]');
-    const scrollBtn = document.querySelector('[data-debug-scroll-btn]') as HTMLElement | null;
-    
-    const logEl = (name: string, el: HTMLElement | null) => {
-      if (!el) return;
-      const cs = window.getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
-      console.info(`[ChatDebug] ${name}`, {
-        clientHeight: el.clientHeight,
-        scrollHeight: el.scrollHeight,
-        offsetHeight: el.offsetHeight,
-        boundingRect: { top: rect.top, bottom: rect.bottom, height: rect.height },
-        overflow: cs.overflow,
-        overflowY: cs.overflowY,
-        paddingTop: cs.paddingTop,
-        paddingBottom: cs.paddingBottom,
-        marginTop: cs.marginTop,
-        marginBottom: cs.marginBottom,
-        display: cs.display,
-        flexDirection: cs.flexDirection,
-        gap: cs.gap,
-      });
-    };
-    
-    logEl('Conversation (GREEN outer)', outer);
-    logEl('ConversationContent (RED inner)', inner);
-
-    const inset = document.querySelector('[data-debug-inset]') as HTMLElement | null;
-    const input = document.querySelector('[data-chat-input]') as HTMLElement | null;
-    logEl('SidebarInset (PAGE wrapper)', inset);
-    logEl('Chat Input (FOOTER sibling)', input);
-    
-    // Check if inner's bottom is far from outer's bottom
-    if (outer && inner) {
-      const outerRect = outer.getBoundingClientRect();
-      const innerRect = inner.getBoundingClientRect();
-      const gap = outerRect.bottom - innerRect.bottom;
-      console.warn(`[ChatDebug] GAP below red box: ${gap}px (negative means inner extends beyond outer)`);
-    }
-    
-    messages.forEach((msg, idx) => logEl(`Message ${idx} (PURPLE)`, msg as HTMLElement));
-    actions.forEach((action, idx) => logEl(`Actions ${idx} (MAGENTA)`, action as HTMLElement));
-    if (scrollBtn) logEl('Scroll Button (CYAN)', scrollBtn);
-  }, [messages.length, status, debugEnabled]);
-
-  // Compute and visualize gap between RED inner and GREEN outer
-  useEffect(() => {
-    if (!debugEnabled) return;
-    const outer = document.querySelector('[data-chat-outer]') as HTMLElement | null;
-    const inner = document.querySelector('[data-chat-inner]') as HTMLElement | null;
-    if (!outer || !inner) return;
-
-    const update = () => {
-      const outerRect = outer.getBoundingClientRect();
-      const innerRect = inner.getBoundingClientRect();
-      const gap = Math.max(0, Math.round(outerRect.bottom - innerRect.bottom));
-      setGapPx(gap);
-
-      // Get inner's actual padding
-      const innerCs = getComputedStyle(inner);
-      const paddingBottom = parseFloat(innerCs.paddingBottom);
-      setInnerPaddingPx(paddingBottom);
-
-      // Check for sentinel elements or hidden spacing
-      const outerChildren = Array.from(outer.children);
-      console.warn('[ChatDebug] Outer children count:', outerChildren.length);
-      outerChildren.forEach((child, idx) => {
-        const childEl = child as HTMLElement;
-        const childRect = childEl.getBoundingClientRect();
-        console.info(`[ChatDebug] Child ${idx}:`, {
-          tagName: childEl.tagName,
-          className: childEl.className,
-          height: childRect.height,
-          bottom: childRect.bottom,
-          isScrollButton: childEl.hasAttribute('data-debug-scroll-btn'),
-        });
-      });
-
-      // Inspect last message margin collapse
-      const msgNodes = inner.querySelectorAll('[data-debug-message]');
-      const lastMsg = msgNodes[msgNodes.length - 1] as HTMLElement | undefined;
-      if (lastMsg) {
-        const cs = getComputedStyle(lastMsg);
-        const parentCs = getComputedStyle(inner);
-        // eslint-disable-next-line no-console
-        console.warn('[ChatDebug] Last message margins', {
-          marginBottom: cs.marginBottom,
-          parentPaddingBottom: parentCs.paddingBottom,
-          parentBorderBottomWidth: parentCs.borderBottomWidth,
-          note: 'If parent padding/border is 0 and last child has mb-*, bottom-margin will collapse OUTSIDE (the blank area).',
-        });
-      }
-    };
-
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(outer);
-    ro.observe(inner);
-    window.addEventListener('resize', update);
-    return () => {
-      window.removeEventListener('resize', update);
-      ro.disconnect();
-    };
-  }, [messages.length, status, debugEnabled]);
 
   // Lock page scroll so only the conversation area can scroll
   useEffect(() => {
