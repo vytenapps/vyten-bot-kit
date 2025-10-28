@@ -57,23 +57,21 @@ export const ConversationScrollButton = ({
     scrollToBottom();
   }, [scrollToBottom]);
 
-  if (isAtBottom) {
-    return null;
-  }
-
   return (
-    <Button
-      className={cn(
-        'absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full z-10',
-        className
-      )}
-      onClick={handleScrollToBottom}
-      size="icon"
-      type="button"
-      variant="outline"
-      {...props}
-    >
-      <ArrowDownIcon className="size-4" />
-    </Button>
+    !isAtBottom && (
+      <Button
+        className={cn(
+          'absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full',
+          className
+        )}
+        onClick={handleScrollToBottom}
+        size="icon"
+        type="button"
+        variant="outline"
+        {...props}
+      >
+        <ArrowDownIcon className="size-4" />
+      </Button>
+    )
   );
 };

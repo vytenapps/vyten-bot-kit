@@ -1,6 +1,5 @@
 import * as React from "react"
 import { MessageSquarePlus, Search, Users } from "lucide-react"
-import { Link, useLocation } from "react-router-dom"
 
 import { VersionSwitcher } from "@/components/version-switcher"
 import {
@@ -17,9 +16,6 @@ import {
 } from "@/components/ui/sidebar"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const location = useLocation()
-  const isActive = (path: string) => location.pathname === path
-
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -31,19 +27,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/chat')}>
-                  <Link to="/chat">
+                <SidebarMenuButton asChild>
+                  <a href="/chat">
                     <MessageSquarePlus className="size-4" />
                     <span>New chat</span>
-                  </Link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/chat')}>
-                  <Link to="/chat">
+                <SidebarMenuButton asChild>
+                  <a href="/chat">
                     <Search className="size-4" />
                     <span>Search chats</span>
-                  </Link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -54,11 +50,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/chat')}>
-                  <Link to="/chat">
+                <SidebarMenuButton asChild>
+                  <a href="/chat">
                     <Users className="size-4" />
                     <span>Social Wall</span>
-                  </Link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

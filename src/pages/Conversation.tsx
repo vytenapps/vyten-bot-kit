@@ -27,7 +27,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
+import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
@@ -230,7 +230,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col h-svh overflow-hidden bg-background">
+      <SidebarInset className="overflow-x-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -247,8 +247,9 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <Conversation className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+          <Conversation className="flex-1 min-h-0">
+            <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
                 const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
@@ -335,12 +336,11 @@ const ConversationPage = () => {
                 </Reasoning>
               )}
               <div ref={messagesEndRef} />
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
-        <div className="shrink-0 px-4 sm:px-6 md:px-8 pb-4 bg-background border-t">
-          <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto pt-4">
-            <PromptInput onSubmit={handleSubmit}>
+            </ConversationContent>
+          </Conversation>
+          <div className="px-4 sm:px-6 md:px-8 pb-4">
+            <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
+              <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -377,6 +377,7 @@ const ConversationPage = () => {
               <p className="text-xs text-center text-muted-foreground mt-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
+            </div>
           </div>
         </div>
       </SidebarInset>
