@@ -11,19 +11,33 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { messages, conversationId, model } = await req.json();
+  console.log("=== Chat function invoked ===");
 
-    console.log("Chat request:", { conversationId, model, messageCount: messages?.length ?? 0 });
+  try {
+    console.log("Step 1: Parsing request body");
+    const body = await req.json();
+    console.log("Step 2: Body parsed", { 
+      hasMessages: !!body.messages, 
+      hasConversationId: !!body.conversationId,
+      messagesType: typeof body.messages,
+      messagesLength: Array.isArray(body.messages) ? body.messages.length : "not array"
+    });
+    
+    const { messages, conversationId, model } = body;
+
+    console.log("Step 3: Extracted values", { conversationId, model, messageCount: messages?.length ?? 0 });
 
     // Validate input
+    console.log("Step 4: Starting validation");
     if (!conversationId) {
+      console.error("Validation failed: Missing conversationId");
       return new Response(
         JSON.stringify({ error: "Missing conversationId" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      console.error("Validation failed: Invalid messages", { messages });
       return new Response(
         JSON.stringify({ error: "No messages provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -31,7 +45,14 @@ serve(async (req) => {
     }
 
     const lastUserMessage = messages[messages.length - 1];
+    console.log("Step 5: Last message", { 
+      hasContent: !!lastUserMessage?.content,
+      contentType: typeof lastUserMessage?.content,
+      content: lastUserMessage?.content
+    });
+    
     if (!lastUserMessage?.content || String(lastUserMessage.content).trim() === "") {
+      console.error("Validation failed: Empty content");
       return new Response(
         JSON.stringify({ error: "Message content is empty" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -205,10 +226,26 @@ serve(async (req) => {
       },
     });
   } catch (error) {
-    console.error("Chat error:", error);
-    const errMsg = (typeof error === "object" && error !== null && (error as any).message)
-      ? (error as any).message
-      : (error instanceof Error ? error.message : "Unknown error");
+    console.error("=== Chat function error ===");
+    console.error("Error type:", typeof error);
+    console.error("Error:", error);
+    console.error("Error stringified:", JSON.stringify(error, null, 2));
+    
+    let errMsg = "Unknown error";
+    if (error && typeof error === "object") {
+      // Handle Supabase database errors
+      if ("message" in error && error.message) {
+        errMsg = String(error.message);
+      } else if ("code" in error && "details" in error) {
+        const dbErr = error as any;
+        errMsg = `Database error ${dbErr.code}: ${dbErr.message || "Unknown"}`;
+      } else if (error instanceof Error) {
+        errMsg = error.message;
+      }
+    }
+    
+    console.error("Final error message:", errMsg);
+    
     return new Response(
       JSON.stringify({ error: errMsg }),
       {
