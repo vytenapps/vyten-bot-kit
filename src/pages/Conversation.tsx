@@ -34,7 +34,7 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/s
 import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
 import { Button } from "@/components/ui/button";
 
-import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon } from "lucide-react";
+import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon, ArrowUpIcon, SquareIcon } from "lucide-react";
 
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -51,7 +51,7 @@ const ConversationPage = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   
-  const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
+  const { messages, status, model, setModel, sendMessage, loadConversation, setMessages, stopStreaming } = useAIChat();
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -468,7 +468,27 @@ const ConversationPage = () => {
                     </PromptInputModelSelectContent>
                   </PromptInputModelSelect>
                 </PromptInputTools>
-                <PromptInputSubmit disabled={!text.trim()} status={status} />
+                {status === "streaming" ? (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="default"
+                    className="rounded-sm"
+                    onClick={stopStreaming}
+                  >
+                    <SquareIcon className="size-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    size="icon"
+                    variant="default"
+                    className="rounded-full"
+                    disabled={!text.trim()}
+                  >
+                    <ArrowUpIcon className="size-4" />
+                  </Button>
+                )}
               </PromptInputToolbar>
             </PromptInput>
             <p className="text-xs text-center text-muted-foreground mt-2">

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredModel, setStoredModel } from "@/lib/ai-config";
 import { toast } from "sonner";
@@ -15,10 +15,20 @@ export const useAIChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>("ready");
   const [model, setModelState] = useState<string>(getStoredModel());
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const setModel = useCallback((newModel: string) => {
     setModelState(newModel);
     setStoredModel(newModel);
+  }, []);
+
+  const stopStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setStatus("ready");
+      toast.info("Stopped generating response");
+    }
   }, []);
 
   const loadConversation = useCallback(async (userId: string, conversationId: string) => {
@@ -49,6 +59,8 @@ export const useAIChat = () => {
   const sendMessage = useCallback(async (content: string, conversationId: string) => {
     if (!content.trim()) return;
 
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
     setStatus("streaming");
 
     // Add user message to UI immediately
@@ -80,6 +92,7 @@ export const useAIChat = () => {
           conversationId,
           model,
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -183,13 +196,22 @@ export const useAIChat = () => {
       }
 
       setStatus("ready");
+      abortControllerRef.current = null;
     } catch (error) {
+      // Don't show error toast if request was aborted by user
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log("Request aborted by user");
+        setStatus("ready");
+        return;
+      }
+      
       console.error("Error sending message:", error);
       setStatus("error");
       toast.error(error instanceof Error ? error.message : "Failed to send message");
       
       // Remove the user message on error
       setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+      abortControllerRef.current = null;
     }
   }, [messages, model]);
 
@@ -201,5 +223,6 @@ export const useAIChat = () => {
     setMessages,
     sendMessage,
     loadConversation,
+    stopStreaming,
   };
 };
