@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/shadcn-io/ai/prompt-input";
 import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
+import { Response } from "@/components/ai/response";
 
 import { MicIcon, PaperclipIcon } from "lucide-react";
 
@@ -381,7 +382,13 @@ const ConversationPage = () => {
                         <VytenIcon className="h-4 w-4 text-white" />
                       </MessageAvatar>
                     )}
-                    <MessageContent>{message.content}</MessageContent>
+                    <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
+                      {message.role === "assistant" ? (
+                        <Response>{message.content}</Response>
+                      ) : (
+                        message.content
+                      )}
+                    </MessageContent>
                     {message.role === "user" && (
                       <MessageAvatar 
                         name={getInitials(session?.user?.email)}
