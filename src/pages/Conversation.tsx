@@ -639,10 +639,6 @@ const ConversationPage = () => {
                     <PromptInputButton onClick={handleAttachClick} type="button">
                       <PaperclipIcon size={16} />
                     </PromptInputButton>
-                    <PromptInputButton>
-                      <MicIcon size={16} />
-                      <span>Voice</span>
-                    </PromptInputButton>
                     <PromptInputModelSelect
                       value={model}
                       onValueChange={setModel}
@@ -659,29 +655,39 @@ const ConversationPage = () => {
                       </PromptInputModelSelectContent>
                     </PromptInputModelSelect>
                   </PromptInputTools>
-                  {status === "streaming" ? (
+                  <div className="flex items-center gap-1">
                     <Button
                       type="button"
                       size="icon"
-                      variant="default"
-                      className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
-                      onClick={stopStreaming}
+                      variant="ghost"
+                      className="rounded-full h-6 w-6 min-w-6 shrink-0"
                     >
-                      <div className="w-2 h-2 bg-current" />
+                      <MicIcon size={14} />
                     </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      size="icon"
-                      variant="default"
-                      className="rounded-full h-6 w-6 min-w-6 shrink-0 ml-2 mr-2"
-                      disabled={!text.trim()}
-                    >
-                      <svg width="10" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                        <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
-                      </svg>
-                    </Button>
-                  )}
+                    {status === "streaming" ? (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="default"
+                        className="rounded-full h-6 w-6 min-w-6 shrink-0"
+                        onClick={stopStreaming}
+                      >
+                        <div className="w-2 h-2 bg-current" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        size="icon"
+                        variant="default"
+                        className="rounded-full h-6 w-6 min-w-6 shrink-0"
+                        disabled={!text.trim()}
+                      >
+                        <svg width="10" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                          <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
+                        </svg>
+                      </Button>
+                    )}
+                  </div>
                 </PromptInputToolbar>
             </PromptInput>
           </AttachmentInput>
