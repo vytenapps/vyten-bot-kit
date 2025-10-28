@@ -46,6 +46,10 @@ const ConversationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
+  const debugEnabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || searchParams.get("debugScroll") === '1';
+  const outerRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
 
   useEffect(() => {
@@ -109,6 +113,30 @@ const ConversationPage = () => {
     }
     return () => cleanup?.();
   }, [messages.length, status]);
+
+  // Extra logs specifically for chat containers
+  useEffect(() => {
+    if (!debugEnabled) return;
+    const outer = outerRef.current;
+    const inner = contentRef.current;
+    const logEl = (name: string, el: HTMLElement | null) => {
+      if (!el) return;
+      const cs = window.getComputedStyle(el);
+      console.info(`[ChatDebug] ${name}`, {
+        clientHeight: el.clientHeight,
+        scrollHeight: el.scrollHeight,
+        offsetHeight: el.offsetHeight,
+        overflow: cs.overflow,
+        overflowY: cs.overflowY,
+        paddingTop: cs.paddingTop,
+        paddingBottom: cs.paddingBottom,
+        marginTop: cs.marginTop,
+        marginBottom: cs.marginBottom,
+      });
+    };
+    logEl('Conversation (outer)', outer);
+    logEl('ConversationContent (inner)', inner);
+  }, [messages.length, status, debugEnabled]);
 
   // Lock page scroll so only the conversation area can scroll
   useEffect(() => {
@@ -274,8 +302,8 @@ const ConversationPage = () => {
         </header>
         
         {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1 min-h-0" data-allowed-scroll>
-          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 !overflow-visible">
+        <Conversation ref={outerRef} className="flex-1 min-h-0" data-allowed-scroll debug={debugEnabled}>
+          <ConversationContent ref={contentRef} className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 !overflow-visible" debug={debugEnabled}>
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
