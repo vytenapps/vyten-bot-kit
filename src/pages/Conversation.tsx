@@ -185,18 +185,17 @@ const ConversationPage = () => {
         <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
           <div className="flex-1 overflow-hidden">
             <Conversation>
-              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
+              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
                 {messages.map((message, index) => {
                   const isLastMessage = index === messages.length - 1;
                   const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
                   
                   return (
-                    <div key={message.id}>
+                    <div key={message.id} className="space-y-4">
                       {isStreamingThisMessage && (
                         <Reasoning 
                           isStreaming={true}
                           defaultOpen={true}
-                          className="mb-2"
                         >
                           <ReasoningTrigger />
                           <ReasoningContent>
@@ -231,7 +230,6 @@ const ConversationPage = () => {
                   <Reasoning 
                     isStreaming={true}
                     defaultOpen={true}
-                    className="mb-2"
                   >
                     <ReasoningTrigger />
                     <ReasoningContent>

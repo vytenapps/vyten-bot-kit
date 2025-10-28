@@ -1,33 +1,77 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+/**
+ * Copyright 2023 Vercel, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+'use client';
 
-const Conversation = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col h-full", className)}
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ArrowDownIcon } from 'lucide-react';
+import type { ComponentProps } from 'react';
+import { useCallback } from 'react';
+import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom';
+
+export type ConversationProps = ComponentProps<typeof StickToBottom>;
+
+export const Conversation = ({ className, ...props }: ConversationProps) => (
+  <StickToBottom
+    className={cn('relative flex-1 overflow-y-auto', className)}
+    initial="smooth"
+    resize="smooth"
+    role="log"
     {...props}
   />
-));
-Conversation.displayName = "Conversation";
+);
 
-const ConversationContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-  <ScrollArea className="flex-1">
-    <div
-      ref={ref}
-      className={cn("p-4 space-y-4", className)}
-      {...props}
-    >
-      {children}
-    </div>
-  </ScrollArea>
-));
-ConversationContent.displayName = "ConversationContent";
+export type ConversationContentProps = ComponentProps<
+  typeof StickToBottom.Content
+>;
 
-export { Conversation, ConversationContent };
+export const ConversationContent = ({
+  className,
+  ...props
+}: ConversationContentProps) => (
+  <StickToBottom.Content className={cn('p-4', className)} {...props} />
+);
+
+export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
+
+export const ConversationScrollButton = ({
+  className,
+  ...props
+}: ConversationScrollButtonProps) => {
+  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+
+  const handleScrollToBottom = useCallback(() => {
+    scrollToBottom();
+  }, [scrollToBottom]);
+
+  return (
+    !isAtBottom && (
+      <Button
+        className={cn(
+          'absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full',
+          className
+        )}
+        onClick={handleScrollToBottom}
+        size="icon"
+        type="button"
+        variant="outline"
+        {...props}
+      >
+        <ArrowDownIcon className="size-4" />
+      </Button>
+    )
+  );
+};
