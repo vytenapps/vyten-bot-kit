@@ -30,6 +30,7 @@ import {
 import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
+import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
 
 import { MicIcon, PaperclipIcon } from "lucide-react";
 
@@ -185,27 +186,46 @@ const ConversationPage = () => {
           <div className="flex-1 overflow-hidden">
             <Conversation>
               <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
-                {messages.map((message) => (
-                  <Message from={message.role} key={message.id}>
-                    {message.role === "assistant" && (
-                      <MessageAvatar name="AI">
-                        <VytenIcon className="h-4 w-4 text-white" />
-                      </MessageAvatar>
-                    )}
-                    {message.role === "assistant" ? (
-                      <Response className="flex-1">{message.content}</Response>
-                    ) : (
-                      <MessageContent className="bg-primary text-primary-foreground">
-                        {message.content}
-                      </MessageContent>
-                    )}
-                    {message.role === "user" && (
-                      <MessageAvatar 
-                        name={getInitials(session?.user?.email)}
-                      />
-                    )}
-                  </Message>
-                ))}
+                {messages.map((message, index) => {
+                  const isLastMessage = index === messages.length - 1;
+                  const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
+                  
+                  return (
+                    <div key={message.id}>
+                      {isStreamingThisMessage && (
+                        <Reasoning 
+                          isStreaming={true}
+                          defaultOpen={true}
+                          className="mb-2"
+                        >
+                          <ReasoningTrigger />
+                          <ReasoningContent>
+                            Analyzing your question and generating a thoughtful response...
+                          </ReasoningContent>
+                        </Reasoning>
+                      )}
+                      <Message from={message.role}>
+                        {message.role === "assistant" && (
+                          <MessageAvatar name="AI">
+                            <VytenIcon className="h-4 w-4 text-white" />
+                          </MessageAvatar>
+                        )}
+                        {message.role === "assistant" ? (
+                          <Response className="flex-1">{message.content}</Response>
+                        ) : (
+                          <MessageContent className="bg-primary text-primary-foreground">
+                            {message.content}
+                          </MessageContent>
+                        )}
+                        {message.role === "user" && (
+                          <MessageAvatar 
+                            name={getInitials(session?.user?.email)}
+                          />
+                        )}
+                      </Message>
+                    </div>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </ConversationContent>
             </Conversation>
