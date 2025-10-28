@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEventHandler, useRef } from "react";
+import { useState, useEffect, type FormEventHandler } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
-import { AttachmentInput, AttachmentPreviews } from "@/components/chat/AttachmentInput";
+import { ChatInputBox } from "@/components/chat/ChatInputBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Copy } from "lucide-react";
@@ -17,21 +17,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import {
-  PromptInput,
-  PromptInputButton,
-  PromptInputModelSelect,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-} from "@/components/ui/shadcn-io/ai/prompt-input";
 import { Suggestions, Suggestion } from "@/components/ui/shadcn-io/ai/suggestion";
-import { MicIcon, PaperclipIcon } from "lucide-react";
 
 const Chat = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -41,7 +27,6 @@ const Chat = () => {
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number; content?: string; preview?: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -201,10 +186,6 @@ const Chat = () => {
     setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleAttachClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleDownload = (file: File) => {
     const url = URL.createObjectURL(file);
     const a = document.createElement("a");
@@ -287,57 +268,23 @@ const Chat = () => {
             </Suggestions>
 
             <div className="w-full">
-              <AttachmentInput
+              <ChatInputBox
+                text={text}
+                onTextChange={setText}
+                model={model}
+                onModelChange={setModel}
+                status={status}
+                onSubmit={handleSubmit}
+                attachedFiles={attachedFiles}
+                filePreviews={filePreviews}
                 onFilesSelected={handleFilesSelected}
-                files={attachedFiles}
                 onRemoveFile={handleRemoveFile}
-                maxFiles={10}
-                maxSize={20 * 1024 * 1024}
-              >
-                <PromptInput onSubmit={handleSubmit}>
-                  <AttachmentPreviews
-                    files={attachedFiles}
-                    filePreviews={filePreviews}
-                    onRemoveFile={handleRemoveFile}
-                    onFileClick={handleFileClick}
-                    hoveredIndex={hoveredIndex}
-                    onMouseEnter={setHoveredIndex}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                  />
-                  <PromptInputTextarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Type your message..."
-                  />
-                  <PromptInputToolbar>
-                    <PromptInputTools>
-                      <PromptInputButton onClick={handleAttachClick} type="button">
-                        <PaperclipIcon size={16} />
-                      </PromptInputButton>
-                      <PromptInputButton>
-                        <MicIcon size={16} />
-                        <span>Voice</span>
-                      </PromptInputButton>
-                      <PromptInputModelSelect
-                        value={model}
-                        onValueChange={setModel}
-                      >
-                        <PromptInputModelSelectTrigger>
-                          <PromptInputModelSelectValue />
-                        </PromptInputModelSelectTrigger>
-                        <PromptInputModelSelectContent>
-                          {AI_MODELS.map((m) => (
-                            <PromptInputModelSelectItem key={m.id} value={m.id}>
-                              {m.name}
-                            </PromptInputModelSelectItem>
-                          ))}
-                        </PromptInputModelSelectContent>
-                      </PromptInputModelSelect>
-                    </PromptInputTools>
-                    <PromptInputSubmit disabled={!text} status={status} />
-                  </PromptInputToolbar>
-                </PromptInput>
-              </AttachmentInput>
+                onFileClick={handleFileClick}
+                hoveredIndex={hoveredIndex}
+                onMouseEnter={setHoveredIndex}
+                onMouseLeave={() => setHoveredIndex(null)}
+                placeholder="Type your message..."
+              />
               <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>

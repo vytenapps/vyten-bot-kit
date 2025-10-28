@@ -10,7 +10,7 @@ import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
 import { VytenIcon } from "@/components/VytenIcon";
 import { cn } from "@/lib/utils";
-import { AttachmentInput, AttachmentPreviews } from "@/components/chat/AttachmentInput";
+import { ChatInputBox } from "@/components/chat/ChatInputBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Download, Copy, File } from "lucide-react";
 import {
@@ -18,26 +18,13 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import {
-  PromptInput,
-  PromptInputButton,
-  PromptInputModelSelect,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-} from "@/components/ui/shadcn-io/ai/prompt-input";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
 import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
 import { Button } from "@/components/ui/button";
 
-import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon, ArrowUpIcon, SquareIcon } from "lucide-react";
+import { ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon } from "lucide-react";
 
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -50,7 +37,6 @@ const ConversationPage = () => {
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [lightboxFile, setLightboxFile] = useState<{ fileName: string; fileType: string; index: number; content?: string; preview?: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -294,10 +280,6 @@ const ConversationPage = () => {
 
   const handleRemoveFile = (index: number) => {
     setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleAttachClick = () => {
-    fileInputRef.current?.click();
   };
 
   const handleDownload = (file: File) => {
@@ -614,96 +596,29 @@ const ConversationPage = () => {
         {/* Input Area - sibling to Conversation */}
         <div className="shrink-0 bg-transparent px-4 pb-4" data-chat-input>
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
-            <AttachmentInput
+            <ChatInputBox
+              text={text}
+              onTextChange={setText}
+              model={model}
+              onModelChange={setModel}
+              status={status}
+              onSubmit={handleSubmit}
+              attachedFiles={attachedFiles}
+              filePreviews={filePreviews}
               onFilesSelected={handleFilesSelected}
-              files={attachedFiles}
               onRemoveFile={handleRemoveFile}
-              maxFiles={10}
-              maxSize={20 * 1024 * 1024}
-            >
-              <PromptInput onSubmit={handleSubmit}>
-                <AttachmentPreviews
-                  files={attachedFiles}
-                  filePreviews={filePreviews}
-                  onRemoveFile={handleRemoveFile}
-                  onFileClick={handleFileClick}
-                  hoveredIndex={hoveredIndex}
-                  onMouseEnter={setHoveredIndex}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                />
-                <PromptInputTextarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type your message..."
-                />
-                <PromptInputToolbar>
-                  <PromptInputTools>
-                    <PromptInputButton onClick={handleAttachClick} type="button">
-                      <PaperclipIcon size={16} />
-                    </PromptInputButton>
-                    <PromptInputModelSelect
-                      value={model}
-                      onValueChange={setModel}
-                    >
-                      <PromptInputModelSelectTrigger>
-                        <PromptInputModelSelectValue />
-                      </PromptInputModelSelectTrigger>
-                      <PromptInputModelSelectContent>
-                        {AI_MODELS.map((m) => (
-                          <PromptInputModelSelectItem key={m.id} value={m.id}>
-                            {m.name}
-                          </PromptInputModelSelectItem>
-                        ))}
-                      </PromptInputModelSelectContent>
-                    </PromptInputModelSelect>
-                  </PromptInputTools>
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center justify-center h-11 w-11 shrink-0">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="rounded-full h-[30px] w-[30px] min-w-[30px]"
-                      >
-                        <MicIcon size={16} />
-                      </Button>
-                    </div>
-                    {status === "streaming" ? (
-                      <div className="flex items-center justify-center h-11 w-11 shrink-0">
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="default"
-                          className="rounded-full h-[30px] w-[30px] min-w-[30px]"
-                          onClick={stopStreaming}
-                        >
-                          <div className="w-2.5 h-2.5 bg-current" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-11 w-11 shrink-0">
-                        <Button
-                          type="submit"
-                          size="icon"
-                          variant="default"
-                          className="rounded-full h-[30px] w-[30px] min-w-[30px]"
-                          disabled={!text.trim()}
-                        >
-                          <svg width="12" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                            <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
-                          </svg>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </PromptInputToolbar>
-            </PromptInput>
-          </AttachmentInput>
-          <p className="text-xs text-center text-muted-foreground mt-2">
-            AI Chatbot can make mistakes. Check important info.
-          </p>
+              onFileClick={handleFileClick}
+              hoveredIndex={hoveredIndex}
+              onMouseEnter={setHoveredIndex}
+              onMouseLeave={() => setHoveredIndex(null)}
+              onStopStreaming={stopStreaming}
+              placeholder="Type your message..."
+            />
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              AI Chatbot can make mistakes. Check important info.
+            </p>
+          </div>
         </div>
-      </div>
 
       {/* Lightbox Dialog */}
       <Dialog open={!!lightboxFile} onOpenChange={() => setLightboxFile(null)}>
