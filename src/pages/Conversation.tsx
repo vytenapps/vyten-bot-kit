@@ -433,7 +433,7 @@ const ConversationPage = () => {
           data-chat-outer
           style={{ scrollbarGutter: 'stable both-edges' }}
         >
-          <div className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 p-4" data-chat-inner>
+          <div className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 p-4 pb-5" data-chat-inner>
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
