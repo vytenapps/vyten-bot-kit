@@ -471,22 +471,22 @@ const ConversationPage = () => {
                 {status === "streaming" ? (
                   <Button
                     type="button"
-                    size="icon"
+                    size="sm"
                     variant="default"
-                    className="rounded-sm"
+                    className="rounded-sm h-8 w-8 p-0"
                     onClick={stopStreaming}
                   >
-                    <SquareIcon className="size-4" />
+                    <SquareIcon className="size-3.5" />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
-                    size="icon"
+                    size="sm"
                     variant="default"
-                    className="rounded-full"
+                    className="rounded-full h-8 w-8 p-0"
                     disabled={!text.trim()}
                   >
-                    <ArrowUpIcon className="size-4" />
+                    <ArrowUpIcon className="size-3.5" strokeWidth={2.5} />
                   </Button>
                 )}
               </PromptInputToolbar>
