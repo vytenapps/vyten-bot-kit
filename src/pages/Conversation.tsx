@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment, type FormEventHandler } from "react";
+import { useState, useEffect, Fragment, useRef, useCallback, type FormEventHandler } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,13 +28,13 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
 import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
+import { Button } from "@/components/ui/button";
 
-import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon } from "lucide-react";
+import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon } from "lucide-react";
 import { highlightScrollContainers } from "@/lib/debug-scroll";
 
 const ConversationPage = () => {
@@ -51,7 +51,30 @@ const ConversationPage = () => {
   const [gapPx, setGapPx] = useState(0);
   const [innerPaddingPx, setInnerPaddingPx] = useState(0);
   
+  // Refs for scroll management
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
+
+  // Auto-scroll to bottom when messages change
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  }, []);
+
+  // Check if user is at bottom to show/hide scroll button
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollButton(!isNearBottom);
+  }, []);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     // Get initial session
@@ -389,9 +412,16 @@ const ConversationPage = () => {
           </div>
         </header>
         
-        {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1 min-h-0 [&>*:not([data-chat-inner]):not([data-debug-scroll-btn])]:!hidden" data-allowed-scroll data-chat-outer debug={debugEnabled}>
-          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 pb-4 flex-1 min-h-0" data-chat-inner debug={debugEnabled}>
+        {/* Conversation Area - simple overflow-y-auto scroll container */}
+        <div 
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain relative"
+          data-allowed-scroll 
+          data-chat-outer
+          style={{ scrollbarGutter: 'stable both-edges' }}
+        >
+          <div className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4 p-4" data-chat-inner>
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
@@ -477,53 +507,22 @@ const ConversationPage = () => {
                 <ReasoningTrigger />
               </Reasoning>
             )}
-          </ConversationContent>
+            {/* Scroll anchor */}
+            <div ref={messagesEndRef} />
+          </div>
           
-          {/* Debug overlays to visualize all spacing sources */}
-          {debugEnabled && gapPx > 0 && (
-            <>
-              {/* Overlay 1: Inner padding-bottom (should be 16px = pb-4) */}
-              <div
-                className="pointer-events-none absolute left-0 right-0"
-                style={{
-                  bottom: `${gapPx}px`,
-                  height: `${innerPaddingPx}px`,
-                  background: 'repeating-linear-gradient(45deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.3) 5px, rgba(0, 200, 255, 0.3) 5px, rgba(0, 200, 255, 0.3) 10px)',
-                  border: '2px solid cyan',
-                  zIndex: 40,
-                }}
-              >
-                <div className="bg-cyan-600 text-white px-2 py-0.5 rounded text-xs font-bold inline-block">
-                  Inner pb-4: {innerPaddingPx}px
-                </div>
-              </div>
-              
-              {/* Overlay 2: The mysterious gap (everything else) */}
-              <div
-                className="pointer-events-none"
-                style={{
-                  height: `${gapPx}px`,
-                  background: 'repeating-linear-gradient(45deg, rgba(255, 165, 0, 0.5), rgba(255, 165, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 20px)',
-                  border: '3px solid orange',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  zIndex: 50,
-                }}
-              >
-                <div className="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                  TOTAL GAP: {gapPx}px (RED bottom ↑ to GREEN bottom ↓)
-                </div>
-              </div>
-            </>
+          {/* Scroll to bottom button */}
+          {showScrollButton && (
+            <Button
+              onClick={() => scrollToBottom()}
+              size="icon"
+              variant="outline"
+              className="absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full shadow-lg"
+            >
+              <ArrowDownIcon className="size-4" />
+            </Button>
           )}
-          
-          <ConversationScrollButton 
-            className={debugEnabled ? "bg-cyan-500/20 outline outline-2 outline-cyan-500/60" : ""}
-            data-debug-scroll-btn
-          />
-        </Conversation>
+        </div>
         
         {/* Input Area - sibling to Conversation */}
         <div className="shrink-0 border-t p-4" data-chat-input>
