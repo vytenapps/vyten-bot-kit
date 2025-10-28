@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>("");
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -17,6 +19,7 @@ const Profile = () => {
     email: "",
     phone: "",
     bio: "",
+    avatar_url: null as string | null,
     privacy_settings: {
       full_name: "only_me",
       email: "only_me",
@@ -73,6 +76,8 @@ const Profile = () => {
         return;
       }
 
+      setUserId(user.id);
+
       const { data, error } = await supabase
         .from("user_profiles")
         .select("*")
@@ -91,6 +96,7 @@ const Profile = () => {
           email: data.email || "",
           phone: data.phone || "",
           bio: data.bio || "",
+          avatar_url: data.avatar_url || null,
           privacy_settings: {
             full_name: privacyData?.full_name || "only_me",
             email: privacyData?.email || "only_me",
@@ -195,6 +201,17 @@ const Profile = () => {
         <h1 className="mb-8 text-3xl font-bold text-foreground">Profile Settings</h1>
 
         <div className="space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Profile Photo</h2>
+            <AvatarUpload
+              userId={userId}
+              currentAvatarUrl={profile.avatar_url}
+              username={profile.username || profile.first_name || "User"}
+              onAvatarChange={(url) => setProfile({ ...profile, avatar_url: url })}
+              size="xl"
+            />
+          </div>
+
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-foreground">Basic Information</h2>
             

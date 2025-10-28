@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { useTheme } from "@/components/theme-provider"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { applyBaseColor, getStoredBaseColor, baseColors, type BaseColor } from "@/lib/colors"
+import { AvatarUpload } from "@/components/profile/AvatarUpload"
 
 import {
   Breadcrumb,
@@ -64,6 +65,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange, initialSection = "profile" }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = React.useState(initialSection)
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string>("")
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -71,6 +73,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
     email: "",
     phone: "",
     bio: "",
+    avatar_url: null as string | null,
     privacy_settings: {
       full_name: "only_me",
       email: "only_me",
@@ -139,6 +142,8 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      setUserId(user.id)
+
       const { data, error } = await supabase
         .from("user_profiles")
         .select("*")
@@ -157,6 +162,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
           email: data.email || "",
           phone: data.phone || "",
           bio: data.bio || "",
+          avatar_url: data.avatar_url || null,
           privacy_settings: {
             full_name: privacyData?.full_name || "only_me",
             email: privacyData?.email || "only_me",
@@ -258,7 +264,18 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile" 
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
+              <div className="border-b pb-6">
+                <h3 className="text-lg font-semibold mb-4">Profile Photo</h3>
+                <AvatarUpload
+                  userId={userId}
+                  currentAvatarUrl={profile.avatar_url}
+                  username={profile.username || profile.first_name || "User"}
+                  onAvatarChange={(url) => setProfile({ ...profile, avatar_url: url })}
+                  size="lg"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input
