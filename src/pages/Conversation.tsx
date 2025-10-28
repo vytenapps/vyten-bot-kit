@@ -314,8 +314,8 @@ const ConversationPage = () => {
                         </div>
                       ) : (
                         <div className="flex-1 flex flex-col items-end group">
-                          <div className="relative pb-8">
-                            <MessageContent className="bg-primary text-primary-foreground">
+                          <div className="relative pb-8 max-w-[85%] sm:max-w-[75%]">
+                            <MessageContent className="bg-primary text-primary-foreground w-full">
                               {message.content}
                             </MessageContent>
                             <div className="absolute bottom-0 left-4 opacity-0 group-hover:opacity-100 transition-opacity">
