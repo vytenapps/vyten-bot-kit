@@ -436,7 +436,7 @@ const ConversationPage = () => {
                       <ReasoningTrigger />
                     </Reasoning>
                   )}
-                  <Message from={message.role} data-debug-message className={cn(debugEnabled ? "bg-purple-500/10 outline outline-1 outline-purple-500/40" : "", message.role === "user" && "group")}>
+                  <Message from={message.role} data-debug-message className={message.role === "user" ? "group" : ""}>
                     {message.role === "assistant" && (
                       <MessageAvatar name="AI">
                         <VytenIcon className="h-4 w-4 text-white" />
@@ -444,9 +444,9 @@ const ConversationPage = () => {
                     )}
                     {message.role === "assistant" ? (
                       <div className="flex-1 flex flex-col">
-                        <Response className={cn("mb-0", debugEnabled && "bg-blue-500/10 outline outline-1 outline-blue-500/40")}>{message.content}</Response>
+                        <Response className="mb-0">{message.content}</Response>
                         <Actions 
-                          className={cn("mt-2", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
+                          className="mt-2"
                           data-debug-actions
                         >
                           <Action 
@@ -490,7 +490,7 @@ const ConversationPage = () => {
                           {message.content}
                         </MessageContent>
                         <Actions 
-                          className={cn("mt-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
+                          className="mt-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
                           data-debug-actions
                         >
                           <Action 
