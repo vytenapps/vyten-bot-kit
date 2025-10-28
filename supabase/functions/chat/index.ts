@@ -183,29 +183,55 @@ serve(async (req) => {
           return;
         }
 
+        let lineBuffer = "";
+
         try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value);
-            const lines = chunk.split("\n");
+            const chunk = decoder.decode(value, { stream: true });
+            lineBuffer += chunk;
 
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") continue;
+            let newlineIndex: number;
+            while ((newlineIndex = lineBuffer.indexOf("\n")) !== -1) {
+              let line = lineBuffer.slice(0, newlineIndex);
+              lineBuffer = lineBuffer.slice(newlineIndex + 1);
 
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    fullResponse += content;
-                    controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
-                  }
-                } catch (e) {
-                  // Ignore parse errors for partial chunks
+              if (line.endsWith("\r")) line = line.slice(0, -1);
+              if (line.startsWith(":") || line.trim() === "") continue;
+              if (!line.startsWith("data: ")) continue;
+
+              const data = line.slice(6).trim();
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
                 }
+              } catch (e) {
+                // Ignore parse errors for incomplete JSON
+                console.warn("Failed to parse SSE chunk:", e);
+              }
+            }
+          }
+
+          // Process any remaining buffered line
+          if (lineBuffer.trim() && lineBuffer.startsWith("data: ")) {
+            const data = lineBuffer.slice(6).trim();
+            if (data !== "[DONE]") {
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+                }
+              } catch (e) {
+                console.warn("Failed to parse final buffered chunk:", e);
               }
             }
           }
