@@ -25,9 +25,10 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Conversation, ConversationContent } from "@/components/ai/conversation";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
+import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai/reasoning";
 
 import { MicIcon, PaperclipIcon } from "lucide-react";
 
@@ -362,6 +363,12 @@ const ConversationPage = () => {
           <div className="flex-1 overflow-hidden">
             <Conversation>
               <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto">
+                {status === 'streaming' && messages.length === 0 && (
+                  <Reasoning isStreaming={true}>
+                    <ReasoningTrigger title="Thinking" />
+                    <ReasoningContent>Processing your request...</ReasoningContent>
+                  </Reasoning>
+                )}
                 {messages.map((message) => (
                   <Message from={message.role} key={message.id}>
                     {message.role === "assistant" && (
@@ -371,7 +378,7 @@ const ConversationPage = () => {
                     )}
                     <MessageContent className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
                       {message.role === "assistant" ? (
-                        <Response>{message.content}</Response>
+                        <Response parseIncompleteMarkdown={status === 'streaming'}>{message.content}</Response>
                       ) : (
                         message.content
                       )}
@@ -385,6 +392,7 @@ const ConversationPage = () => {
                 ))}
                 <div ref={messagesEndRef} />
               </ConversationContent>
+              <ConversationScrollButton />
             </Conversation>
           </div>
           <div className="px-4 sm:px-6 md:px-8">
