@@ -313,19 +313,20 @@ const ConversationPage = () => {
                           </Actions>
                         </div>
                       ) : (
-                        <div className="flex-1 flex flex-col items-end">
-                          <MessageContent className="bg-primary text-primary-foreground">
+                        <div className="flex-1 flex flex-col items-end relative">
+                          <MessageContent className="bg-primary text-primary-foreground relative group">
                             {message.content}
+                            <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Action 
+                                label="Copy" 
+                                tooltip="Copy to clipboard"
+                                onClick={() => handleCopy(message.content)}
+                                className="bg-background shadow-sm"
+                              >
+                                <CopyIcon className="size-4" />
+                              </Action>
+                            </div>
                           </MessageContent>
-                          <Actions className="-mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Action 
-                              label="Copy" 
-                              tooltip="Copy to clipboard"
-                              onClick={() => handleCopy(message.content)}
-                            >
-                              <CopyIcon className="size-4" />
-                            </Action>
-                          </Actions>
                         </div>
                       )}
                       {message.role === "user" && (
