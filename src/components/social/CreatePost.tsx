@@ -15,6 +15,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,8 +40,17 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) {
-      toast.error("Please enter some content");
+    setError(null);
+    
+    // Client-side validation
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
+      setError("Please enter some content");
+      return;
+    }
+    
+    if (trimmedContent.length > 5000) {
+      setError("Post content must be less than 5000 characters");
       return;
     }
 
@@ -52,6 +62,11 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
 
       // Upload image if selected
       if (selectedFile) {
+        // Validate file type
+        if (!selectedFile.type.startsWith('image/')) {
+          throw new Error('Only image files are allowed');
+        }
+        
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}.${fileExt}`;
         
@@ -61,31 +76,37 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
+        // Use signed URL with 1 year expiration for better security
+        const { data: signedUrlData, error: urlError } = await supabase.storage
           .from('post-images')
-          .getPublicUrl(fileName);
+          .createSignedUrl(fileName, 31536000); // 1 year in seconds
 
-        mediaUrl = publicUrl;
+        if (urlError) throw urlError;
+
+        mediaUrl = signedUrlData.signedUrl;
         mediaType = selectedFile.type;
       }
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from("posts")
         .insert({
           user_id: userId,
-          content: content.trim(),
+          content: trimmedContent,
           media_url: mediaUrl,
           media_type: mediaType,
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       setContent("");
+      setError(null);
       handleRemoveImage();
       toast.success("Post created successfully!");
     } catch (error) {
       console.error("Error creating post:", error);
-      toast.error("Failed to create post");
+      const errorMessage = error instanceof Error ? error.message : "Failed to create post";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -95,6 +116,11 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+              {error}
+            </div>
+          )}
           <Textarea
             placeholder="What's on your mind?"
             value={content}

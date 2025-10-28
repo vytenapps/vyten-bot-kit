@@ -30,6 +30,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchComments = async () => {
     try {
@@ -62,26 +63,41 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newComment.trim()) return;
+    setError(null);
+    
+    const trimmedComment = newComment.trim();
+    if (!trimmedComment) {
+      setError("Please enter a comment");
+      return;
+    }
+    
+    if (trimmedComment.length > 2000) {
+      setError("Comment must be less than 2000 characters");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from("post_comments")
         .insert({
           post_id: postId,
           user_id: currentUserId,
-          content: newComment.trim(),
+          content: trimmedComment,
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       setNewComment("");
+      setError(null);
       fetchComments();
       onUpdate();
+      toast.success("Comment posted!");
     } catch (error) {
       console.error("Error creating comment:", error);
-      toast.error("Failed to post comment");
+      const errorMessage = error instanceof Error ? error.message : "Failed to post comment";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -115,12 +131,18 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
 
   return (
     <div className="w-full space-y-4 pt-4 border-t">
+      {error && (
+        <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
+          {error}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
           placeholder="Write a comment..."
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           disabled={isSubmitting}
+          maxLength={2000}
         />
         <Button type="submit" size="icon" disabled={!newComment.trim() || isSubmitting}>
           {isSubmitting ? (

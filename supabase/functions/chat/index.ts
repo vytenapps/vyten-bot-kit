@@ -77,6 +77,43 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
+    console.log("Step 6: User authenticated", { userId: user.id });
+
+    // Rate limiting: Check recent requests (20 requests per minute)
+    console.log("Step 7: Checking rate limit");
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+    const { data: recentEvents, error: rateLimitError } = await supabaseClient
+      .from('rate_limit_events')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('event', 'chat_request')
+      .gte('at', oneMinuteAgo);
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (recentEvents && recentEvents.length >= 20) {
+      console.log("Rate limit exceeded for user", user.id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please wait a moment before sending more messages.',
+          retryAfter: 60 
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Log this request for rate limiting (fire-and-forget)
+    supabaseClient.from('rate_limit_events').insert({
+      user_id: user.id,
+      event: 'chat_request'
+    }).then(({ error }) => {
+      if (error) console.error('Error logging rate limit event:', error);
+    });
+
+    console.log("Step 8: Rate limit check passed");
+
     // Phase 2 Optimization: Parallelize user message save and AI Gateway call
     const saveUserMessagePromise = supabaseClient
       .from("messages")
