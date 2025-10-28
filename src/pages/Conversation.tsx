@@ -457,31 +457,32 @@ const ConversationPage = () => {
               </Reasoning>
             )}
           </ConversationContent>
+          
+          {/* Debug overlay to visualize gap between RED inner bottom and GREEN outer bottom */}
+          {debugEnabled && gapPx > 0 && (
+            <div
+              className="pointer-events-none"
+              style={{
+                height: `${gapPx}px`,
+                background: 'repeating-linear-gradient(45deg, rgba(255, 165, 0, 0.5), rgba(255, 165, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 10px, rgba(255, 200, 0, 0.5) 20px)',
+                border: '3px solid orange',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+              }}
+            >
+              <div className="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                GAP: {gapPx}px (between RED bottom ↑ and GREEN bottom ↓)
+              </div>
+            </div>
+          )}
+          
           <ConversationScrollButton 
             className={debugEnabled ? "bg-cyan-500/20 outline outline-2 outline-cyan-500/60" : ""}
             data-debug-scroll-btn
           />
         </Conversation>
-        
-        {/* Debug overlay to visualize gap */}
-        {debugEnabled && gapPx > 0 && (
-          <div
-            className="absolute left-0 right-0 pointer-events-none z-50"
-            style={{
-              bottom: 0,
-              height: `${gapPx}px`,
-              background: 'repeating-linear-gradient(45deg, rgba(255, 165, 0, 0.3), rgba(255, 165, 0, 0.3) 10px, rgba(255, 200, 0, 0.3) 10px, rgba(255, 200, 0, 0.3) 20px)',
-              border: '2px dashed orange',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-              BLANK GAP: {gapPx}px (margin collapse from last Message)
-            </div>
-          </div>
-        )}
         
         {/* Input Area - sibling to Conversation */}
         <div className="shrink-0 border-t p-4" data-chat-input>
