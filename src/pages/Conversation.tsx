@@ -119,6 +119,9 @@ const ConversationPage = () => {
     const outer = document.querySelector('[data-chat-outer]') as HTMLElement | null;
     const inner = document.querySelector('[data-chat-inner]') as HTMLElement | null;
     const messages = document.querySelectorAll('[data-debug-message]');
+    const actions = document.querySelectorAll('[data-debug-actions]');
+    const scrollBtn = document.querySelector('[data-debug-scroll-btn]') as HTMLElement | null;
+    
     const logEl = (name: string, el: HTMLElement | null) => {
       if (!el) return;
       const cs = window.getComputedStyle(el);
@@ -139,6 +142,7 @@ const ConversationPage = () => {
         gap: cs.gap,
       });
     };
+    
     logEl('Conversation (GREEN outer)', outer);
     logEl('ConversationContent (RED inner)', inner);
     
@@ -147,10 +151,12 @@ const ConversationPage = () => {
       const outerRect = outer.getBoundingClientRect();
       const innerRect = inner.getBoundingClientRect();
       const gap = outerRect.bottom - innerRect.bottom;
-      console.warn(`[ChatDebug] GAP below red box: ${gap}px`);
+      console.warn(`[ChatDebug] GAP below red box: ${gap}px (negative means inner extends beyond outer)`);
     }
     
-    messages.forEach((msg, idx) => logEl(`Message ${idx}`, msg as HTMLElement));
+    messages.forEach((msg, idx) => logEl(`Message ${idx} (PURPLE)`, msg as HTMLElement));
+    actions.forEach((action, idx) => logEl(`Actions ${idx} (MAGENTA)`, action as HTMLElement));
+    if (scrollBtn) logEl('Scroll Button (CYAN)', scrollBtn);
   }, [messages.length, status, debugEnabled]);
 
   // Lock page scroll so only the conversation area can scroll
@@ -318,7 +324,7 @@ const ConversationPage = () => {
         
         {/* Conversation Area - flex-1 takes remaining space */}
         <Conversation className="flex-1 min-h-0" data-allowed-scroll data-chat-outer debug={debugEnabled}>
-          <ConversationContent className={cn("max-w-screen-sm md:max-w-3xl mx-auto space-y-4 !overflow-visible", debugEnabled && "!pb-0")} data-chat-inner debug={debugEnabled}>
+          <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4" data-chat-inner debug={debugEnabled}>
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
@@ -342,7 +348,10 @@ const ConversationPage = () => {
                     {message.role === "assistant" ? (
                       <div className={cn("flex-1", debugEnabled && "bg-yellow-500/10 outline outline-1 outline-yellow-500/40")}>
                         <Response className={cn("mb-0", debugEnabled && "bg-blue-500/10 outline outline-1 outline-blue-500/40")}>{message.content}</Response>
-                        <Actions className="-mt-2">
+                        <Actions 
+                          className={cn("mt-2", debugEnabled && "bg-magenta-500/10 outline outline-2 outline-magenta-500/60")}
+                          data-debug-actions
+                        >
                           <Action 
                             label="Copy" 
                             tooltip="Copy to clipboard"
@@ -402,7 +411,10 @@ const ConversationPage = () => {
               </Reasoning>
             )}
           </ConversationContent>
-          <ConversationScrollButton />
+          <ConversationScrollButton 
+            className={debugEnabled ? "bg-cyan-500/20 outline outline-2 outline-cyan-500/60" : ""}
+            data-debug-scroll-btn
+          />
         </Conversation>
         
         {/* Input Area - sibling to Conversation */}
