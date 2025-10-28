@@ -43,7 +43,10 @@ const ConversationPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState<string>("");
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
-  const [model, setModel] = useState<string>("google/gemini-2.5-flash");
+  const [model, setModel] = useState<string>(() => {
+    // Load model preference from localStorage, default to GPT-5 Mini
+    return localStorage.getItem("ai-model-preference") || "openai/gpt-5-mini";
+  });
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const navigate = useNavigate();
@@ -66,6 +69,11 @@ const ConversationPage = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Save model preference to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("ai-model-preference", model);
+  }, [model]);
 
   useEffect(() => {
     // Get initial session

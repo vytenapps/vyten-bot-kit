@@ -135,7 +135,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: model || "google/gemini-2.5-flash",
+        model: model || "openai/gpt-5",
         messages,
         stream: true,
       }),
