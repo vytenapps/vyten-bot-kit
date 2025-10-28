@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
+import { AI_MODELS } from "@/lib/ai-config";
+import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
@@ -31,32 +33,16 @@ const Chat = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [text, setText] = useState<string>("");
-  const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
-  const [selectedModel, setSelectedModel] = useState<string>(
-    localStorage.getItem("ai-model-preference") || "openai/gpt-5-mini"
-  );
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const models = [
-    { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
-    { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro" },
-    { id: "google/gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
-    { id: "openai/gpt-5", name: "GPT-5" },
-    { id: "openai/gpt-5-mini", name: "GPT-5 Mini" },
-    { id: "openai/gpt-5-nano", name: "GPT-5 Nano" },
-  ];
+  
+  const { model, setModel, status } = useAIChat();
 
   const suggestions = [
     "What is Vyten Apps?",
     "What are the latest trends in AI?",
     "Explain best practices for Lovable development?",
   ];
-
-  // Save selected model to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem("ai-model-preference", selectedModel);
-  }, [selectedModel]);
 
   useEffect(() => {
     // Get initial session
@@ -127,33 +113,25 @@ const Chat = () => {
     if (!text.trim() || !session?.user?.id) {
       return;
     }
-    
-    setStatus('submitted');
 
     try {
-      // Create a new conversation (don't save message yet - edge function will do it)
+      // Create a new conversation
       const { data: conversation, error: convError } = await supabase
         .from("conversations")
         .insert({
           user_id: session.user.id,
-          title: text.substring(0, 50), // Use first 50 chars as title
+          title: text.substring(0, 50),
         })
         .select()
         .single();
 
-      if (convError) {
-        throw convError;
-      }
+      if (convError) throw convError;
 
-      // Navigate to the conversation page with the message and model
-      // The conversation page will auto-trigger the AI call
-      navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${selectedModel}`);
+      // Navigate to conversation page with message and model
+      navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${model}`);
     } catch (error) {
       console.error("Error creating conversation:", error);
-      toast.error("Failed to create conversation", {
-        description: "Please try again",
-      });
-      setStatus('error');
+      toast.error("Failed to create conversation");
     }
   };
 
@@ -220,16 +198,16 @@ const Chat = () => {
                       <span>Voice</span>
                     </PromptInputButton>
                     <PromptInputModelSelect
-                      value={selectedModel}
-                      onValueChange={setSelectedModel}
+                      value={model}
+                      onValueChange={setModel}
                     >
                       <PromptInputModelSelectTrigger>
                         <PromptInputModelSelectValue />
                       </PromptInputModelSelectTrigger>
                       <PromptInputModelSelectContent>
-                        {models.map((model) => (
-                          <PromptInputModelSelectItem key={model.id} value={model.id}>
-                            {model.name}
+                        {AI_MODELS.map((m) => (
+                          <PromptInputModelSelectItem key={m.id} value={m.id}>
+                            {m.name}
                           </PromptInputModelSelectItem>
                         ))}
                       </PromptInputModelSelectContent>

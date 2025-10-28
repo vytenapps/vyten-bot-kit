@@ -1,6 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+/**
+ * Lovable Cloud AI Chat Edge Function
+ * 
+ * Implements streaming chat using Lovable AI Gateway with:
+ * - JWT authentication
+ * - Rate limiting (20 requests per minute)
+ * - Conversation history management
+ * - Proper SSE streaming with line buffering
+ * - Message persistence to database
+ * 
+ * Follows Lovable AI best practices:
+ * - Uses agent-centric approach (complete conversation history)
+ * - Proper error handling for 429/402 rate limits
+ * - Server-side system prompt management
+ */
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -110,7 +126,7 @@ serve(async (req) => {
 
     if (userMsgError) throw userMsgError;
 
-    // Get conversation history (last 10 messages)
+    // Get conversation history (last 10 messages for context)
     const { data: history, error: historyError } = await supabaseClient
       .from("messages")
       .select("role, content")
@@ -120,6 +136,7 @@ serve(async (req) => {
 
     if (historyError) throw historyError;
 
+    // Build complete conversation context (agent-centric approach)
     const messages = [
       { role: "system", content: system || "You are a helpful AI assistant. Keep answers clear and concise." },
       ...(history || []).reverse(),
@@ -128,6 +145,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // Call Lovable AI Gateway with streaming enabled
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -135,7 +153,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: model || "openai/gpt-5",
+        model: model || "openai/gpt-5-mini",
         messages,
         stream: true,
       }),
@@ -171,7 +189,8 @@ serve(async (req) => {
       );
     }
 
-    // Stream response back to client and collect full response
+    // Stream response with proper SSE line buffering
+    // Critical: Buffer incomplete lines across chunks to prevent data loss
     let fullResponse = "";
     const stream = new ReadableStream({
       async start(controller) {
@@ -193,6 +212,7 @@ serve(async (req) => {
             const chunk = decoder.decode(value, { stream: true });
             lineBuffer += chunk;
 
+            // Process complete lines only
             let newlineIndex: number;
             while ((newlineIndex = lineBuffer.indexOf("\n")) !== -1) {
               let line = lineBuffer.slice(0, newlineIndex);
