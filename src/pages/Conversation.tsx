@@ -610,7 +610,7 @@ const ConversationPage = () => {
         
         
         {/* Input Area - sibling to Conversation */}
-        <div className="shrink-0 bg-transparent p-4" data-chat-input>
+        <div className="shrink-0 bg-transparent px-4 pb-4" data-chat-input>
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
             <AttachmentInput
               onFilesSelected={handleFilesSelected}
