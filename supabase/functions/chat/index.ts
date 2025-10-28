@@ -20,10 +20,11 @@ serve(async (req) => {
       hasMessages: !!body.messages, 
       hasConversationId: !!body.conversationId,
       messagesType: typeof body.messages,
-      messagesLength: Array.isArray(body.messages) ? body.messages.length : "not array"
+      messagesLength: Array.isArray(body.messages) ? body.messages.length : "not array",
+      hasFiles: !!body.files
     });
     
-    const { messages, conversationId, model } = body;
+    const { messages, conversationId, model, files } = body;
 
     console.log("Step 3: Extracted values", { conversationId, model, messageCount: messages?.length ?? 0 });
 
@@ -130,6 +131,44 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
+    // Format messages with file attachments if present
+    const formattedMessages = [...messages];
+    if (files && files.length > 0 && formattedMessages.length > 0) {
+      const lastMessage = formattedMessages[formattedMessages.length - 1];
+      const content = [];
+      
+      // Add text content
+      if (typeof lastMessage.content === 'string') {
+        content.push({
+          type: "text",
+          text: lastMessage.content
+        });
+      }
+      
+      // Add file attachments
+      for (const file of files) {
+        if (file.type === 'image') {
+          content.push({
+            type: "image_url",
+            image_url: {
+              url: file.data // base64 data URI
+            }
+          });
+        } else {
+          // For non-image files, include file info as text
+          content.push({
+            type: "text",
+            text: `[File: ${file.name}, Type: ${file.mimeType}, Size: ${file.size} bytes]`
+          });
+        }
+      }
+      
+      formattedMessages[formattedMessages.length - 1] = {
+        ...lastMessage,
+        content
+      };
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -141,9 +180,9 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful AI assistant. Provide clear, concise, and accurate responses."
+            content: "You are a helpful AI assistant. Provide clear, concise, and accurate responses. When analyzing images or files, provide detailed and helpful insights."
           },
-          ...messages
+          ...formattedMessages
         ],
         stream: true,
       }),

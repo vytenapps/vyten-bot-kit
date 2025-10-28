@@ -127,6 +127,7 @@ const ConversationPage = () => {
   useEffect(() => {
     const messageFromUrl = searchParams.get("message");
     const modelFromUrl = searchParams.get("model");
+    const filesFromUrl = searchParams.get("files");
     
     if (messageFromUrl && !hasTriggeredAI && session?.user?.id && chatId) {
       console.log("Auto-triggering AI response from URL params");
@@ -136,8 +137,18 @@ const ConversationPage = () => {
         setModel(modelFromUrl);
       }
       
+      // Parse files if present
+      let filesData = null;
+      if (filesFromUrl) {
+        try {
+          filesData = JSON.parse(decodeURIComponent(filesFromUrl));
+        } catch (e) {
+          console.error("Failed to parse files from URL", e);
+        }
+      }
+      
       // Trigger AI response
-      sendMessage(messageFromUrl, chatId).then(() => {
+      sendMessage(messageFromUrl, chatId, filesData).then(() => {
         console.log("Auto-trigger completed, reloading from DB");
         if (session?.user?.id && chatId) {
           loadConversation(session.user.id, chatId);
@@ -244,10 +255,37 @@ const ConversationPage = () => {
     if (!text.trim() || !chatId) return;
 
     const userMessage = text.trim();
+    const filesToSend = attachedFiles;
     setText("");
     setAttachedFiles([]);
     
-    await sendMessage(userMessage, chatId);
+    // Convert files to base64 for AI processing
+    let filesData = null;
+    if (filesToSend.length > 0) {
+      filesData = await Promise.all(
+        filesToSend.map(async (file) => {
+          const base64 = await fileToBase64(file);
+          return {
+            name: file.name,
+            type: file.type.startsWith("image/") ? "image" : "file",
+            mimeType: file.type,
+            size: file.size,
+            data: base64
+          };
+        })
+      );
+    }
+    
+    await sendMessage(userMessage, chatId, filesData);
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleFilesSelected = (files: File[]) => {

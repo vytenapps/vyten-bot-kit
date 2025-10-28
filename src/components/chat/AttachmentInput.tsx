@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { X, FileIcon, Upload, Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 interface FileWithPreview extends File {
@@ -212,71 +213,87 @@ export function AttachmentPreviews({
   const isImageFile = (file: File) => file.type.startsWith("image/");
 
   return (
-    <div className="flex flex-wrap gap-2 px-3 pt-3">
-      {files.map((file, index) => {
-        const isImage = isImageFile(file);
-        const preview = filePreviews[index];
+    <TooltipProvider>
+      <div className="flex flex-wrap gap-2 px-3 pt-3">
+        {files.map((file, index) => {
+          const isImage = isImageFile(file);
+          const preview = filePreviews[index];
 
-        return (
-          <div
-            key={index}
-            className="relative group"
-            onMouseEnter={() => onMouseEnter(index)}
-            onMouseLeave={onMouseLeave}
-          >
-            {isImage ? (
-              <div
-                className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted cursor-pointer"
-                onClick={() => onFileClick(file, index)}
-              >
-                <img
-                  src={preview}
-                  alt={file.name}
-                  className="w-full h-full object-cover"
-                />
-                {hoveredIndex === index && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveFile(index);
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 pr-8 relative">
-                <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-medium truncate max-w-[120px]">
-                    {file.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {(file.size / 1024).toFixed(0)} KB
-                  </span>
+          return (
+            <div
+              key={index}
+              className="relative group"
+              onMouseEnter={() => onMouseEnter(index)}
+              onMouseLeave={onMouseLeave}
+            >
+              {isImage ? (
+                <div
+                  className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted cursor-pointer"
+                  onClick={() => onFileClick(file, index)}
+                >
+                  <img
+                    src={preview}
+                    alt={file.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "absolute top-1 right-1 h-5 w-5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-opacity",
+                          hoveredIndex === index ? "opacity-100" : "opacity-0"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveFile(index);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Remove file</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-                {hoveredIndex === index && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 absolute right-1 top-1/2 -translate-y-1/2"
-                    onClick={() => onRemoveFile(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 relative">
+                  <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex flex-col min-w-0 pr-6">
+                    <span className="text-xs font-medium truncate max-w-[120px]">
+                      {file.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {(file.size / 1024).toFixed(0)} KB
+                    </span>
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "absolute top-1 right-1 h-5 w-5 rounded-full hover:bg-muted transition-opacity",
+                          hoveredIndex === index ? "opacity-100" : "opacity-0"
+                        )}
+                        onClick={() => onRemoveFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Remove file</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </TooltipProvider>
   );
 }
 

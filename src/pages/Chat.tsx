@@ -154,12 +154,39 @@ const Chat = () => {
 
       if (convError) throw convError;
 
-      // Navigate to conversation page with message and model
-      navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${model}`);
+      // Prepare files parameter for URL
+      let filesParam = "";
+      if (attachedFiles.length > 0) {
+        const filesData = await Promise.all(
+          attachedFiles.map(async (file) => {
+            const base64 = await fileToBase64(file);
+            return {
+              name: file.name,
+              type: file.type.startsWith("image/") ? "image" : "file",
+              mimeType: file.type,
+              size: file.size,
+              data: base64
+            };
+          })
+        );
+        filesParam = `&files=${encodeURIComponent(JSON.stringify(filesData))}`;
+      }
+
+      // Navigate to conversation page with message, model, and files
+      navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${model}${filesParam}`);
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to create conversation");
     }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSuggestionClick = (suggestion: string) => {

@@ -56,7 +56,7 @@ export const useAIChat = () => {
     }
   }, []);
 
-  const sendMessage = useCallback(async (content: string, conversationId: string) => {
+  const sendMessage = useCallback(async (content: string, conversationId: string, files?: any[] | null) => {
     if (!content.trim()) return;
 
     // Create new abort controller for this request
@@ -80,7 +80,7 @@ export const useAIChat = () => {
       if (!session) throw new Error("Not authenticated");
 
       const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-      console.debug("[AIChat] POST", { chatUrl, conversationId, model, msgCount: apiMessages.length });
+      console.debug("[AIChat] POST", { chatUrl, conversationId, model, msgCount: apiMessages.length, hasFiles: !!files });
       const response = await fetch(chatUrl, {
         method: "POST",
         headers: {
@@ -91,6 +91,7 @@ export const useAIChat = () => {
           messages: apiMessages,
           conversationId,
           model,
+          files: files || undefined,
         }),
         signal: abortControllerRef.current.signal,
       });
