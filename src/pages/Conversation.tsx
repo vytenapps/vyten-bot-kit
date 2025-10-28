@@ -51,7 +51,7 @@ const ConversationPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState<string>("");
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
-  const [model, setModel] = useState<string>("google/gemini-2.5-flash");
+  const [model, setModel] = useState<string>("openai/gpt-5");
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
@@ -70,6 +70,22 @@ const ConversationPage = () => {
     { id: "openai/gpt-5-mini", name: "GPT-5 Mini" },
     { id: "openai/gpt-5-nano", name: "GPT-5 Nano" },
   ];
+
+  // Load saved model from localStorage or use GPT-5 as default
+  useEffect(() => {
+    const savedModel = localStorage.getItem("preferred-ai-model");
+    if (savedModel && models.some(m => m.id === savedModel)) {
+      setModel(savedModel);
+    } else {
+      setModel("openai/gpt-5");
+    }
+  }, []);
+
+  // Save model selection to localStorage when it changes
+  const handleModelChange = (newModel: string) => {
+    setModel(newModel);
+    localStorage.setItem("preferred-ai-model", newModel);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -567,7 +583,7 @@ const ConversationPage = () => {
                       </PromptInputButton>
                       <PromptInputModelSelect
                         value={model}
-                        onValueChange={setModel}
+                        onValueChange={handleModelChange}
                       >
                         <PromptInputModelSelectTrigger>
                           <PromptInputModelSelectValue />

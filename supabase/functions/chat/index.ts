@@ -139,11 +139,11 @@ serve(async (req) => {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: model || "google/gemini-2.5-flash",
-        messages,
-        stream: true,
-      }),
+        body: JSON.stringify({
+          model: model || "openai/gpt-5-mini",
+          messages,
+          stream: true,
+        }),
     });
 
     if (!response.ok) {
@@ -234,7 +234,7 @@ serve(async (req) => {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  model: "google/gemini-2.5-flash",
+                  model: "openai/gpt-5-mini",
                   messages: [
                     { role: "system", content: "Generate a short 25 character or less title for this conversation. Only output the title, nothing else." },
                     { role: "user", content: message },
