@@ -12,6 +12,7 @@ import Chat from "./pages/Chat";
 import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { AuthProvider, Protected } from "@/components/auth-provider";
 
 const queryClient = new QueryClient();
 
@@ -33,9 +34,9 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/c/:chatId" element={<Conversation />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/chat" element={<Protected><Chat /></Protected>} />
+          <Route path="/c/:chatId" element={<Protected><Conversation /></Protected>} />
+          <Route path="/profile" element={<Protected><Profile /></Protected>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -47,7 +48,9 @@ function AppContent() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

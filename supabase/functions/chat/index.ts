@@ -40,7 +40,9 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY } } }
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Extract raw JWT (removing the Bearer prefix if present) and validate it
+    const jwt = authHeader.replace(/^Bearer\s+/i, "");
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
     if (userError || !user) {
       console.error("Auth.getUser failed", { hasUser: !!user, userError });
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
