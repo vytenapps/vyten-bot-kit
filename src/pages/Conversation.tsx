@@ -104,7 +104,7 @@ const ConversationPage = () => {
     const qs = new URLSearchParams(window.location.search);
     const enabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || qs.get('debugScroll') === '1';
     if (enabled) {
-      const cleanup = highlightScrollContainers({ allowedAttr: 'data-allowed-scroll' });
+      const cleanup = highlightScrollContainers({ allowedAttr: 'data-allowed-scroll', showOverlay: true });
       // Re-run when message list size or status changes since height changes
       return () => cleanup?.();
     }

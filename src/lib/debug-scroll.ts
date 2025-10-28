@@ -23,7 +23,7 @@ function getDomPath(el: Element): string {
   return stack.join(' > ');
 }
 
-export function highlightScrollContainers(options?: { allowedAttr?: string }) {
+export function highlightScrollContainers(options?: { allowedAttr?: string; showOverlay?: boolean }) {
   const allowedAttr = options?.allowedAttr ?? 'data-allowed-scroll';
   const nodes = Array.from(document.querySelectorAll('*')) as HTMLElement[];
   const scrollers: HTMLElement[] = [];
@@ -43,6 +43,26 @@ export function highlightScrollContainers(options?: { allowedAttr?: string }) {
       el.style.outlineOffset = '-2px';
     }
   });
+
+  // Optional small overlay for mobile Safari (no console access)
+  let overlay: HTMLDivElement | null = null;
+  if (options?.showOverlay) {
+    overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.bottom = '8px';
+    overlay.style.left = '8px';
+    overlay.style.zIndex = '9999';
+    overlay.style.maxWidth = '90vw';
+    overlay.style.background = 'rgba(0,0,0,0.6)';
+    overlay.style.color = '#fff';
+    overlay.style.fontSize = '12px';
+    overlay.style.lineHeight = '1.2';
+    overlay.style.padding = '6px 8px';
+    overlay.style.borderRadius = '8px';
+    overlay.style.pointerEvents = 'none';
+    overlay.textContent = `[ScrollDebug] ${scrollers.length} scrollable element(s)`;
+    document.body.appendChild(overlay);
+  }
 
   // Console report
   // Grouped to avoid noise; expand when needed
