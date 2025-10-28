@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
 import { VytenIcon } from "@/components/VytenIcon";
+import { cn } from "@/lib/utils";
 import {
   SidebarInset,
   SidebarProvider,
@@ -117,6 +118,7 @@ const ConversationPage = () => {
     if (!debugEnabled) return;
     const outer = document.querySelector('[data-chat-outer]') as HTMLElement | null;
     const inner = document.querySelector('[data-chat-inner]') as HTMLElement | null;
+    const messages = document.querySelectorAll('[data-debug-message]');
     const logEl = (name: string, el: HTMLElement | null) => {
       if (!el) return;
       const cs = window.getComputedStyle(el);
@@ -130,10 +132,13 @@ const ConversationPage = () => {
         paddingBottom: cs.paddingBottom,
         marginTop: cs.marginTop,
         marginBottom: cs.marginBottom,
+        display: cs.display,
+        flexDirection: cs.flexDirection,
       });
     };
     logEl('Conversation (outer)', outer);
     logEl('ConversationContent (inner)', inner);
+    messages.forEach((msg, idx) => logEl(`Message ${idx}`, msg as HTMLElement));
   }, [messages.length, status, debugEnabled]);
 
   // Lock page scroll so only the conversation area can scroll
@@ -316,15 +321,15 @@ const ConversationPage = () => {
                       <ReasoningTrigger />
                     </Reasoning>
                   )}
-                  <Message from={message.role}>
+                  <Message from={message.role} data-debug-message className={debugEnabled ? "bg-purple-500/10 outline outline-1 outline-purple-500/40" : ""}>
                     {message.role === "assistant" && (
                       <MessageAvatar name="AI">
                         <VytenIcon className="h-4 w-4 text-white" />
                       </MessageAvatar>
                     )}
                     {message.role === "assistant" ? (
-                      <div className="flex-1">
-                        <Response className="mb-0">{message.content}</Response>
+                      <div className={cn("flex-1", debugEnabled && "bg-yellow-500/10 outline outline-1 outline-yellow-500/40")}>
+                        <Response className={cn("mb-0", debugEnabled && "bg-blue-500/10 outline outline-1 outline-blue-500/40")}>{message.content}</Response>
                         <Actions className="-mt-2">
                           <Action 
                             label="Copy" 
