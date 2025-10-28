@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
+import { VytenIcon } from "@/components/VytenIcon";
 import {
   SidebarInset,
   SidebarProvider,
@@ -26,7 +27,8 @@ import {
 } from "@/components/ui/shadcn-io/ai/prompt-input";
 import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
-import { Bot, MicIcon, PaperclipIcon } from "lucide-react";
+
+import { MicIcon, PaperclipIcon } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -338,6 +340,12 @@ const ConversationPage = () => {
     }
   };
 
+  const getInitials = (email?: string) => {
+    if (!email) return "U";
+    const name = email.split("@")[0];
+    return name.slice(0, 2).toUpperCase();
+  };
+
   if (!session) {
     return null;
   }
@@ -370,13 +378,13 @@ const ConversationPage = () => {
                   <Message from={message.role} key={message.id}>
                     {message.role === "assistant" && (
                       <MessageAvatar name="AI">
-                        <Bot className="h-4 w-4" />
+                        <VytenIcon className="h-5 w-5 text-accent" />
                       </MessageAvatar>
                     )}
                     <MessageContent>{message.content}</MessageContent>
                     {message.role === "user" && (
                       <MessageAvatar 
-                        name={session?.user?.email?.split("@")[0] || "You"} 
+                        name={getInitials(session?.user?.email)}
                       />
                     )}
                   </Message>

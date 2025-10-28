@@ -44,12 +44,13 @@ MessageContent.displayName = "MessageContent";
 interface MessageAvatarProps extends React.ComponentProps<typeof Avatar> {
   src?: string;
   name?: string;
+  children?: React.ReactNode;
 }
 
 const MessageAvatar = React.forwardRef<
   React.ElementRef<typeof Avatar>,
   MessageAvatarProps
->(({ src, name, className, ...props }, ref) => {
+>(({ src, name, className, children, ...props }, ref) => {
   const initials = name
     ? name
         .split(" ")
@@ -62,7 +63,9 @@ const MessageAvatar = React.forwardRef<
   return (
     <Avatar ref={ref} className={cn("h-8 w-8", className)} {...props}>
       <AvatarImage src={src} alt={name} />
-      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+      <AvatarFallback className="text-xs flex items-center justify-center">
+        {children || initials}
+      </AvatarFallback>
     </Avatar>
   );
 });
