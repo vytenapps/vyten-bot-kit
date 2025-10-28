@@ -41,7 +41,7 @@ const ConversationPage = () => {
   const [text, setText] = useState<string>("");
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
-  const [messageFeedback, setMessageFeedback] = useState<Record<string, 'up' | 'down'>>({});
+  const [messageFeedback, setMessageFeedback] = useState<Record<string, 'positive' | 'negative'>>({});
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -145,9 +145,9 @@ const ConversationPage = () => {
       .eq("user_id", userId);
 
     if (feedback) {
-      const feedbackMap: Record<string, 'up' | 'down'> = {};
+      const feedbackMap: Record<string, 'positive' | 'negative'> = {};
       feedback.forEach((f: any) => {
-        feedbackMap[f.message_id] = f.feedback_type as 'up' | 'down';
+        feedbackMap[f.message_id] = f.feedback_type as 'positive' | 'negative';
       });
       setMessageFeedback(feedbackMap);
     }
@@ -174,7 +174,7 @@ const ConversationPage = () => {
     toast.success("Copied to clipboard");
   };
 
-  const handleFeedback = async (messageId: string, feedbackType: 'up' | 'down') => {
+  const handleFeedback = async (messageId: string, feedbackType: 'positive' | 'negative') => {
     if (!session?.user?.id) return;
 
     const currentFeedback = messageFeedback[messageId];
@@ -287,23 +287,23 @@ const ConversationPage = () => {
                             <Action 
                               label="Like" 
                               tooltip="Like this response"
-                              onClick={() => handleFeedback(message.id, 'up')}
-                              className={messageFeedback[message.id] === 'up' ? 'text-foreground' : ''}
+                              onClick={() => handleFeedback(message.id, 'positive')}
+                              className={messageFeedback[message.id] === 'positive' ? 'text-foreground' : ''}
                             >
                               <ThumbsUpIcon 
                                 className="size-4" 
-                                fill={messageFeedback[message.id] === 'up' ? 'currentColor' : 'none'}
+                                fill={messageFeedback[message.id] === 'positive' ? 'currentColor' : 'none'}
                               />
                             </Action>
                             <Action 
                               label="Dislike" 
                               tooltip="Dislike this response"
-                              onClick={() => handleFeedback(message.id, 'down')}
-                              className={messageFeedback[message.id] === 'down' ? 'text-foreground' : ''}
+                              onClick={() => handleFeedback(message.id, 'negative')}
+                              className={messageFeedback[message.id] === 'negative' ? 'text-foreground' : ''}
                             >
                               <ThumbsDownIcon 
                                 className="size-4"
-                                fill={messageFeedback[message.id] === 'down' ? 'currentColor' : 'none'}
+                                fill={messageFeedback[message.id] === 'negative' ? 'currentColor' : 'none'}
                               />
                             </Action>
                           </Actions>
