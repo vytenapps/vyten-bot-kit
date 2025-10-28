@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -16,6 +16,8 @@ interface Comment {
     username: string;
     first_name: string | null;
     last_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -41,7 +43,9 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
           user_profiles!inner (
             username,
             first_name,
-            last_name
+            last_name,
+            email,
+            avatar_url
           )
         `)
         .eq("post_id", postId)
@@ -160,20 +164,19 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
               comment.user_profiles.username
             : "Unknown User";
 
-          const initials = comment.user_profiles
-            ? `${comment.user_profiles.first_name?.[0] || ""}${comment.user_profiles.last_name?.[0] || ""}`.toUpperCase() ||
-              comment.user_profiles.username[0].toUpperCase()
-            : "?";
-
           const isOwnComment = comment.user_id === currentUserId;
 
           return (
             <div key={comment.id} className="flex gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                className="h-8 w-8"
+                avatarUrl={comment.user_profiles?.avatar_url}
+                email={comment.user_profiles?.email}
+                username={comment.user_profiles?.username}
+                firstName={comment.user_profiles?.first_name}
+                lastName={comment.user_profiles?.last_name}
+                fallbackClassName="bg-secondary text-secondary-foreground text-xs"
+              />
               <div className="flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="bg-muted rounded-lg px-3 py-2 flex-1">

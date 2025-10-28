@@ -1,15 +1,11 @@
 import { User, LogOut, Monitor } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +24,33 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<string>("profile");
+  const [profile, setProfile] = useState<{
+    avatar_url: string | null;
+    username: string;
+    first_name: string | null;
+    last_name: string | null;
+  } | null>(null);
+
+  // Load user profile data for avatar
+  useEffect(() => {
+    if (isLoggedIn && userEmail) {
+      const loadProfile = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from("user_profiles")
+            .select("avatar_url, username, first_name, last_name")
+            .eq("user_id", user.id)
+            .single();
+
+          if (data) {
+            setProfile(data);
+          }
+        }
+      };
+      loadProfile();
+    }
+  }, [isLoggedIn, userEmail]);
 
   const handleSignOut = async () => {
     try {
@@ -55,23 +78,13 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
     navigate("/auth");
   };
 
-  const getInitials = (email?: string) => {
-    if (!email) return "U";
-    const name = email.split("@")[0];
-    return name.slice(0, 2).toUpperCase();
-  };
-
   if (!isLoggedIn) {
     return (
       <>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
-              <Avatar className="h-10 w-10 cursor-pointer">
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar className="h-10 w-10 cursor-pointer" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -89,10 +102,14 @@ export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
-            <Avatar className="h-10 w-10 cursor-pointer">
-              <AvatarImage src="" alt={userEmail} />
-              <AvatarFallback>{getInitials(userEmail)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              className="h-10 w-10 cursor-pointer"
+              avatarUrl={profile?.avatar_url}
+              email={userEmail}
+              username={profile?.username}
+              firstName={profile?.first_name}
+              lastName={profile?.last_name}
+            />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">

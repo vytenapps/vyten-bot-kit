@@ -29,6 +29,13 @@ import { ThumbsUpIcon, ThumbsDownIcon, CopyIcon, ArrowDownIcon } from "lucide-re
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    avatar_url: string | null;
+    username: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+  } | null>(null);
   const [text, setText] = useState<string>("");
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
@@ -46,6 +53,18 @@ const ConversationPage = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages, stopStreaming } = useAIChat();
+
+  const loadUserProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("avatar_url, username, first_name, last_name, email")
+      .eq("user_id", userId)
+      .single();
+
+    if (data) {
+      setUserProfile(data);
+    }
+  };
 
   // Generate preview URLs for image files
   useEffect(() => {
@@ -90,6 +109,10 @@ const ConversationPage = () => {
         navigate("/auth");
       } else {
         setSession(session);
+        
+        // Load user profile for avatar
+        loadUserProfile(session.user.id);
+        
         // Only load conversation if we're not auto-triggering
         const messageFromUrl = searchParams.get("message");
         if (!messageFromUrl) {
@@ -101,6 +124,9 @@ const ConversationPage = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      }
       if (event === "SIGNED_OUT") {
         navigate("/auth");
       }
@@ -432,7 +458,7 @@ const ConversationPage = () => {
                   )}
                   <Message from={message.role} data-debug-message className={message.role === "user" ? "group" : ""}>
                     {message.role === "assistant" && (
-                      <MessageAvatar name="AI">
+                      <MessageAvatar isAI>
                         <svg height="14" strokeLinejoin="round" viewBox="0 0 16 16" width="14" style={{ color: 'currentcolor' }}>
                           <path d="M2.5 0.5V0H3.5V0.5C3.5 1.60457 4.39543 2.5 5.5 2.5H6V3V3.5H5.5C4.39543 3.5 3.5 4.39543 3.5 5.5V6H3H2.5V5.5C2.5 4.39543 1.60457 3.5 0.5 3.5H0V3V2.5H0.5C1.60457 2.5 2.5 1.60457 2.5 0.5Z" fill="currentColor"></path>
                           <path d="M14.5 4.5V5H13.5V4.5C13.5 3.94772 13.0523 3.5 12.5 3.5H12V3V2.5H12.5C13.0523 2.5 13.5 2.05228 13.5 1.5V1H14H14.5V1.5C14.5 2.05228 14.9477 2.5 15.5 2.5H16V3V3.5H15.5C14.9477 3.5 14.5 3.94772 14.5 4.5Z" fill="currentColor"></path>
@@ -556,7 +582,11 @@ const ConversationPage = () => {
                     )}
                     {message.role === "user" && (
                       <MessageAvatar 
-                        name={getInitials(session?.user?.email)}
+                        avatarUrl={userProfile?.avatar_url}
+                        email={userProfile?.email}
+                        username={userProfile?.username}
+                        firstName={userProfile?.first_name}
+                        lastName={userProfile?.last_name}
                       />
                     )}
                   </Message>

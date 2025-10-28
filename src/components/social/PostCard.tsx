@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Heart, MessageCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -31,6 +31,8 @@ interface PostCardProps {
       username: string;
       first_name: string | null;
       last_name: string | null;
+      email: string | null;
+      avatar_url: string | null;
     } | null;
     post_likes: { user_id: string }[];
     post_comments: { id: string }[];
@@ -53,11 +55,6 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
     ? `${post.user_profiles.first_name || ""} ${post.user_profiles.last_name || ""}`.trim() ||
       post.user_profiles.username
     : "Unknown User";
-
-  const initials = post.user_profiles
-    ? `${post.user_profiles.first_name?.[0] || ""}${post.user_profiles.last_name?.[0] || ""}`.toUpperCase() ||
-      post.user_profiles.username[0].toUpperCase()
-    : "?";
 
   const handleLike = async () => {
     setIsLiking(true);
@@ -114,11 +111,14 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              avatarUrl={post.user_profiles?.avatar_url}
+              email={post.user_profiles?.email}
+              username={post.user_profiles?.username}
+              firstName={post.user_profiles?.first_name}
+              lastName={post.user_profiles?.last_name}
+              fallbackClassName="bg-primary text-primary-foreground"
+            />
             <div>
               <p className="font-semibold">{displayName}</p>
               <p className="text-sm text-muted-foreground">

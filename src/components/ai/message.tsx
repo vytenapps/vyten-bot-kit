@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 
 interface MessageProps extends React.HTMLAttributes<HTMLDivElement> {
   from: "user" | "assistant";
@@ -41,35 +41,46 @@ const MessageContent = React.forwardRef<
 ));
 MessageContent.displayName = "MessageContent";
 
-interface MessageAvatarProps extends React.ComponentProps<typeof Avatar> {
-  src?: string;
-  name?: string;
+interface MessageAvatarProps {
+  // For AI assistant avatars
   children?: React.ReactNode;
+  isAI?: boolean;
+  
+  // For user avatars
+  avatarUrl?: string | null;
+  email?: string | null;
+  username?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  
+  className?: string;
 }
 
 const MessageAvatar = React.forwardRef<
-  React.ElementRef<typeof Avatar>,
+  HTMLDivElement,
   MessageAvatarProps
->(({ src, name, className, children, ...props }, ref) => {
-  const initials = name
-    ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "AI";
+>(({ children, isAI, avatarUrl, email, username, firstName, lastName, className }, ref) => {
+  if (isAI || children) {
+    // AI avatar with custom icon
+    return (
+      <div ref={ref} className={cn("h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs", className)}>
+        {children || "AI"}
+      </div>
+    );
+  }
 
+  // User avatar
   return (
-    <Avatar ref={ref} className={cn("h-8 w-8 rounded-full", className)} {...props}>
-      <AvatarImage src={src} alt={name} />
-      <AvatarFallback className={cn(
-        "text-xs flex items-center justify-center rounded-full",
-        children && "bg-primary text-primary-foreground"
-      )}>
-        {children || initials}
-      </AvatarFallback>
-    </Avatar>
+    <div ref={ref}>
+      <UserAvatar
+        className={cn("h-8 w-8", className)}
+        avatarUrl={avatarUrl}
+        email={email}
+        username={username}
+        firstName={firstName}
+        lastName={lastName}
+      />
+    </div>
   );
 });
 MessageAvatar.displayName = "MessageAvatar";

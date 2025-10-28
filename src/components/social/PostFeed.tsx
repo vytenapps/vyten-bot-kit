@@ -16,6 +16,8 @@ interface Post {
     username: string;
     first_name: string | null;
     last_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
   } | null;
   post_likes: { user_id: string }[];
   post_comments: { id: string }[];
@@ -41,7 +43,9 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
           user_profiles!inner (
             username,
             first_name,
-            last_name
+            last_name,
+            email,
+            avatar_url
           ),
           post_likes (user_id),
           post_comments (id)
