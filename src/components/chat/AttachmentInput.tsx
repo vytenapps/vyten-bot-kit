@@ -241,7 +241,7 @@ export function AttachmentPreviews({
             >
               {isImage ? (
                 <div
-                  className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted cursor-pointer"
+                  className="relative w-16 h-16 rounded-lg overflow-hidden border bg-muted cursor-pointer"
                   onClick={() => onFileClick(file, index)}
                 >
                   <img
