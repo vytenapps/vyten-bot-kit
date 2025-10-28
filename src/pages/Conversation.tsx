@@ -34,6 +34,7 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/s
 import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
 
 import { MicIcon, PaperclipIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon } from "lucide-react";
+import { highlightScrollContainers } from "@/lib/debug-scroll";
 
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -97,6 +98,17 @@ const ConversationPage = () => {
       });
     }
   }, [searchParams, hasTriggeredAI, session, chatId, sendMessage, loadConversation, setModel, navigate]);
+
+  // Debug: highlight unexpected scroll containers on this page when enabled
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search);
+    const enabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || qs.get('debugScroll') === '1';
+    if (enabled) {
+      const cleanup = highlightScrollContainers({ allowedAttr: 'data-allowed-scroll' });
+      // Re-run when message list size or status changes since height changes
+      return () => cleanup?.();
+    }
+  }, [messages.length, status]);
 
   const loadConversationData = async (userId: string) => {
     if (!chatId) return;
@@ -240,7 +252,7 @@ const ConversationPage = () => {
         </header>
         
         {/* Conversation Area - flex-1 takes remaining space */}
-        <Conversation className="flex-1 min-h-0">
+        <Conversation className="flex-1 min-h-0" data-allowed-scroll style={import.meta.env.VITE_DEBUG_DISABLE_GUTTER === '1' ? { scrollbarGutter: 'auto' } : undefined}>
           <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
