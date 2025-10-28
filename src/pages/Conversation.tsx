@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type FormEventHandler } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 import { AI_MODELS } from "@/lib/ai-config";
 import { useAIChat } from "@/hooks/use-ai-chat";
@@ -31,8 +31,11 @@ import { Conversation, ConversationContent } from "@/components/ai/conversation"
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
+import { Actions, Action } from "@/components/ui/shadcn-io/ai/actions";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
-import { MicIcon, PaperclipIcon } from "lucide-react";
+import { MicIcon, PaperclipIcon, CopyIcon, EditIcon, ThumbsUpIcon, ThumbsDownIcon } from "lucide-react";
 
 const ConversationPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -43,6 +46,10 @@ const ConversationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [messageFeedback, setMessageFeedback] = useState<Record<string, "up" | "down">>({});
+  const { toast } = useToast();
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
 
@@ -118,13 +125,13 @@ const ConversationPage = () => {
 
     if (convError) {
       console.error("Error loading conversation:", convError);
-      toast.error("Failed to load conversation");
+      sonnerToast.error("Failed to load conversation");
       navigate("/chat");
       return;
     }
 
     if (!conversation) {
-      toast.error("Conversation not found");
+      sonnerToast.error("Conversation not found");
       navigate("/chat");
       return;
     }
@@ -134,6 +141,30 @@ const ConversationPage = () => {
     // Load messages using the hook
     if (chatId) {
       await loadConversation(userId, chatId);
+      
+      // Load feedback for assistant messages
+      const { data: msgs } = await supabase
+        .from("messages")
+        .select("id, role")
+        .eq("conversation_id", chatId)
+        .eq("user_id", userId);
+
+      const assistantMessageIds = msgs?.filter(m => m.role === "assistant").map(m => m.id) || [];
+      if (assistantMessageIds.length > 0) {
+        const { data: feedbackData } = await (supabase as any)
+          .from("message_feedback")
+          .select("message_id, feedback_type")
+          .eq("user_id", userId)
+          .in("message_id", assistantMessageIds);
+
+        if (feedbackData && Array.isArray(feedbackData)) {
+          const feedbackMap: Record<string, "up" | "down"> = {};
+          feedbackData.forEach((f: any) => {
+            feedbackMap[f.message_id] = f.feedback_type as "up" | "down";
+          });
+          setMessageFeedback(feedbackMap);
+        }
+      }
     }
   };
 
@@ -145,6 +176,99 @@ const ConversationPage = () => {
     setText("");
     
     await sendMessage(userMessage, chatId);
+  };
+
+  const handleCopy = async (content: string) => {
+    await navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied to clipboard",
+      duration: 2000,
+    });
+  };
+
+  const handleEdit = (messageId: string, content: string) => {
+    setEditingMessageId(messageId);
+    setEditText(content);
+  };
+
+  const handleSaveEdit = async (messageId: string) => {
+    if (!editText.trim() || !chatId) return;
+    
+    // Delete all messages after this one and resend
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    // Update the message content in the database
+    const { error } = await supabase
+      .from("messages")
+      .update({ content: editText.trim() })
+      .eq("id", messageId);
+
+    if (error) {
+      toast({
+        title: "Error updating message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Delete subsequent messages
+    const subsequentMessages = messages.slice(messageIndex + 1);
+    if (subsequentMessages.length > 0) {
+      await supabase
+        .from("messages")
+        .delete()
+        .in("id", subsequentMessages.map(m => m.id));
+    }
+
+    setEditingMessageId(null);
+    
+    // Reload conversation and regenerate
+    if (session?.user?.id && chatId) {
+      await loadConversation(session.user.id, chatId);
+      await sendMessage(editText.trim(), chatId);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditText("");
+  };
+
+  const handleFeedback = async (messageId: string, feedbackType: "up" | "down") => {
+    if (!session?.user?.id) return;
+
+    const currentFeedback = messageFeedback[messageId];
+    
+    // If clicking the same feedback, remove it
+    const newFeedbackType = currentFeedback === feedbackType ? null : feedbackType;
+
+    if (newFeedbackType === null) {
+      // Delete feedback
+      await (supabase as any)
+        .from("message_feedback")
+        .delete()
+        .eq("message_id", messageId)
+        .eq("user_id", session.user.id);
+      
+      const newFeedback = { ...messageFeedback };
+      delete newFeedback[messageId];
+      setMessageFeedback(newFeedback);
+    } else {
+      // Upsert feedback
+      await (supabase as any)
+        .from("message_feedback")
+        .upsert({
+          message_id: messageId,
+          user_id: session.user.id,
+          feedback_type: newFeedbackType,
+        });
+
+      setMessageFeedback({
+        ...messageFeedback,
+        [messageId]: newFeedbackType,
+      });
+    }
   };
 
   const getInitials = (email?: string) => {
@@ -203,13 +327,78 @@ const ConversationPage = () => {
                           <VytenIcon className="h-4 w-4 text-white" />
                         </MessageAvatar>
                       )}
-                      {message.role === "assistant" ? (
-                        <Response className="flex-1">{message.content}</Response>
-                      ) : (
-                        <MessageContent className="bg-primary text-primary-foreground">
-                          {message.content}
-                        </MessageContent>
-                      )}
+                      <div className="flex-1">
+                        {message.role === "assistant" ? (
+                          <>
+                            <Response className="flex-1">{message.content}</Response>
+                            <Actions className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Action 
+                                tooltip="Copy" 
+                                onClick={() => handleCopy(message.content)}
+                              >
+                                <CopyIcon className="size-4" />
+                              </Action>
+                              <Action 
+                                tooltip="Like" 
+                                onClick={() => handleFeedback(message.id, "up")}
+                                className={messageFeedback[message.id] === "up" ? "text-foreground" : ""}
+                              >
+                                <ThumbsUpIcon className="size-4" />
+                              </Action>
+                              <Action 
+                                tooltip="Dislike" 
+                                onClick={() => handleFeedback(message.id, "down")}
+                                className={messageFeedback[message.id] === "down" ? "text-foreground" : ""}
+                              >
+                                <ThumbsDownIcon className="size-4" />
+                              </Action>
+                            </Actions>
+                          </>
+                        ) : editingMessageId === message.id ? (
+                          <div className="space-y-2">
+                            <Textarea
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              className="min-h-[80px]"
+                              autoFocus
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSaveEdit(message.id)}
+                                className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded"
+                              >
+                                Save & Regenerate
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <MessageContent className="bg-primary text-primary-foreground">
+                              {message.content}
+                            </MessageContent>
+                            <Actions className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Action 
+                                tooltip="Copy" 
+                                onClick={() => handleCopy(message.content)}
+                              >
+                                <CopyIcon className="size-4" />
+                              </Action>
+                              <Action 
+                                tooltip="Edit" 
+                                onClick={() => handleEdit(message.id, message.content)}
+                              >
+                                <EditIcon className="size-4" />
+                              </Action>
+                            </Actions>
+                          </>
+                        )}
+                      </div>
                       {message.role === "user" && (
                         <MessageAvatar 
                           name={getInitials(session?.user?.email)}
