@@ -27,7 +27,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
-import { Conversation, ConversationContent } from "@/components/ai/conversation";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
 import { Message, MessageContent, MessageAvatar } from "@/components/ai/message";
 import { Response } from "@/components/ai/response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ui/shadcn-io/ai/reasoning";
@@ -247,7 +247,7 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <Conversation className="flex-1 min-h-0 overscroll-contain">
+        <Conversation className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
@@ -334,8 +334,9 @@ const ConversationPage = () => {
                   <ReasoningTrigger />
                 </Reasoning>
               )}
-            <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} />
           </ConversationContent>
+          <ConversationScrollButton />
         </Conversation>
         <div className="shrink-0 px-4 sm:px-6 md:px-8 pb-4 bg-background border-t">
           <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto pt-4">
