@@ -183,65 +183,63 @@ const ConversationPage = () => {
           </div>
         </header>
         <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
-          <div className="flex-1 overflow-hidden">
-            <Conversation>
-              <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
-                {messages.map((message, index) => {
-                  const isLastMessage = index === messages.length - 1;
-                  const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
-                  
-                  return (
-                    <div key={message.id} className="space-y-4">
-                      {isStreamingThisMessage && (
-                        <Reasoning 
-                          isStreaming={true}
-                          defaultOpen={true}
-                        >
-                          <ReasoningTrigger />
-                          <ReasoningContent>
-                            Analyzing your question and generating a thoughtful response...
-                          </ReasoningContent>
-                        </Reasoning>
+          <Conversation className="flex-1 min-h-0">
+            <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
+              {messages.map((message, index) => {
+                const isLastMessage = index === messages.length - 1;
+                const isStreamingThisMessage = isLastMessage && message.role === "assistant" && status === "streaming";
+                
+                return (
+                  <div key={message.id} className="space-y-4">
+                    {isStreamingThisMessage && (
+                      <Reasoning 
+                        isStreaming={true}
+                        defaultOpen={true}
+                      >
+                        <ReasoningTrigger />
+                        <ReasoningContent>
+                          Analyzing your question and generating a thoughtful response...
+                        </ReasoningContent>
+                      </Reasoning>
+                    )}
+                    <Message from={message.role}>
+                      {message.role === "assistant" && (
+                        <MessageAvatar name="AI">
+                          <VytenIcon className="h-4 w-4 text-white" />
+                        </MessageAvatar>
                       )}
-                      <Message from={message.role}>
-                        {message.role === "assistant" && (
-                          <MessageAvatar name="AI">
-                            <VytenIcon className="h-4 w-4 text-white" />
-                          </MessageAvatar>
-                        )}
-                        {message.role === "assistant" ? (
-                          <Response className="flex-1">{message.content}</Response>
-                        ) : (
-                          <MessageContent className="bg-primary text-primary-foreground">
-                            {message.content}
-                          </MessageContent>
-                        )}
-                        {message.role === "user" && (
-                          <MessageAvatar 
-                            name={getInitials(session?.user?.email)}
-                          />
-                        )}
-                      </Message>
-                    </div>
-                  );
-                })}
-                {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
-                {status === "streaming" && messages[messages.length - 1]?.role === "user" && (
-                  <Reasoning 
-                    isStreaming={true}
-                    defaultOpen={true}
-                  >
-                    <ReasoningTrigger />
-                    <ReasoningContent>
-                      Analyzing your question and generating a thoughtful response...
-                    </ReasoningContent>
-                  </Reasoning>
-                )}
-                <div ref={messagesEndRef} />
-              </ConversationContent>
-            </Conversation>
-          </div>
-          <div className="px-4 sm:px-6 md:px-8">
+                      {message.role === "assistant" ? (
+                        <Response className="flex-1">{message.content}</Response>
+                      ) : (
+                        <MessageContent className="bg-primary text-primary-foreground">
+                          {message.content}
+                        </MessageContent>
+                      )}
+                      {message.role === "user" && (
+                        <MessageAvatar 
+                          name={getInitials(session?.user?.email)}
+                        />
+                      )}
+                    </Message>
+                  </div>
+                );
+              })}
+              {/* Show reasoning immediately when streaming starts, even before assistant message appears */}
+              {status === "streaming" && messages[messages.length - 1]?.role === "user" && (
+                <Reasoning 
+                  isStreaming={true}
+                  defaultOpen={true}
+                >
+                  <ReasoningTrigger />
+                  <ReasoningContent>
+                    Analyzing your question and generating a thoughtful response...
+                  </ReasoningContent>
+                </Reasoning>
+              )}
+              <div ref={messagesEndRef} />
+            </ConversationContent>
+          </Conversation>
+          <div className="px-4 sm:px-6 md:px-8 pb-4">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
@@ -277,7 +275,7 @@ const ConversationPage = () => {
                   <PromptInputSubmit disabled={!text.trim()} status={status} />
                 </PromptInputToolbar>
               </PromptInput>
-              <p className="text-xs text-center text-muted-foreground mt-2 mb-2">
+              <p className="text-xs text-center text-muted-foreground mt-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
             </div>
