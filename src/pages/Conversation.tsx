@@ -49,6 +49,7 @@ const ConversationPage = () => {
   
   const debugEnabled = import.meta.env.VITE_DEBUG_SCROLL === '1' || searchParams.get("debugScroll") === '1';
   const [gapPx, setGapPx] = useState(0);
+  const [innerPaddingPx, setInnerPaddingPx] = useState(0);
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
 
