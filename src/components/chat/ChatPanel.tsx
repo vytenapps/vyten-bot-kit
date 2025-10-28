@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 
 interface Message {
@@ -25,7 +25,6 @@ export const ChatPanel = ({ conversationId, onConversationCreated }: ChatPanelPr
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (conversationId) {
@@ -83,10 +82,8 @@ export const ChatPanel = ({ conversationId, onConversationCreated }: ChatPanelPr
       if (error) throw error;
       setMessages((data || []) as Message[]);
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to load messages", {
         description: error.message,
-        variant: "destructive",
       });
     }
   };
@@ -184,10 +181,8 @@ export const ChatPanel = ({ conversationId, onConversationCreated }: ChatPanelPr
 
       await loadMessages();
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to send message", {
         description: error.message,
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);

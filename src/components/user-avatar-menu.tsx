@@ -2,7 +2,7 @@ import { User, LogOut, Monitor } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
@@ -26,23 +26,17 @@ interface UserAvatarMenuProps {
 
 export function UserAvatarMenu({ isLoggedIn, userEmail }: UserAvatarMenuProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<string>("profile");
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "Signed out",
-        description: "You've been successfully signed out.",
-      });
+      toast.success("Signed out successfully");
       navigate("/auth");
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to sign out", {
         description: error.message,
-        variant: "destructive",
       });
     }
   };

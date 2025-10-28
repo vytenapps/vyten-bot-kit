@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { LoginForm } from "@/components/login-form";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [checkingLogin, setCheckingLogin] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,15 +70,12 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Check your email!",
+      toast.success("Check your email!", {
         description: "We sent you a login link. Click it to sign in.",
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Authentication failed", {
         description: error.message,
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);

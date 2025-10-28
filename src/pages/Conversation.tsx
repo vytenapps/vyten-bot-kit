@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type FormEventHandler } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
@@ -46,7 +46,6 @@ const ConversationPage = () => {
   const [model, setModel] = useState<string>("google/gemini-2.5-flash");
   const [conversationTitle, setConversationTitle] = useState<string>("");
   const [hasTriggeredAI, setHasTriggeredAI] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -119,9 +118,7 @@ const ConversationPage = () => {
           stack: error.stack
         });
         setStatus("error");
-        toast({
-          description: error instanceof Error ? error.message : "Failed to get AI response",
-        });
+        toast.error(error instanceof Error ? error.message : "Failed to get AI response");
       });
     }
   }, [searchParams, hasTriggeredAI, session, chatId]);
@@ -139,21 +136,13 @@ const ConversationPage = () => {
 
     if (convError) {
       console.error("Error loading conversation:", convError);
-      toast({
-        title: "Error",
-        description: "Failed to load conversation",
-        variant: "destructive",
-      });
+      toast.error("Failed to load conversation");
       navigate("/chat");
       return;
     }
 
     if (!conversation) {
-      toast({
-        title: "Not Found",
-        description: "Conversation not found",
-        variant: "destructive",
-      });
+      toast.error("Conversation not found");
       navigate("/chat");
       return;
     }
@@ -335,9 +324,7 @@ const ConversationPage = () => {
         stack: error instanceof Error ? error.stack : undefined
       });
       setStatus("error");
-      toast({
-        description: error instanceof Error ? error.message : "Failed to send message",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to send message");
     }
   };
 

@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Plus, User, LogOut, Trash2, Edit2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +28,6 @@ interface SidebarProps {
 export const Sidebar = ({ currentConversationId, onSelectConversation, onSignOut }: SidebarProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     loadConversations();
@@ -45,10 +44,8 @@ export const Sidebar = ({ currentConversationId, onSelectConversation, onSignOut
       if (error) throw error;
       setConversations(data || []);
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to load conversations", {
         description: error.message,
-        variant: "destructive",
       });
     }
   };
@@ -73,15 +70,10 @@ export const Sidebar = ({ currentConversationId, onSelectConversation, onSignOut
 
       setConversations(conversations.filter(c => c.id !== id));
       
-      toast({
-        title: "Deleted",
-        description: "Conversation deleted successfully.",
-      });
+      toast.success("Conversation deleted successfully");
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast.error("Failed to delete conversation", {
         description: error.message,
-        variant: "destructive",
       });
     }
   };

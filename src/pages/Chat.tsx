@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEventHandler } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
@@ -33,7 +33,6 @@ const Chat = () => {
   const [text, setText] = useState<string>("");
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
   const [selectedModel, setSelectedModel] = useState<string>("google/gemini-2.5-flash");
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -144,10 +143,8 @@ const Chat = () => {
       navigate(`/c/${conversation.id}?message=${encodeURIComponent(text)}&model=${selectedModel}`);
     } catch (error) {
       console.error("Error creating conversation:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create conversation",
-        variant: "destructive",
+      toast.error("Failed to create conversation", {
+        description: "Please try again",
       });
       setStatus('error');
     }
