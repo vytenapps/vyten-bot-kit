@@ -230,7 +230,7 @@ const ConversationPage = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col h-screen overflow-hidden bg-background">
+      <SidebarInset className="flex flex-col h-svh overflow-hidden bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -247,7 +247,7 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <Conversation className="flex-1 min-h-0">
+        <Conversation className="flex-1 min-h-0 overscroll-contain">
           <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
