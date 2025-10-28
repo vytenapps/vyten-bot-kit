@@ -38,8 +38,16 @@ export function highlightScrollContainers(options?: { allowedAttr?: string; show
     if (isScrollableProp && isScrollableSize) {
       scrollers.push(el);
       const isAllowed = el.hasAttribute(allowedAttr);
+      // Mark page-level scrollers (SidebarInset or body/html) in yellow
+      const isPageScroller = el.tagName === 'MAIN' || el.tagName === 'BODY' || el.tagName === 'HTML';
       // Visual outline for quick spotting
-      el.style.outline = isAllowed ? '2px solid lime' : '2px solid red';
+      if (isAllowed) {
+        el.style.outline = '2px solid lime';
+      } else if (isPageScroller) {
+        el.style.outline = '2px solid yellow';
+      } else {
+        el.style.outline = '2px solid red';
+      }
       el.style.outlineOffset = '-2px';
     }
   });
@@ -49,19 +57,26 @@ export function highlightScrollContainers(options?: { allowedAttr?: string; show
   scrollers.forEach((el, idx) => {
     const rect = el.getBoundingClientRect();
     const isAllowed = el.hasAttribute(allowedAttr);
+    const isPageScroller = el.tagName === 'MAIN' || el.tagName === 'BODY' || el.tagName === 'HTML';
     const marker = document.createElement('div');
     marker.style.position = 'fixed';
     marker.style.top = `${Math.max(4, rect.top + 4)}px`;
     marker.style.left = `${Math.max(4, rect.left + 4)}px`;
     marker.style.zIndex = '9999';
-    marker.style.background = isAllowed ? 'rgba(0,255,0,0.85)' : 'rgba(255,0,0,0.85)';
+    if (isAllowed) {
+      marker.style.background = 'rgba(0,255,0,0.85)';
+    } else if (isPageScroller) {
+      marker.style.background = 'rgba(255,255,0,0.85)';
+    } else {
+      marker.style.background = 'rgba(255,0,0,0.85)';
+    }
     marker.style.color = '#000';
     marker.style.fontSize = '10px';
     marker.style.lineHeight = '1';
     marker.style.padding = '2px 4px';
     marker.style.borderRadius = '4px';
     marker.style.pointerEvents = 'none';
-    marker.textContent = `#${idx + 1}`;
+    marker.textContent = `#${idx + 1} ${el.tagName}`;
     document.body.appendChild(marker);
     markers.push(marker);
   });
