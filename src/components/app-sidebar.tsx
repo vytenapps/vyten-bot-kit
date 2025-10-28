@@ -51,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/chat">
+                  <a href="/social-wall">
                     <Users className="size-4" />
                     <span>Social Wall</span>
                   </a>
