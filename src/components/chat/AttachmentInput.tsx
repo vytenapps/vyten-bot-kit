@@ -211,12 +211,25 @@ export function AttachmentPreviews({
   if (files.length === 0) return null;
 
   const isImageFile = (file: File) => file.type.startsWith("image/");
+  const isTextFile = (file: File) => {
+    return file.type.startsWith("text/") || 
+           file.name.endsWith(".json") || 
+           file.name.endsWith(".md") || 
+           file.name.endsWith(".txt") ||
+           file.name.endsWith(".js") ||
+           file.name.endsWith(".ts") ||
+           file.name.endsWith(".tsx") ||
+           file.name.endsWith(".jsx") ||
+           file.name.endsWith(".css") ||
+           file.name.endsWith(".html");
+  };
 
   return (
     <TooltipProvider>
       <div className="flex flex-wrap gap-2 px-3 pt-3">
         {files.map((file, index) => {
           const isImage = isImageFile(file);
+          const isText = isTextFile(file);
           const preview = filePreviews[index];
 
           return (
@@ -254,19 +267,25 @@ export function AttachmentPreviews({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Remove file</p>
+                      <p>Remove image</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 relative">
+                <div 
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 relative",
+                    isText && "cursor-pointer hover:bg-muted"
+                  )}
+                  onClick={isText ? () => onFileClick(file, index) : undefined}
+                >
                   <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <div className="flex flex-col min-w-0 pr-6">
                     <span className="text-xs font-medium truncate max-w-[120px]">
                       {file.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {(file.size / 1024).toFixed(0)} KB
+                      {file.type.split('/')[1]?.toUpperCase() || 'FILE'}
                     </span>
                   </div>
                   <Tooltip>
@@ -278,7 +297,10 @@ export function AttachmentPreviews({
                           "absolute top-1 right-1 h-5 w-5 rounded-full hover:bg-muted transition-opacity",
                           hoveredIndex === index ? "opacity-100" : "opacity-0"
                         )}
-                        onClick={() => onRemoveFile(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveFile(index);
+                        }}
                       >
                         <X className="h-3 w-3" />
                       </Button>

@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { AttachmentInput, AttachmentPreviews } from "@/components/chat/AttachmentInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Copy } from "lucide-react";
+import { Download } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -40,7 +40,7 @@ const Chat = () => {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number } | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ file: File; index: number; content?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -217,9 +217,26 @@ const Chat = () => {
     toast.success("File downloaded");
   };
 
-  const handleCopyFileName = (fileName: string) => {
-    navigator.clipboard.writeText(fileName);
-    toast.success("Filename copied");
+  const handleFileClick = async (file: File, index: number) => {
+    const isImage = file.type.startsWith("image/");
+    const isText = file.type.startsWith("text/") || 
+                   file.name.endsWith(".json") || 
+                   file.name.endsWith(".md") || 
+                   file.name.endsWith(".txt") ||
+                   file.name.endsWith(".js") ||
+                   file.name.endsWith(".ts") ||
+                   file.name.endsWith(".tsx") ||
+                   file.name.endsWith(".jsx") ||
+                   file.name.endsWith(".css") ||
+                   file.name.endsWith(".html");
+
+    if (isText) {
+      // Read text file content
+      const content = await file.text();
+      setLightboxFile({ file, index, content });
+    } else if (isImage) {
+      setLightboxFile({ file, index });
+    }
   };
 
   if (!session) {
@@ -277,7 +294,7 @@ const Chat = () => {
                     files={attachedFiles}
                     filePreviews={filePreviews}
                     onRemoveFile={handleRemoveFile}
-                    onFileClick={(file, index) => setLightboxFile({ file, index })}
+                    onFileClick={handleFileClick}
                     hoveredIndex={hoveredIndex}
                     onMouseEnter={setHoveredIndex}
                     onMouseLeave={() => setHoveredIndex(null)}
@@ -328,7 +345,12 @@ const Chat = () => {
                   <>
                     <DialogHeader>
                       <DialogTitle className="text-sm font-normal flex items-center justify-between">
-                        <span className="truncate">{lightboxFile.file.name}</span>
+                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                          <span className="truncate font-medium">{lightboxFile.file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {lightboxFile.file.type.split('/')[1]?.toUpperCase() || 'FILE'}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                           <Button
                             variant="ghost"
@@ -338,26 +360,26 @@ const Chat = () => {
                             <Download className="h-4 w-4 mr-2" />
                             Download File
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopyFileName(lightboxFile.file.name)}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy
-                          </Button>
                         </div>
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
-                      <img
-                        src={filePreviews[lightboxFile.index]}
-                        alt={lightboxFile.file.name}
-                        className="max-w-full max-h-[70vh] object-contain"
-                      />
-                    </div>
+                    {lightboxFile.content ? (
+                      <div className="bg-muted/30 rounded-lg p-4 max-h-[70vh] overflow-auto">
+                        <pre className="text-xs font-mono whitespace-pre-wrap">
+                          {lightboxFile.content}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
+                        <img
+                          src={filePreviews[lightboxFile.index]}
+                          alt={lightboxFile.file.name}
+                          className="max-w-full max-h-[70vh] object-contain"
+                        />
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground text-center">
-                      Image • {(lightboxFile.file.size / 1024).toFixed(1)} KB
+                      {lightboxFile.content ? 'Text File' : 'Image'} • {(lightboxFile.file.size / 1024).toFixed(1)} KB
                     </p>
                   </>
                 )}
