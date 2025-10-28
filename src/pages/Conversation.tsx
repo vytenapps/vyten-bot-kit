@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 import { AI_MODELS } from "@/lib/ai-config";
 import { useAIChat } from "@/hooks/use-ai-chat";
-import { useScrollDebug } from "@/hooks/use-scroll-debug";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { Separator } from "@/components/ui/separator";
@@ -47,9 +46,6 @@ const ConversationPage = () => {
   const [searchParams] = useSearchParams();
   
   const { messages, status, model, setModel, sendMessage, loadConversation, setMessages } = useAIChat();
-  
-  // Debug: Log all scrollable elements
-  useScrollDebug("ConversationPage");
 
   useEffect(() => {
     // Get initial session
@@ -242,8 +238,8 @@ const ConversationPage = () => {
             />
           </div>
         </header>
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-background">
-          <Conversation className="flex-1 min-h-0 overscroll-contain">
+        <div className="flex-1 flex flex-col relative">
+          <Conversation className="absolute inset-0 overscroll-contain">
             <ConversationContent className="max-w-screen-sm md:max-w-3xl mx-auto space-y-4">
               {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
@@ -330,7 +326,8 @@ const ConversationPage = () => {
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
-          <div className="shrink-0 px-4 sm:px-6 md:px-8 pb-4">
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 md:px-8 pb-4 bg-background pointer-events-none">
+            <div className="pointer-events-auto">
             <div className="w-full max-w-screen-sm md:max-w-3xl mx-auto">
               <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
@@ -369,6 +366,7 @@ const ConversationPage = () => {
               <p className="text-xs text-center text-muted-foreground mt-2">
                 AI Chatbot can make mistakes. Check important info.
               </p>
+            </div>
             </div>
           </div>
         </div>
