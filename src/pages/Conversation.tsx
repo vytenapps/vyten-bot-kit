@@ -594,15 +594,17 @@ const ConversationPage = () => {
             <div ref={messagesEndRef} />
             {showScrollButton && (
               <div className="sticky bottom-2 left-0 right-0 flex justify-center pointer-events-none">
-                <Button
-                  onClick={() => scrollToBottom()}
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full h-11 w-11 shadow-md pointer-events-auto"
-                  type="button"
-                >
-                  <ArrowDownIcon className="size-5" />
-                </Button>
+                <div className="flex items-center justify-center h-11 w-11 pointer-events-auto">
+                  <Button
+                    onClick={() => scrollToBottom()}
+                    size="icon"
+                    variant="outline"
+                    className="rounded-full h-[30px] w-[30px] shadow-md"
+                    type="button"
+                  >
+                    <ArrowDownIcon className="size-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -656,36 +658,42 @@ const ConversationPage = () => {
                     </PromptInputModelSelect>
                   </PromptInputTools>
                   <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="rounded-full h-11 w-11 min-w-11 shrink-0"
-                    >
-                      <MicIcon size={18} />
-                    </Button>
-                    {status === "streaming" ? (
+                    <div className="flex items-center justify-center h-11 w-11 shrink-0">
                       <Button
                         type="button"
                         size="icon"
-                        variant="default"
-                        className="rounded-full h-11 w-11 min-w-11 shrink-0"
-                        onClick={stopStreaming}
+                        variant="ghost"
+                        className="rounded-full h-[30px] w-[30px] min-w-[30px]"
                       >
-                        <div className="w-3 h-3 bg-current" />
+                        <MicIcon size={16} />
                       </Button>
+                    </div>
+                    {status === "streaming" ? (
+                      <div className="flex items-center justify-center h-11 w-11 shrink-0">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="default"
+                          className="rounded-full h-[30px] w-[30px] min-w-[30px]"
+                          onClick={stopStreaming}
+                        >
+                          <div className="w-2.5 h-2.5 bg-current" />
+                        </Button>
+                      </div>
                     ) : (
-                      <Button
-                        type="submit"
-                        size="icon"
-                        variant="default"
-                        className="rounded-full h-11 w-11 min-w-11 shrink-0"
-                        disabled={!text.trim()}
-                      >
-                        <svg width="14" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                          <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
-                        </svg>
-                      </Button>
+                      <div className="flex items-center justify-center h-11 w-11 shrink-0">
+                        <Button
+                          type="submit"
+                          size="icon"
+                          variant="default"
+                          className="rounded-full h-[30px] w-[30px] min-w-[30px]"
+                          disabled={!text.trim()}
+                        >
+                          <svg width="12" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                            <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
+                          </svg>
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </PromptInputToolbar>
