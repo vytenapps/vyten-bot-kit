@@ -16,6 +16,16 @@ serve(async (req) => {
 
     console.log("Chat request:", { conversationId, model, messageCount: messages.length });
 
+    // Validate input
+    if (!messages || messages.length === 0) {
+      throw new Error("No messages provided");
+    }
+
+    const lastUserMessage = messages[messages.length - 1];
+    if (!lastUserMessage?.content || lastUserMessage.content.trim() === "") {
+      throw new Error("Message content is empty");
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -46,10 +56,7 @@ serve(async (req) => {
       throw new Error("Conversation not found");
     }
 
-    // Get the last user message to save
-    const lastUserMessage = messages[messages.length - 1];
-    
-    // Save user message to database
+    // Save user message to database (already validated above)
     const { error: userMsgError } = await supabaseClient
       .from("messages")
       .insert({
