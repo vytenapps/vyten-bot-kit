@@ -125,36 +125,36 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
+      <CardHeader className="pb-3 px-4 sm:px-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
             <UserAvatar
               avatarUrl={post.user_profiles?.avatar_url}
               email={post.user_profiles?.email}
               username={post.user_profiles?.username}
               firstName={post.user_profiles?.first_name}
               lastName={post.user_profiles?.last_name}
-              className="h-12 w-12"
+              className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
               fallbackClassName="bg-primary text-primary-foreground"
             />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-base">{displayName}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-semibold text-sm sm:text-base truncate">{displayName}</p>
                 {post.user_profiles?.username && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs shrink-0">
                     template creator
                   </Badge>
                 )}
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs sm:text-sm text-muted-foreground shrink-0">
                   {formatDistanceToNow(new Date(post.created_at), { addSuffix: true }).replace('about ', '')}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 Posted in Ask the Community
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Bookmark className="h-4 w-4" />
             </Button>
@@ -192,49 +192,49 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0 pb-3">
-        <div className="space-y-3">
+      <CardContent className="pt-0 pb-3 px-4 sm:px-6">
+        <div className="space-y-2 sm:space-y-3">
           {post.title && (
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl sm:text-2xl font-bold break-words">
               {post.title}
             </h2>
           )}
-          <p className="whitespace-pre-wrap break-words text-base">
+          <p className="whitespace-pre-wrap break-words text-sm sm:text-base">
             {post.content}
           </p>
           {post.media_url && post.media_type?.startsWith('image/') && (
             <img 
               src={post.media_url} 
               alt="Post image" 
-              className="rounded-lg max-h-96 w-full object-cover"
+              className="rounded-lg w-full h-auto max-h-[400px] sm:max-h-[500px] object-contain bg-muted"
             />
           )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-0 px-0 pt-0 pb-0">
-        <div className="flex items-center justify-between w-full px-6 pb-2 border-b">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between w-full px-4 sm:px-6 pb-2 border-b">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLike}
               disabled={isLiking}
-              className="gap-2 hover:bg-transparent p-0"
+              className="gap-1 sm:gap-2 hover:bg-transparent p-0 h-auto"
             >
               <Heart
-                className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                className={`h-4 w-4 sm:h-5 sm:w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
               />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowComments(!showComments)}
-              className="gap-2 hover:bg-transparent p-0"
+              className="gap-1 sm:gap-2 hover:bg-transparent p-0 h-auto"
             >
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {likeCount > 0 && (
               <div className="flex items-center gap-1">
                 <div className="flex -space-x-2">
@@ -246,25 +246,25 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
                       username={like.user_profiles?.username}
                       firstName={like.user_profiles?.first_name}
                       lastName={like.user_profiles?.last_name}
-                      className="h-6 w-6 border-2 border-background"
+                      className="h-5 w-5 sm:h-6 sm:w-6 border-2 border-background"
                       fallbackClassName="bg-primary text-primary-foreground text-xs"
                     />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                   {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                 </span>
               </div>
             )}
             {commentCount > 0 && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                 {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
               </span>
             )}
           </div>
         </div>
         {showComments && (
-          <div className="w-full px-6 py-4">
+          <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
             <CommentSection
               postId={post.id}
               currentUserId={currentUserId}

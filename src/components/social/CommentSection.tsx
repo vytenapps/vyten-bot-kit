@@ -66,10 +66,10 @@ const CommentItem = ({
   const likeCount = comment.comment_likes.length;
 
   return (
-    <div className={depth > 0 ? "ml-11" : ""}>
-      <div className="flex gap-3 py-2">
+    <div className={depth > 0 ? "ml-8 sm:ml-11" : ""}>
+      <div className="flex gap-2 sm:gap-3 py-2">
         <UserAvatar
-          className="h-8 w-8"
+          className="h-7 w-7 sm:h-8 sm:w-8 shrink-0"
           avatarUrl={comment.user_profiles?.avatar_url}
           email={comment.user_profiles?.email}
           username={comment.user_profiles?.username}
@@ -77,17 +77,17 @@ const CommentItem = ({
           lastName={comment.user_profiles?.last_name}
           fallbackClassName="bg-secondary text-secondary-foreground text-xs"
         />
-        <div className="flex-1 space-y-1">
+        <div className="flex-1 space-y-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold">{displayName}</p>
-                <p className="text-xs text-muted-foreground">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                <p className="text-xs sm:text-sm font-semibold truncate">{displayName}</p>
+                <p className="text-xs text-muted-foreground shrink-0">
                   {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                 </p>
               </div>
-              <p className="text-sm mt-1">{comment.content}</p>
-              <div className="flex items-center gap-3 mt-2">
+              <p className="text-xs sm:text-sm mt-1 break-words">{comment.content}</p>
+              <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -127,7 +127,7 @@ const CommentItem = ({
         </div>
       </div>
       {comment.replies && comment.replies.length > 0 && (
-        <div className="mt-2">
+        <div className="mt-1 sm:mt-2">
           {comment.replies.map((reply) => (
             <CommentItem
               key={reply.id}
@@ -371,7 +371,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
   }
 
   return (
-    <div className="w-full space-y-4 pt-4 border-t">
+    <div className="w-full space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t">
       {error && (
         <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
           {error}
@@ -399,9 +399,10 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
             onChange={(e) => setNewComment(e.target.value)}
             disabled={isSubmitting}
             maxLength={2000}
+            className="text-sm sm:text-base"
           />
         </div>
-        <Button type="submit" size="icon" disabled={!newComment.trim() || isSubmitting}>
+        <Button type="submit" size="icon" disabled={!newComment.trim() || isSubmitting} className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (

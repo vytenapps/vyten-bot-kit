@@ -174,30 +174,30 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
         className="cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={() => setIsDialogOpen(true)}
       >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <UserAvatar
               avatarUrl={userProfile?.avatar_url}
               email={userProfile?.email}
               username={userProfile?.username}
               firstName={userProfile?.first_name}
               lastName={userProfile?.last_name}
-              className="h-12 w-12"
+              className="h-10 w-10 sm:h-12 sm:w-12"
               fallbackClassName="bg-primary text-primary-foreground"
             />
-            <div className="flex-1 text-muted-foreground">
+            <div className="flex-1 text-sm sm:text-base text-muted-foreground">
               Start a post
             </div>
             <Button 
               size="icon" 
               variant="ghost" 
-              className="rounded-full"
+              className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsDialogOpen(true);
               }}
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </CardContent>
@@ -205,7 +205,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
 
       {/* Expanded Create Post Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create a post</DialogTitle>
           </DialogHeader>
@@ -217,7 +217,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                 username={userProfile?.username}
                 firstName={userProfile?.first_name}
                 lastName={userProfile?.last_name}
-                className="h-12 w-12"
+                className="h-10 w-10 sm:h-12 sm:w-12"
                 fallbackClassName="bg-primary text-primary-foreground"
               />
               <div>
@@ -239,7 +239,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
               placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-lg font-semibold border-0 focus-visible:ring-0"
+              className="text-base sm:text-lg font-semibold border-0 focus-visible:ring-0"
               maxLength={200}
             />
 
@@ -247,7 +247,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
               placeholder="What do you want to talk about?"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[120px] resize-none border-0 focus-visible:ring-0 text-base"
+              className="min-h-[100px] sm:min-h-[120px] resize-none border-0 focus-visible:ring-0 text-sm sm:text-base"
               maxLength={5000}
             />
             
@@ -256,7 +256,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                 <img 
                   src={previewUrl} 
                   alt="Preview" 
-                  className="rounded-lg max-h-64 w-full object-cover"
+                  className="rounded-lg w-full h-auto max-h-64 sm:max-h-80 object-contain bg-muted"
                 />
                 <Button
                   type="button"
@@ -270,8 +270,8 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between pt-4 border-t flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <input
                   type="file"
                   id="image-upload"
@@ -286,8 +286,9 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                   size="sm"
                   onClick={() => document.getElementById('image-upload')?.click()}
                   disabled={isSubmitting}
+                  className="h-8 sm:h-9"
                 >
-                  <Image className="h-5 w-5" />
+                  <Image className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
                 <span className="text-xs text-muted-foreground">
                   Title: {title.length}/200 | Content: {content.length}/5000
@@ -296,7 +297,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
               <Button 
                 type="submit" 
                 disabled={!title.trim() || !content.trim() || isSubmitting}
-                className="rounded-full px-6"
+                className="rounded-full px-4 sm:px-6 text-sm"
               >
                 {isSubmitting ? (
                   <>

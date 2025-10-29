@@ -44,13 +44,13 @@ const SocialWall = () => {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background flex flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
+        <header className="flex h-14 sm:h-16 shrink-0 items-center gap-2 border-b px-3 sm:px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-lg font-semibold">Social Wall</h1>
+          <h1 className="text-base sm:text-lg font-semibold">Social Wall</h1>
           <div className="ml-auto">
             <UserAvatarMenu 
               isLoggedIn={!!session} 
@@ -60,7 +60,7 @@ const SocialWall = () => {
         </header>
         
         <div className="flex-1 overflow-y-auto">
-          <div className="w-full max-w-2xl mx-auto py-6 px-4 space-y-6">
+          <div className="w-full max-w-2xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-4 sm:space-y-6">
             <CreatePost userId={session.user.id} />
             <PostFeed userId={session.user.id} />
           </div>
