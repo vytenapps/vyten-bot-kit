@@ -270,9 +270,12 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
               </div>
             )}
             {commentCount > 0 && (
-              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+              <button
+                onClick={() => setShowComments(!showComments)}
+                className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap hover:underline cursor-pointer"
+              >
                 {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
-              </span>
+              </button>
             )}
           </div>
         </div>
