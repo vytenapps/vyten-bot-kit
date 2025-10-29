@@ -111,9 +111,6 @@ const CommentItem = ({
                   onClick={() => onLike(comment.id, isLiked)}
                   className="h-auto p-0 hover:bg-transparent text-xs font-semibold"
                 >
-                  <Heart
-                    className={`h-3 w-3 mr-1 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-                  />
                   {likeCount > 0 ? `${likeCount} ${likeCount === 1 ? 'Like' : 'Likes'}` : 'Like'}
                 </Button>
                 {depth < 2 && (
@@ -123,7 +120,6 @@ const CommentItem = ({
                     onClick={() => onReply(comment.id, comment)}
                     className="h-auto p-0 hover:bg-transparent text-xs font-semibold"
                   >
-                    <MessageCircle className="h-3 w-3 mr-1" />
                     Reply
                   </Button>
                 )}
