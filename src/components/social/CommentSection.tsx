@@ -455,7 +455,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
           fallbackClassName="bg-primary text-primary-foreground"
         />
         <form onSubmit={handleSubmit} className="flex-1">
-          <div className="border rounded-lg bg-background">
+          <div className="border border-transparent rounded-lg bg-background focus-within:border-transparent hover:border-transparent">
             <div className="p-3 sm:p-4">
               {replyToId && replyToName && (
                 <div className="mb-2 flex items-center gap-2">
@@ -483,7 +483,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
                 className="text-sm sm:text-base border-0 focus-visible:ring-0 px-0 h-auto"
               />
             </div>
-            <div className="flex items-center justify-end gap-2 px-3 sm:px-4 pb-3 border-t pt-3">
+            <div className="flex items-center justify-end gap-2 px-3 sm:px-4 pb-3 pt-3">
               <Button 
                 type="submit" 
                 disabled={!newComment.trim() || isSubmitting}
