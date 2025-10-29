@@ -480,7 +480,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
                 onChange={(e) => setNewComment(e.target.value)}
                 disabled={isSubmitting}
                 maxLength={2000}
-                className="text-sm sm:text-base border-0 focus-visible:ring-0 px-0 h-auto"
+                className="text-sm sm:text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-auto"
               />
             </div>
             <div className="flex items-center justify-end gap-2 px-3 sm:px-4 pb-3 pt-3">
