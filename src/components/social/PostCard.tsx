@@ -164,11 +164,11 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {isOwnPost && (
+              <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
+                {isOwnPost ? (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete post
                       </DropdownMenuItem>
@@ -186,6 +186,10 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                ) : (
+                  <DropdownMenuItem disabled className="text-muted-foreground">
+                    No actions available
+                  </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>

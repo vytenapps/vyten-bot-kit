@@ -3,7 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Loader2, Send, Trash2, Heart, MessageCircle } from "lucide-react";
+import { Loader2, Send, Trash2, Heart, MessageCircle, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -110,19 +127,39 @@ const CommentItem = ({
                     Reply
                   </Button>
                 )}
-                {isOwnComment && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(comment.id)}
-                    className="h-auto p-0 hover:bg-transparent text-xs font-semibold text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Delete
-                  </Button>
-                )}
               </div>
             </div>
+            {isOwnComment && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                    <MoreHorizontal className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40 bg-popover z-50">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer text-destructive">
+                        <Trash2 className="h-3 w-3 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this comment? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(comment.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
