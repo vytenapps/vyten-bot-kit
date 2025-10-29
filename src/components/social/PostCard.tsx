@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2, Flag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -71,6 +71,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showLikesModal, setShowLikesModal] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   const isLiked = post.post_likes.some((like) => like.user_id === currentUserId);
   const isOwnPost = post.user_id === currentUserId;
@@ -139,6 +140,33 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
     }
   };
 
+  const handleReport = async () => {
+    setIsReporting(true);
+    try {
+      const { error } = await supabase
+        .from("post_reports")
+        .insert({
+          post_id: post.id,
+          user_id: currentUserId,
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.info("You have already reported this post");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Post reported successfully");
+      }
+    } catch (error) {
+      console.error("Error reporting post:", error);
+      toast.error("Failed to report post");
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3 px-4 sm:px-6">
@@ -181,7 +209,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
-                {canDelete ? (
+                {canDelete && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
@@ -202,7 +230,18 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                ) : (
+                )}
+                {!isOwnPost && (
+                  <DropdownMenuItem 
+                    onClick={handleReport} 
+                    disabled={isReporting}
+                    className="cursor-pointer"
+                  >
+                    <Flag className="h-4 w-4 mr-2" />
+                    Report post
+                  </DropdownMenuItem>
+                )}
+                {!canDelete && isOwnPost && (
                   <DropdownMenuItem disabled className="text-muted-foreground">
                     No actions available
                   </DropdownMenuItem>

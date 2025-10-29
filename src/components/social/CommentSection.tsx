@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Loader2, Send, Trash2, Heart, MessageCircle, MoreHorizontal } from "lucide-react";
+import { Loader2, Send, Trash2, Heart, MessageCircle, MoreHorizontal, Flag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +66,7 @@ const CommentItem = ({
   onDelete,
   onReply,
   onLike,
+  onReport,
   depth = 0
 }: {
   comment: Comment;
@@ -74,6 +75,7 @@ const CommentItem = ({
   onDelete: (id: string) => void;
   onReply: (parentId: string, parentComment: Comment) => void;
   onLike: (commentId: string, isLiked: boolean) => void;
+  onReport: (commentId: string) => void;
   depth?: number;
 }) => {
   const displayName = comment.user_profiles
@@ -130,7 +132,7 @@ const CommentItem = ({
                 )}
               </div>
             </div>
-            {canDelete && (
+            {canDelete || !isOwnComment ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
@@ -138,29 +140,40 @@ const CommentItem = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40 bg-popover z-50">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer text-destructive">
-                        <Trash2 className="h-3 w-3 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Comment</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this comment? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(comment.id)}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {canDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer text-destructive">
+                          <Trash2 className="h-3 w-3 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this comment? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(comment.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  {!isOwnComment && (
+                    <DropdownMenuItem 
+                      onClick={() => onReport(comment.id)}
+                      className="cursor-pointer"
+                    >
+                      <Flag className="h-3 w-3 mr-2" />
+                      Report
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -175,6 +188,7 @@ const CommentItem = ({
               onDelete={onDelete}
               onReply={onReply}
               onLike={onLike}
+              onReport={onReport}
               depth={depth + 1}
             />
           ))}
@@ -431,6 +445,30 @@ export const CommentSection = ({ postId, currentUserId, currentUserRoles, onUpda
     setReplyToName(displayName);
   };
 
+  const handleReport = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from("comment_reports")
+        .insert({
+          comment_id: commentId,
+          user_id: currentUserId,
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.info("You have already reported this comment");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Comment reported successfully");
+      }
+    } catch (error) {
+      console.error("Error reporting comment:", error);
+      toast.error("Failed to report comment");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="w-full flex justify-center py-4">
@@ -515,6 +553,7 @@ export const CommentSection = ({ postId, currentUserId, currentUserRoles, onUpda
             onDelete={handleDelete}
             onReply={handleReply}
             onLike={handleLike}
+            onReport={handleReport}
           />
         ))}
       </div>
