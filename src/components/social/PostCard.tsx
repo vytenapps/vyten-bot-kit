@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2, Flag } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2, Flag, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +72,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
   const [isDeleting, setIsDeleting] = useState(false);
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const isLiked = post.post_likes.some((like) => like.user_id === currentUserId);
   const isOwnPost = post.user_id === currentUserId;
@@ -165,6 +166,18 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
     } finally {
       setIsReporting(false);
     }
+  };
+
+  const handleImageDownload = () => {
+    if (!post.media_url) return;
+    
+    const a = document.createElement("a");
+    a.href = post.media_url;
+    a.download = `post-image-${post.id}.${post.media_type?.split('/')[1] || 'jpg'}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success("Image downloaded");
   };
 
   return (
@@ -265,7 +278,8 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             <img 
               src={post.media_url} 
               alt="Post image" 
-              className="rounded-lg w-full h-auto max-h-[400px] sm:max-h-[500px] object-contain bg-muted"
+              className="rounded-lg w-full h-auto max-h-[400px] sm:max-h-[500px] object-contain bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => setShowImageModal(true)}
             />
           )}
         </div>
@@ -362,6 +376,43 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Image Modal */}
+        <Dialog open={showImageModal} onOpenChange={setShowImageModal}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-normal flex items-center justify-between">
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                  <span className="truncate font-medium">Post Image</span>
+                  <span className="text-xs text-muted-foreground">
+                    {post.media_type?.split('/')[1]?.toUpperCase() || 'IMAGE'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImageDownload}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Image
+                  </Button>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex items-center justify-center bg-muted/30 rounded-lg p-4">
+              <img
+                src={post.media_url || ''}
+                alt="Post image"
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Image • {post.media_type}
+            </p>
+          </DialogContent>
+        </Dialog>
+        
         {showComments && (
           <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
             <CommentSection
