@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Loader2, Image, X, Plus } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import heic2any from "heic2any";
 
 interface CreatePostProps {
   userId: string;
@@ -64,51 +63,40 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
 
     try {
       let processedFile: File | Blob = file;
+      const fileName = file.name.toLowerCase();
+      const isHeic = fileName.endsWith('.heic') || fileName.endsWith('.heif') || 
+                     file.type === 'image/heic' || file.type === 'image/heif';
 
-      // Convert HEIC to JPEG if needed
-      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-        toast.info("Converting HEIC image...");
-        try {
-          const convertedBlob = await heic2any({
-            blob: file,
-            toType: 'image/jpeg',
-            quality: 0.9
-          });
-          
-          // heic2any can return an array or single blob
-          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-          
-          // Create a new File object with .jpg extension
-          processedFile = new File(
-            [blob], 
-            file.name.replace(/\.(heic|heif)$/i, '.jpg'),
-            { type: 'image/jpeg' }
-          );
-          toast.success("Image converted successfully!");
-        } catch (conversionError) {
-          console.error("HEIC conversion error:", conversionError);
-          toast.error("Failed to convert HEIC image. Please use JPG or PNG format.");
-          return;
-        }
-      }
-
-      // Check file size after conversion
-      if (processedFile.size > 5 * 1024 * 1024) {
-        toast.error("Image must be less than 5MB");
+      // Check for HEIC and provide clear message
+      if (isHeic) {
+        toast.error(
+          "HEIC images are not supported. Please convert to JPG or PNG on your device first.",
+          { duration: 5000 }
+        );
+        e.target.value = ''; // Reset the input
         return;
       }
 
       // Validate it's an image
-      if (!processedFile.type.startsWith('image/')) {
-        toast.error("Please select a valid image file");
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select a valid image file (JPG, PNG, GIF, WebP)");
+        e.target.value = '';
         return;
       }
 
-      setSelectedFile(processedFile as File);
-      setPreviewUrl(URL.createObjectURL(processedFile));
+      // Check file size
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        e.target.value = '';
+        return;
+      }
+
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     } catch (error) {
       console.error("Error processing file:", error);
       toast.error("Failed to process image");
+      e.target.value = '';
     }
   };
 
@@ -318,7 +306,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                 <input
                   type="file"
                   id="image-upload"
-                  accept="image/*,.heic,.heif"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   className="hidden"
                   onChange={handleFileSelect}
                   disabled={isSubmitting}
