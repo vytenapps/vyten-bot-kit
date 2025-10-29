@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,22 +10,50 @@ import { UserAvatar } from "@/components/shared/UserAvatar";
 
 interface CreatePostProps {
   userId: string;
-  userProfile?: {
-    avatar_url: string | null;
-    username: string;
-    first_name: string | null;
-    last_name: string | null;
-    email: string | null;
-  };
 }
 
-export const CreatePost = ({ userId, userProfile }: CreatePostProps) => {
+export const CreatePost = ({ userId }: CreatePostProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<{
+    avatar_url: string | null;
+    username: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null>(null);
+
+  // Fetch user profile on mount and when dialog opens
+  useEffect(() => {
+    fetchUserProfile();
+  }, [userId]);
+
+  // Refresh profile when dialog opens to ensure latest avatar
+  useEffect(() => {
+    if (isDialogOpen) {
+      fetchUserProfile();
+    }
+  }, [isDialogOpen]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data } = await (supabase as any)
+        .from("user_profiles")
+        .select("avatar_url, username, first_name, last_name, email")
+        .eq("user_id", userId)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
