@@ -56,16 +56,19 @@ interface PostCardProps {
     post_comments: { id: string }[];
   };
   currentUserId: string;
+  currentUserRoles: string[];
   onUpdate: () => void;
 }
 
-export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
+export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: PostCardProps) => {
   const [isLiking, setIsLiking] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isLiked = post.post_likes.some((like) => like.user_id === currentUserId);
   const isOwnPost = post.user_id === currentUserId;
+  const isAdminOrModerator = currentUserRoles.includes('admin') || currentUserRoles.includes('moderator');
+  const canDelete = isOwnPost || isAdminOrModerator;
   const likeCount = post.post_likes.length;
   const commentCount = post.post_comments.length;
 
@@ -75,7 +78,7 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
     : "Unknown User";
 
   const userRoles = post.user_roles || [];
-  const isAdminOrModerator = userRoles.some(
+  const isPostAuthorAdminOrModerator = userRoles.some(
     (roleObj) => roleObj.role === "admin" || roleObj.role === "moderator"
   );
 
@@ -146,7 +149,7 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-semibold text-sm sm:text-base truncate">{displayName}</p>
-                {isAdminOrModerator && (
+                {isPostAuthorAdminOrModerator && (
                   <Badge variant="secondary" className="text-xs shrink-0">
                     template creator
                   </Badge>
@@ -171,7 +174,7 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
-                {isOwnPost ? (
+                {canDelete ? (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
@@ -278,6 +281,7 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
             <CommentSection
               postId={post.id}
               currentUserId={currentUserId}
+              currentUserRoles={currentUserRoles}
               onUpdate={onUpdate}
             />
           </div>

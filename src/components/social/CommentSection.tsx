@@ -55,12 +55,14 @@ interface Comment {
 interface CommentSectionProps {
   postId: string;
   currentUserId: string;
+  currentUserRoles: string[];
   onUpdate: () => void;
 }
 
 const CommentItem = ({
   comment,
   currentUserId,
+  currentUserRoles,
   onDelete,
   onReply,
   onLike,
@@ -68,6 +70,7 @@ const CommentItem = ({
 }: {
   comment: Comment;
   currentUserId: string;
+  currentUserRoles: string[];
   onDelete: (id: string) => void;
   onReply: (parentId: string, parentComment: Comment) => void;
   onLike: (commentId: string, isLiked: boolean) => void;
@@ -79,6 +82,8 @@ const CommentItem = ({
     : "Unknown User";
 
   const isOwnComment = comment.user_id === currentUserId;
+  const isAdminOrModerator = currentUserRoles.includes('admin') || currentUserRoles.includes('moderator');
+  const canDelete = isOwnComment || isAdminOrModerator;
   const isLiked = comment.comment_likes.some((like) => like.user_id === currentUserId);
   const likeCount = comment.comment_likes.length;
 
@@ -125,7 +130,7 @@ const CommentItem = ({
                 )}
               </div>
             </div>
-            {isOwnComment && (
+            {canDelete && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
@@ -166,6 +171,7 @@ const CommentItem = ({
               key={reply.id}
               comment={reply}
               currentUserId={currentUserId}
+              currentUserRoles={currentUserRoles}
               onDelete={onDelete}
               onReply={onReply}
               onLike={onLike}
@@ -178,7 +184,7 @@ const CommentItem = ({
   );
 };
 
-export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSectionProps) => {
+export const CommentSection = ({ postId, currentUserId, currentUserRoles, onUpdate }: CommentSectionProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
@@ -505,6 +511,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
             key={comment.id}
             comment={comment}
             currentUserId={currentUserId}
+            currentUserRoles={currentUserRoles}
             onDelete={handleDelete}
             onReply={handleReply}
             onLike={handleLike}

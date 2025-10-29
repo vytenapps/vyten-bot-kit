@@ -42,6 +42,7 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
 
   const fetchPosts = async (showRefreshState = false) => {
     if (showRefreshState) setIsRefreshing(true);
@@ -99,6 +100,20 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
 
   useEffect(() => {
     fetchPosts();
+    
+    // Fetch current user roles
+    const fetchCurrentUserRoles = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      
+      if (data) {
+        setCurrentUserRoles(data.map(r => r.role));
+      }
+    };
+    
+    fetchCurrentUserRoles();
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -187,6 +202,7 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
             key={post.id}
             post={post}
             currentUserId={userId}
+            currentUserRoles={currentUserRoles}
             onUpdate={fetchPosts}
           />
         ))
