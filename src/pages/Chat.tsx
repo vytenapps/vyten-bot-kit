@@ -7,6 +7,7 @@ import { AI_MODELS } from "@/lib/ai-config";
 import { useAIChat } from "@/hooks/use-ai-chat";
 import { AppSidebar } from "@/components/app-sidebar";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
+import { NotificationMenu } from "@/components/NotificationMenu";
 import { Separator } from "@/components/ui/separator";
 import { ChatInputBox } from "@/components/chat/ChatInputBox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -239,7 +240,8 @@ const Chat = () => {
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <NotificationMenu />
             <UserAvatarMenu 
               isLoggedIn={!!session} 
               userEmail={session?.user?.email}
