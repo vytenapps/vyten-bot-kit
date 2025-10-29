@@ -455,7 +455,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
           fallbackClassName="bg-primary text-primary-foreground"
         />
         <form onSubmit={handleSubmit} className="flex-1">
-          <div className="border border-transparent rounded-lg bg-background focus-within:border-transparent hover:border-transparent">
+          <div className="border rounded-lg bg-background">
             <div className="p-3 sm:p-4">
               {replyToId && replyToName && (
                 <div className="mb-2 flex items-center gap-2">
