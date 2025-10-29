@@ -67,7 +67,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
 
   const isLiked = post.post_likes.some((like) => like.user_id === currentUserId);
   const isOwnPost = post.user_id === currentUserId;
-  const isAdminOrModerator = currentUserRoles.includes('admin') || currentUserRoles.includes('moderator');
+  const isAdminOrModerator = (currentUserRoles ?? []).includes('admin') || (currentUserRoles ?? []).includes('moderator');
   const canDelete = isOwnPost || isAdminOrModerator;
   const likeCount = post.post_likes.length;
   const commentCount = post.post_comments.length;

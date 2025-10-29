@@ -82,7 +82,7 @@ const CommentItem = ({
     : "Unknown User";
 
   const isOwnComment = comment.user_id === currentUserId;
-  const isAdminOrModerator = currentUserRoles.includes('admin') || currentUserRoles.includes('moderator');
+  const isAdminOrModerator = (currentUserRoles ?? []).includes('admin') || (currentUserRoles ?? []).includes('moderator');
   const canDelete = isOwnComment || isAdminOrModerator;
   const isLiked = comment.comment_likes.some((like) => like.user_id === currentUserId);
   const likeCount = comment.comment_likes.length;
