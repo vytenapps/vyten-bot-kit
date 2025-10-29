@@ -20,6 +20,7 @@ interface Post {
     email: string | null;
     avatar_url: string | null;
   } | null;
+  user_roles: { role: string }[];
   post_likes: { 
     user_id: string;
     user_profiles: {
@@ -73,7 +74,21 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
         .limit(50);
 
       if (error) throw error;
-      setPosts(data || []);
+      
+      // Fetch user roles separately
+      const userIds = [...new Set((data || []).map(post => post.user_id))];
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds);
+      
+      // Merge roles into posts
+      const postsWithRoles = (data || []).map(post => ({
+        ...post,
+        user_roles: (rolesData || []).filter(role => role.user_id === post.user_id)
+      }));
+      
+      setPosts(postsWithRoles);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {

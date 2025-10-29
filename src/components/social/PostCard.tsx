@@ -42,6 +42,7 @@ interface PostCardProps {
       email: string | null;
       avatar_url: string | null;
     } | null;
+    user_roles: { role: string }[];
     post_likes: { 
       user_id: string;
       user_profiles: {
@@ -72,6 +73,11 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
     ? `${post.user_profiles.first_name || ""} ${post.user_profiles.last_name || ""}`.trim() ||
       post.user_profiles.username
     : "Unknown User";
+
+  const userRoles = post.user_roles || [];
+  const isAdminOrModerator = userRoles.some(
+    (roleObj) => roleObj.role === "admin" || roleObj.role === "moderator"
+  );
 
   const handleLike = async () => {
     setIsLiking(true);
@@ -140,7 +146,7 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-semibold text-sm sm:text-base truncate">{displayName}</p>
-                {post.user_profiles?.username && (
+                {isAdminOrModerator && (
                   <Badge variant="secondary" className="text-xs shrink-0">
                     template creator
                   </Badge>
