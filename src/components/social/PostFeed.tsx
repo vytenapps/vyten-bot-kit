@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PostCard } from "./PostCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface Post {
   id: string;
@@ -41,11 +39,9 @@ interface PostFeedProps {
 export const PostFeed = ({ userId }: PostFeedProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
 
-  const fetchPosts = async (showRefreshState = false) => {
-    if (showRefreshState) setIsRefreshing(true);
+  const fetchPosts = async () => {
     
     try {
       const { data, error } = await supabase
@@ -94,7 +90,6 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
       console.error("Error fetching posts:", error);
     } finally {
       setIsLoading(false);
-      if (showRefreshState) setIsRefreshing(false);
     }
   };
 
@@ -179,18 +174,7 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Recent Posts</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => fetchPosts(true)}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+      <h2 className="text-lg font-semibold">Recent Posts</h2>
 
       {posts.length === 0 ? (
         <div className="text-center py-12 border rounded-lg bg-muted/50">
