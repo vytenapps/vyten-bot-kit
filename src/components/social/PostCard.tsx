@@ -2,8 +2,15 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Heart, MessageCircle, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { CommentSection } from "./CommentSection";
@@ -108,87 +115,127 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <UserAvatar
               avatarUrl={post.user_profiles?.avatar_url}
               email={post.user_profiles?.email}
               username={post.user_profiles?.username}
               firstName={post.user_profiles?.first_name}
               lastName={post.user_profiles?.last_name}
+              className="h-12 w-12"
               fallbackClassName="bg-primary text-primary-foreground"
             />
-            <div>
-              <p className="font-semibold">{displayName}</p>
-              <p className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-base">{displayName}</p>
+                {post.user_profiles?.username && (
+                  <Badge variant="secondary" className="text-xs">
+                    template creator
+                  </Badge>
+                )}
+                <span className="text-sm text-muted-foreground">
+                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true }).replace('about ', '')}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Posted in Ask the Community
               </p>
             </div>
           </div>
-          {isOwnPost && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" disabled={isDeleting}>
-                  <Trash2 className="h-4 w-4" />
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Bookmark className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Post</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this post? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isOwnPost && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete post
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Post</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this post? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="whitespace-pre-wrap break-words">{post.content}</p>
-        {post.media_url && post.media_type?.startsWith('image/') && (
-          <img 
-            src={post.media_url} 
-            alt="Post image" 
-            className="mt-4 rounded-lg max-h-96 w-full object-cover"
-          />
-        )}
+      <CardContent className="pt-0 pb-3">
+        <div className="space-y-3">
+          <h2 className="text-2xl font-bold">
+            {post.content.split('\n')[0]}
+          </h2>
+          {post.content.split('\n').slice(1).join('\n').trim() && (
+            <p className="whitespace-pre-wrap break-words text-base">
+              {post.content.split('\n').slice(1).join('\n')}
+            </p>
+          )}
+          {post.media_url && post.media_type?.startsWith('image/') && (
+            <img 
+              src={post.media_url} 
+              alt="Post image" 
+              className="rounded-lg max-h-96 w-full object-cover"
+            />
+          )}
+        </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        <div className="flex items-center gap-4 w-full">
+      <CardFooter className="flex flex-col gap-0 px-0 pt-0 pb-0">
+        <div className="flex items-center gap-1 w-full px-6 pb-2 border-b">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
             disabled={isLiking}
-            className="gap-2"
+            className="gap-2 hover:bg-transparent"
           >
             <Heart
-              className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+              className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
             />
-            <span>{likeCount}</span>
+            {likeCount > 0 && <span className="text-sm">{likeCount}</span>}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
-            className="gap-2"
+            className="gap-2 hover:bg-transparent"
           >
-            <MessageCircle className="h-4 w-4" />
-            <span>{commentCount}</span>
+            <MessageCircle className="h-5 w-5" />
+            {commentCount > 0 && <span className="text-sm">{commentCount}</span>}
           </Button>
+          <div className="ml-auto text-sm text-muted-foreground">
+            {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+          </div>
         </div>
         {showComments && (
-          <CommentSection
-            postId={post.id}
-            currentUserId={currentUserId}
-            onUpdate={onUpdate}
-          />
+          <div className="w-full px-6 py-4">
+            <CommentSection
+              postId={post.id}
+              currentUserId={currentUserId}
+              onUpdate={onUpdate}
+            />
+          </div>
         )}
       </CardFooter>
     </Card>

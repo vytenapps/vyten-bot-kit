@@ -15,6 +15,13 @@ import { PostFeed } from "@/components/social/PostFeed";
 
 const SocialWall = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    avatar_url: string | null;
+    username: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +30,7 @@ const SocialWall = () => {
         navigate("/auth");
       } else {
         setSession(session);
+        fetchUserProfile(session.user.id);
       }
     });
 
@@ -30,11 +38,25 @@ const SocialWall = () => {
       setSession(session);
       if (event === "SIGNED_OUT") {
         navigate("/auth");
+      } else if (session) {
+        fetchUserProfile(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data } = await (supabase as any)
+      .from("profiles")
+      .select("avatar_url, username, first_name, last_name, email")
+      .eq("id", userId)
+      .single();
+
+    if (data) {
+      setUserProfile(data);
+    }
+  };
 
   if (!session) {
     return null;
@@ -61,7 +83,7 @@ const SocialWall = () => {
         
         <div className="flex-1 overflow-y-auto">
           <div className="w-full max-w-2xl mx-auto py-6 px-4 space-y-6">
-            <CreatePost userId={session.user.id} />
+            <CreatePost userId={session.user.id} userProfile={userProfile || undefined} />
             <PostFeed userId={session.user.id} />
           </div>
         </div>
