@@ -29,6 +29,7 @@ import {
 interface PostCardProps {
   post: {
     id: string;
+    title: string | null;
     content: string;
     created_at: string;
     user_id: string;
@@ -41,7 +42,16 @@ interface PostCardProps {
       email: string | null;
       avatar_url: string | null;
     } | null;
-    post_likes: { user_id: string }[];
+    post_likes: { 
+      user_id: string;
+      user_profiles: {
+        avatar_url: string | null;
+        username: string;
+        first_name: string | null;
+        last_name: string | null;
+        email: string | null;
+      } | null;
+    }[];
     post_comments: { id: string }[];
   };
   currentUserId: string;
@@ -184,14 +194,14 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
       </CardHeader>
       <CardContent className="pt-0 pb-3">
         <div className="space-y-3">
-          <h2 className="text-2xl font-bold">
-            {post.content.split('\n')[0]}
-          </h2>
-          {post.content.split('\n').slice(1).join('\n').trim() && (
-            <p className="whitespace-pre-wrap break-words text-base">
-              {post.content.split('\n').slice(1).join('\n')}
-            </p>
+          {post.title && (
+            <h2 className="text-2xl font-bold">
+              {post.title}
+            </h2>
           )}
+          <p className="whitespace-pre-wrap break-words text-base">
+            {post.content}
+          </p>
           {post.media_url && post.media_type?.startsWith('image/') && (
             <img 
               src={post.media_url} 
@@ -202,30 +212,55 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-0 px-0 pt-0 pb-0">
-        <div className="flex items-center gap-1 w-full px-6 pb-2 border-b">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            disabled={isLiking}
-            className="gap-2 hover:bg-transparent"
-          >
-            <Heart
-              className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-            />
-            {likeCount > 0 && <span className="text-sm">{likeCount}</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowComments(!showComments)}
-            className="gap-2 hover:bg-transparent"
-          >
-            <MessageCircle className="h-5 w-5" />
-            {commentCount > 0 && <span className="text-sm">{commentCount}</span>}
-          </Button>
-          <div className="ml-auto text-sm text-muted-foreground">
-            {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+        <div className="flex items-center justify-between w-full px-6 pb-2 border-b">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLike}
+              disabled={isLiking}
+              className="gap-2 hover:bg-transparent p-0"
+            >
+              <Heart
+                className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+              />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowComments(!showComments)}
+              className="gap-2 hover:bg-transparent p-0"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            {likeCount > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="flex -space-x-2">
+                  {post.post_likes.slice(0, 3).map((like, index) => (
+                    <UserAvatar
+                      key={like.user_id}
+                      avatarUrl={like.user_profiles?.avatar_url}
+                      email={like.user_profiles?.email}
+                      username={like.user_profiles?.username}
+                      firstName={like.user_profiles?.first_name}
+                      lastName={like.user_profiles?.last_name}
+                      className="h-6 w-6 border-2 border-background"
+                      fallbackClassName="bg-primary text-primary-foreground text-xs"
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                </span>
+              </div>
+            )}
+            {commentCount > 0 && (
+              <span className="text-sm text-muted-foreground">
+                {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+              </span>
+            )}
           </div>
         </div>
         {showComments && (

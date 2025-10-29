@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 interface Post {
   id: string;
+  title: string | null;
   content: string;
   created_at: string;
   user_id: string;
@@ -19,7 +20,16 @@ interface Post {
     email: string | null;
     avatar_url: string | null;
   } | null;
-  post_likes: { user_id: string }[];
+  post_likes: { 
+    user_id: string;
+    user_profiles: {
+      avatar_url: string | null;
+      username: string;
+      first_name: string | null;
+      last_name: string | null;
+      email: string | null;
+    } | null;
+  }[];
   post_comments: { id: string }[];
 }
 
@@ -47,7 +57,16 @@ export const PostFeed = ({ userId }: PostFeedProps) => {
             email,
             avatar_url
           ),
-          post_likes (user_id),
+          post_likes (
+            user_id,
+            user_profiles!inner (
+              avatar_url,
+              username,
+              first_name,
+              last_name,
+              email
+            )
+          ),
           post_comments (id)
         `)
         .order("created_at", { ascending: false })

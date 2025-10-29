@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +14,7 @@ interface CreatePostProps {
 }
 
 export const CreatePost = ({ userId }: CreatePostProps) => {
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -81,7 +83,19 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
     setError(null);
     
     // Client-side validation
+    const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
+    
+    if (!trimmedTitle) {
+      setError("Please enter a title");
+      return;
+    }
+    
+    if (trimmedTitle.length > 200) {
+      setError("Title must be less than 200 characters");
+      return;
+    }
+    
     if (!trimmedContent) {
       setError("Please enter some content");
       return;
@@ -129,6 +143,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
         .from("posts")
         .insert({
           user_id: userId,
+          title: trimmedTitle,
           content: trimmedContent,
           media_url: mediaUrl,
           media_type: mediaType,
@@ -136,6 +151,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
 
       if (insertError) throw insertError;
 
+      setTitle("");
       setContent("");
       setError(null);
       handleRemoveImage();
@@ -219,6 +235,14 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
               </div>
             )}
 
+            <Input
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="text-lg font-semibold border-0 focus-visible:ring-0"
+              maxLength={200}
+            />
+
             <Textarea
               placeholder="What do you want to talk about?"
               value={content}
@@ -266,12 +290,12 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                   <Image className="h-5 w-5" />
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  {content.length}/5000
+                  Title: {title.length}/200 | Content: {content.length}/5000
                 </span>
               </div>
               <Button 
                 type="submit" 
-                disabled={!content.trim() || isSubmitting}
+                disabled={!title.trim() || !content.trim() || isSubmitting}
                 className="rounded-full px-6"
               >
                 {isSubmitting ? (
