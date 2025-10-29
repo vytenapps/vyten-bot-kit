@@ -250,28 +250,30 @@ export const CommentSection = ({ postId, currentUserId, currentUserRoles, onUpda
 
       if (commentsError) throw commentsError;
 
-      // Then fetch likes for each comment with user profiles
+      // Then fetch likes for each comment
       const commentIds = (commentsData || []).map((c: any) => c.id);
       let likesData: any[] = [];
       
       if (commentIds.length > 0) {
+        // Fetch likes without user profiles first
         const { data: fetchedLikes, error: likesError } = await supabase
           .from("comment_likes")
-          .select(`
-            comment_id,
-            user_id,
-            user_profiles!comment_likes_user_id_fkey (
-              avatar_url,
-              username,
-              first_name,
-              last_name,
-              email
-            )
-          `)
+          .select("comment_id, user_id")
           .in("comment_id", commentIds);
 
-        if (!likesError && fetchedLikes) {
-          likesData = fetchedLikes;
+        if (!likesError && fetchedLikes && fetchedLikes.length > 0) {
+          // Then fetch user profiles separately
+          const userIds = [...new Set(fetchedLikes.map((like: any) => like.user_id))];
+          const { data: profiles } = await supabase
+            .from("user_profiles")
+            .select("user_id, avatar_url, username, first_name, last_name, email")
+            .in("user_id", userIds);
+
+          // Merge profiles into likes
+          likesData = fetchedLikes.map((like: any) => ({
+            ...like,
+            user_profiles: profiles?.find((p: any) => p.user_id === like.user_id) || null
+          }));
         }
       }
 
