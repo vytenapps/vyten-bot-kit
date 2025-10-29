@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Loader2, Image, X, Plus } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import heic2any from "heic2any";
 
 interface CreatePostProps {
   userId: string;
@@ -57,15 +58,57 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+    if (!file) return;
+
+    try {
+      let processedFile: File | Blob = file;
+
+      // Convert HEIC to JPEG if needed
+      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        toast.info("Converting HEIC image...");
+        try {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.9
+          });
+          
+          // heic2any can return an array or single blob
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          
+          // Create a new File object with .jpg extension
+          processedFile = new File(
+            [blob], 
+            file.name.replace(/\.(heic|heif)$/i, '.jpg'),
+            { type: 'image/jpeg' }
+          );
+          toast.success("Image converted successfully!");
+        } catch (conversionError) {
+          console.error("HEIC conversion error:", conversionError);
+          toast.error("Failed to convert HEIC image. Please use JPG or PNG format.");
+          return;
+        }
+      }
+
+      // Check file size after conversion
+      if (processedFile.size > 5 * 1024 * 1024) {
         toast.error("Image must be less than 5MB");
         return;
       }
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+
+      // Validate it's an image
+      if (!processedFile.type.startsWith('image/')) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+
+      setSelectedFile(processedFile as File);
+      setPreviewUrl(URL.createObjectURL(processedFile));
+    } catch (error) {
+      console.error("Error processing file:", error);
+      toast.error("Failed to process image");
     }
   };
 
@@ -275,7 +318,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                 <input
                   type="file"
                   id="image-upload"
-                  accept="image/*"
+                  accept="image/*,.heic,.heif"
                   className="hidden"
                   onChange={handleFileSelect}
                   disabled={isSubmitting}
