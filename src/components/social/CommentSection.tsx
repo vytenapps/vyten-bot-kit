@@ -69,7 +69,7 @@ const CommentItem = ({
   comment: Comment;
   currentUserId: string;
   onDelete: (id: string) => void;
-  onReply: (parentId: string) => void;
+  onReply: (parentId: string, parentComment: Comment) => void;
   onLike: (commentId: string, isLiked: boolean) => void;
   depth?: number;
 }) => {
@@ -120,7 +120,7 @@ const CommentItem = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onReply(comment.id)}
+                    onClick={() => onReply(comment.id, comment)}
                     className="h-auto p-0 hover:bg-transparent text-xs font-semibold"
                   >
                     <MessageCircle className="h-3 w-3 mr-1" />
@@ -186,9 +186,33 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [replyToName, setReplyToName] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<{
+    avatar_url: string | null;
+    username: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchCurrentUserProfile = async () => {
+      const { data } = await (supabase as any)
+        .from("user_profiles")
+        .select("avatar_url, username, first_name, last_name, email")
+        .eq("user_id", currentUserId)
+        .single();
+
+      if (data) {
+        setCurrentUserProfile(data);
+      }
+    };
+
+    fetchCurrentUserProfile();
+  }, [currentUserId]);
 
   const fetchComments = async () => {
     try {
@@ -336,6 +360,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
 
       setNewComment("");
       setReplyToId(null);
+      setReplyToName("");
       setError(null);
       fetchComments();
       onUpdate();
@@ -395,8 +420,13 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
     }
   };
 
-  const handleReply = (parentId: string) => {
+  const handleReply = (parentId: string, comment: Comment) => {
     setReplyToId(parentId);
+    const displayName = comment.user_profiles
+      ? `${comment.user_profiles.first_name || ""} ${comment.user_profiles.last_name || ""}`.trim() ||
+        comment.user_profiles.username
+      : "User";
+    setReplyToName(displayName);
   };
 
   if (isLoading) {
@@ -414,39 +444,64 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <div className="flex-1">
-          {replyToId && (
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Replying to comment</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyToId(null)}
-                className="h-auto p-0 text-xs"
+      <div className="flex gap-2 sm:gap-3">
+        <UserAvatar
+          avatarUrl={currentUserProfile?.avatar_url}
+          email={currentUserProfile?.email}
+          username={currentUserProfile?.username}
+          firstName={currentUserProfile?.first_name}
+          lastName={currentUserProfile?.last_name}
+          className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
+          fallbackClassName="bg-primary text-primary-foreground"
+        />
+        <form onSubmit={handleSubmit} className="flex-1">
+          <div className="border rounded-lg bg-background">
+            <div className="p-3 sm:p-4">
+              {replyToId && replyToName && (
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-sm font-medium text-primary">{replyToName}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setReplyToId(null);
+                      setReplyToName("");
+                    }}
+                    className="h-auto p-0 text-xs hover:bg-transparent"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              )}
+              <Input
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                disabled={isSubmitting}
+                maxLength={2000}
+                className="text-sm sm:text-base border-0 focus-visible:ring-0 px-0 h-auto"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 px-3 sm:px-4 pb-3 border-t pt-3">
+              <Button 
+                type="submit" 
+                disabled={!newComment.trim() || isSubmitting}
+                className="rounded-full px-6 bg-foreground text-background hover:bg-foreground/90"
               >
-                Cancel
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  "Post"
+                )}
               </Button>
             </div>
-          )}
-          <Input
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            disabled={isSubmitting}
-            maxLength={2000}
-            className="text-sm sm:text-base"
-          />
-        </div>
-        <Button type="submit" size="icon" disabled={!newComment.trim() || isSubmitting} className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
-          {isSubmitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
-      </form>
+          </div>
+        </form>
+      </div>
 
       <div className="space-y-1">
         {comments.map((comment) => (
