@@ -6,6 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2 } from "lucide-react";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -64,6 +70,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
   const [isLiking, setIsLiking] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showLikesModal, setShowLikesModal] = useState(false);
 
   const isLiked = post.post_likes.some((like) => like.user_id === currentUserId);
   const isOwnPost = post.user_id === currentUserId;
@@ -235,7 +242,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
               className="gap-1 sm:gap-2 hover:bg-transparent p-0 h-auto"
             >
               <Heart
-                className={`h-4 w-4 sm:h-5 sm:w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                className={`h-5 w-5 sm:h-6 sm:w-6 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
               />
             </Button>
             <Button
@@ -244,12 +251,15 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
               onClick={() => setShowComments(!showComments)}
               className="gap-1 sm:gap-2 hover:bg-transparent p-0 h-auto"
             >
-              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {likeCount > 0 && (
-              <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowLikesModal(true)}
+                className="flex items-center gap-1 hover:underline cursor-pointer"
+              >
                 <div className="flex -space-x-2">
                   {post.post_likes.slice(0, 3).map((like, index) => (
                     <UserAvatar
@@ -267,7 +277,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
                 <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                   {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                 </span>
-              </div>
+              </button>
             )}
             {commentCount > 0 && (
               <button
@@ -279,6 +289,40 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             )}
           </div>
         </div>
+        
+        <Dialog open={showLikesModal} onOpenChange={setShowLikesModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Likes</DialogTitle>
+            </DialogHeader>
+            <div className="max-h-[400px] overflow-y-auto space-y-3">
+              {post.post_likes.map((like) => {
+                const displayName = like.user_profiles
+                  ? `${like.user_profiles.first_name || ""} ${like.user_profiles.last_name || ""}`.trim() ||
+                    like.user_profiles.username
+                  : "Unknown User";
+                
+                return (
+                  <div key={like.user_id} className="flex items-center gap-3">
+                    <UserAvatar
+                      avatarUrl={like.user_profiles?.avatar_url}
+                      email={like.user_profiles?.email}
+                      username={like.user_profiles?.username}
+                      firstName={like.user_profiles?.first_name}
+                      lastName={like.user_profiles?.last_name}
+                      className="h-10 w-10"
+                      fallbackClassName="bg-primary text-primary-foreground"
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">@{like.user_profiles?.username}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
         {showComments && (
           <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
             <CommentSection
