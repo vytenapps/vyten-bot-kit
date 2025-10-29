@@ -291,7 +291,7 @@ export const CreatePost = ({ userId }: CreatePostProps) => {
                   <Image className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  Title: {title.length}/200 | Content: {content.length}/5000
+                  {content.length.toLocaleString()}/5,000
                 </span>
               </div>
               <Button 
