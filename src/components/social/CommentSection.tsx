@@ -155,32 +155,54 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      // First fetch comments with user profiles
+      const { data: commentsData, error: commentsError } = await supabase
         .from("post_comments")
         .select(`
           *,
-          user_profiles!inner (
+          user_profiles!post_comments_user_id_fkey (
             username,
             first_name,
             last_name,
             email,
             avatar_url
-          ),
-          comment_likes (
+          )
+        `)
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+
+      if (commentsError) throw commentsError;
+
+      // Then fetch likes for each comment with user profiles
+      const commentIds = (commentsData || []).map((c: any) => c.id);
+      let likesData: any[] = [];
+      
+      if (commentIds.length > 0) {
+        const { data: fetchedLikes, error: likesError } = await supabase
+          .from("comment_likes")
+          .select(`
+            comment_id,
             user_id,
-            user_profiles!inner (
+            user_profiles!comment_likes_user_id_fkey (
               avatar_url,
               username,
               first_name,
               last_name,
               email
             )
-          )
-        `)
-        .eq("post_id", postId)
-        .order("created_at", { ascending: true });
+          `)
+          .in("comment_id", commentIds);
 
-      if (error) throw error;
+        if (!likesError && fetchedLikes) {
+          likesData = fetchedLikes;
+        }
+      }
+
+      // Merge likes into comments
+      const data = (commentsData || []).map((comment: any) => ({
+        ...comment,
+        comment_likes: likesData.filter((like) => like.comment_id === comment.id)
+      }));
       
       // Organize comments into a tree structure
       const commentsMap = new Map<string, Comment>();
