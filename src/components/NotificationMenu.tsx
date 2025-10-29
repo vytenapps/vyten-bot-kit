@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 
 interface Notification {
   id: string;
@@ -25,6 +26,8 @@ interface Notification {
   actor: {
     username: string;
     avatar_url: string | null;
+    first_name: string | null;
+    last_name: string | null;
   };
 }
 
@@ -73,7 +76,9 @@ export const NotificationMenu = () => {
         created_at,
         actor:actor_id (
           username,
-          avatar_url
+          avatar_url,
+          first_name,
+          last_name
         )
       `)
       .eq('user_id', user.id)
@@ -93,15 +98,15 @@ export const NotificationMenu = () => {
     const actorName = notification.actor?.username || 'Someone';
     switch (notification.type) {
       case 'post_like':
-        return `${actorName} liked your post`;
+        return { action: 'liked your post' };
       case 'post_comment':
-        return `${actorName} commented on your post`;
+        return { action: 'commented on your post' };
       case 'comment_like':
-        return `${actorName} liked your comment`;
+        return { action: 'liked your comment' };
       case 'comment_reply':
-        return `${actorName} replied to your comment`;
+        return { action: 'replied to your comment' };
       default:
-        return 'New notification';
+        return { action: 'interacted with your content' };
     }
   };
 
@@ -163,28 +168,49 @@ export const NotificationMenu = () => {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ScrollArea className="max-h-[400px]">
+        <ScrollArea className="max-h-[450px]">
           {notifications.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No notifications yet
             </div>
           ) : (
-            notifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={!notification.is_read ? 'bg-accent/50' : ''}
-              >
-                <div className="flex flex-col gap-1 w-full">
-                  <p className="text-sm font-medium">
-                    {getNotificationText(notification)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                  </p>
-                </div>
-              </DropdownMenuItem>
-            ))
+            <div className="py-1">
+              {notifications.map((notification) => {
+                const { action } = getNotificationText(notification);
+                const actorName = notification.actor?.username || 'Someone';
+                
+                return (
+                  <DropdownMenuItem
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`flex items-start gap-3 p-4 cursor-pointer hover:bg-accent/50 ${
+                      !notification.is_read ? 'bg-accent/30' : ''
+                    }`}
+                  >
+                    <UserAvatar
+                      avatarUrl={notification.actor?.avatar_url}
+                      username={notification.actor?.username}
+                      firstName={notification.actor?.first_name}
+                      lastName={notification.actor?.last_name}
+                      className="h-10 w-10 flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className="text-sm leading-tight">
+                        <span className="font-semibold">{actorName}</span>
+                        {' '}
+                        <span className="text-muted-foreground">{action}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                    {!notification.is_read && (
+                      <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
+            </div>
           )}
         </ScrollArea>
       </DropdownMenuContent>
