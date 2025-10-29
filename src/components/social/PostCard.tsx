@@ -150,7 +150,7 @@ export const PostCard = ({ post, currentUserId, onUpdate }: PostCardProps) => {
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Posted in Ask the Community
+                Posted in Social Wall
               </p>
             </div>
           </div>
