@@ -1,8 +1,9 @@
 import { BellIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,25 +13,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Notification {
   id: string;
-  type: string;
-  created_at: string;
+  type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply';
+  post_id: string | null;
+  comment_id: string | null;
   is_read: boolean;
-  post_id?: string;
-  comment_id?: string;
+  created_at: string;
   actor: {
     username: string;
-    first_name: string | null;
-    last_name: string | null;
+    avatar_url: string | null;
   };
 }
 
 export const NotificationMenu = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,7 +64,18 @@ export const NotificationMenu = () => {
 
     const { data, error } = await supabase
       .from('notifications')
-      .select('*')
+      .select(`
+        id,
+        type,
+        post_id,
+        comment_id,
+        is_read,
+        created_at,
+        actor:actor_id (
+          username,
+          avatar_url
+        )
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
@@ -73,53 +85,12 @@ export const NotificationMenu = () => {
       return;
     }
 
-    // Fetch actor profiles for each notification
-    if (data && data.length > 0) {
-      const actorIds = [...new Set(data.map(n => n.actor_id))];
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('user_id, username, first_name, last_name')
-        .in('user_id', actorIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      const notificationsWithActors = data.map(notification => ({
-        ...notification,
-        actor: profileMap.get(notification.actor_id) || {
-          username: 'Unknown',
-          first_name: null,
-          last_name: null
-        }
-      }));
-
-      setNotifications(notificationsWithActors);
-      setUnreadCount(notificationsWithActors.filter(n => !n.is_read).length);
-    } else {
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
-    
-    loadNotifications();
-  };
-
-  const handleNotificationClick = async (notification: Notification) => {
-    await markAsRead(notification.id);
-    // Navigate to the post
-    if (notification.post_id) {
-      navigate('/social-wall');
-    }
+    setNotifications(data as any);
+    setUnreadCount(data.filter(n => !n.is_read).length);
   };
 
   const getNotificationText = (notification: Notification) => {
-    const actorName = notification.actor?.first_name || notification.actor?.username || 'Someone';
-    
+    const actorName = notification.actor?.username || 'Someone';
     switch (notification.type) {
       case 'post_like':
         return `${actorName} liked your post`;
@@ -134,8 +105,38 @@ export const NotificationMenu = () => {
     }
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    if (!notification.is_read) {
+      await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notification.id);
+    }
+
+    // Navigate to the post
+    if (notification.post_id) {
+      setIsOpen(false);
+      navigate('/social-wall');
+      // Optionally scroll to the post or comment
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false);
+
+    loadNotifications();
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9 relative">
           <BellIcon className="h-4 w-4" />
@@ -148,37 +149,44 @@ export const NotificationMenu = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notifications</span>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary hover:bg-transparent"
+              onClick={markAllAsRead}
+            >
+              Mark all as read
+            </Button>
+          )}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notifications.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            No notifications yet
-          </div>
-        ) : (
-          <>
-            {notifications.map((notification) => (
-              <DropdownMenuItem 
+        <ScrollArea className="max-h-[400px]">
+          {notifications.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              No notifications yet
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <DropdownMenuItem
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className="cursor-pointer"
+                className={!notification.is_read ? 'bg-accent/50' : ''}
               >
                 <div className="flex flex-col gap-1 w-full">
-                  <div className="flex items-center justify-between">
-                    <p className={`text-sm ${!notification.is_read ? 'font-medium' : 'font-normal'}`}>
-                      {getNotificationText(notification)}
-                    </p>
-                    {!notification.is_read && (
-                      <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 ml-2" />
-                    )}
-                  </div>
+                  <p className="text-sm font-medium">
+                    {getNotificationText(notification)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                   </p>
                 </div>
               </DropdownMenuItem>
-            ))}
-          </>
-        )}
+            ))
+          )}
+        </ScrollArea>
       </DropdownMenuContent>
     </DropdownMenu>
   );
