@@ -172,6 +172,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          actor_id: string
+          comment_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          post_id: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          post_id?: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          post_id?: string | null
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
@@ -435,6 +468,11 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "moderator" | "member"
+      notification_type:
+        | "post_like"
+        | "post_comment"
+        | "comment_like"
+        | "comment_reply"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -563,6 +601,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "moderator", "member"],
+      notification_type: [
+        "post_like",
+        "post_comment",
+        "comment_like",
+        "comment_reply",
+      ],
     },
   },
 } as const
