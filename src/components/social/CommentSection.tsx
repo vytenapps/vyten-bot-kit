@@ -438,7 +438,7 @@ export const CommentSection = ({ postId, currentUserId, onUpdate }: CommentSecti
   }
 
   return (
-    <div className="w-full space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t">
+    <div className="w-full space-y-3 sm:space-y-4 pt-3 sm:pt-4">
       {error && (
         <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
           {error}
