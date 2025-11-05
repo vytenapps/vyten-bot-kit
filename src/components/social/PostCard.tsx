@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2, Flag, Download } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Flag, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -212,9 +212,6 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Bookmark className="h-4 w-4" />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
