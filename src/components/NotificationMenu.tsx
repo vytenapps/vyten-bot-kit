@@ -18,7 +18,7 @@ import { UserAvatar } from "@/components/shared/UserAvatar";
 
 interface Notification {
   id: string;
-  type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply';
+  type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply' | 'post_reported';
   post_id: string | null;
   comment_id: string | null;
   is_read: boolean;
@@ -105,6 +105,8 @@ export const NotificationMenu = () => {
         return { action: 'liked your comment' };
       case 'comment_reply':
         return { action: 'replied to your comment' };
+      case 'post_reported':
+        return { action: 'reported a post for review' };
       default:
         return { action: 'interacted with your content' };
     }
@@ -119,11 +121,10 @@ export const NotificationMenu = () => {
         .eq('id', notification.id);
     }
 
-    // Navigate to the post
+    // Navigate to the specific post for all notification types with a post_id
     if (notification.post_id) {
       setIsOpen(false);
-      navigate('/social-wall');
-      // Optionally scroll to the post or comment
+      navigate(`/social-wall/post/${notification.post_id}`);
     }
   };
 

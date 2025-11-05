@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
-  type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply';
+  type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply' | 'post_reported';
   post_id: string | null;
   comment_id: string | null;
   is_read: boolean;
@@ -148,9 +148,9 @@ export const NotificationsList = () => {
         .eq('id', notification.id);
     }
 
-    // Navigate to the post
+    // Navigate to the specific post for all notification types with a post_id
     if (notification.post_id) {
-      navigate('/social-wall');
+      navigate(`/social-wall/post/${notification.post_id}`);
     }
   };
 

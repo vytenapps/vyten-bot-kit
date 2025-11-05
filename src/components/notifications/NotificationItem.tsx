@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface NotificationItemProps {
   notification: {
     id: string;
-    type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply';
+    type: 'post_like' | 'post_comment' | 'comment_like' | 'comment_reply' | 'post_reported';
     post_id: string | null;
     comment_id: string | null;
     is_read: boolean;
@@ -42,6 +42,8 @@ export const NotificationItem = ({
         return 'liked your comment';
       case 'comment_reply':
         return 'replied to your comment';
+      case 'post_reported':
+        return 'reported a post for review';
       default:
         return 'interacted with your content';
     }
