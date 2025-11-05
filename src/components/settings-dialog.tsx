@@ -8,6 +8,7 @@ import {
   Lock,
   Settings,
   Check,
+  Menu,
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -32,6 +33,12 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import {
   Sidebar,
   SidebarContent,
@@ -69,6 +76,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile",
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string>("")
   const [profileChanged, setProfileChanged] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -722,6 +730,31 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile",
         <DialogDescription className="sr-only">
           Customize your settings here.
         </DialogDescription>
+        
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="left" className="w-64 p-0">
+            <SheetHeader className="p-4 border-b">
+              <SheetTitle>Settings</SheetTitle>
+            </SheetHeader>
+            <div className="flex flex-col p-2 space-y-1">
+              {data.nav.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeSection === item.id ? "secondary" : "ghost"}
+                  className="justify-start w-full"
+                  onClick={() => {
+                    setActiveSection(item.id)
+                    setMobileMenuOpen(false)
+                  }}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </Button>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+
         <SidebarProvider className="items-start">
           <Sidebar collapsible="none" className="hidden md:flex border-r">
             <SidebarContent>
@@ -750,6 +783,14 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile",
           <main className="flex h-full md:h-[480px] flex-1 flex-col overflow-hidden bg-background">
             <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden mr-2"
+                  onClick={() => setMobileMenuOpen(true)}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem className="hidden md:block">
