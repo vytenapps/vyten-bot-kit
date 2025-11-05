@@ -481,6 +481,7 @@ export type Database = {
         | "post_comment"
         | "comment_like"
         | "comment_reply"
+        | "post_reported"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -614,6 +615,7 @@ export const Constants = {
         "post_comment",
         "comment_like",
         "comment_reply",
+        "post_reported",
       ],
     },
   },
