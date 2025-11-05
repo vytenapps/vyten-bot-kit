@@ -15,6 +15,7 @@ import { useTheme } from "@/components/theme-provider"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { applyBaseColor, getStoredBaseColor, baseColors, type BaseColor } from "@/lib/colors"
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
+import { NotificationsList } from "@/components/notifications/NotificationsList"
 
 import {
   Breadcrumb,
@@ -464,19 +465,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection = "profile",
         )
       
       case "notifications":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold">Notifications</h2>
-              <p className="text-muted-foreground mt-1">
-                Configure how you receive notifications
-              </p>
-            </div>
-            <div className="bg-muted/50 aspect-video max-w-3xl rounded-xl flex items-center justify-center text-muted-foreground">
-              Notification settings coming soon
-            </div>
-          </div>
-        )
+        return <NotificationsList />
       
       case "appearance":
         return (
