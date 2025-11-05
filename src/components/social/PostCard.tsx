@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Flag, Download } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Flag, Download, Share2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -180,6 +180,18 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
     toast.success("Image downloaded");
   };
 
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/social-wall/post/${post.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      toast.success("Link copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy link:", error);
+      toast.error("Failed to copy link");
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3 px-4 sm:px-6">
@@ -212,6 +224,14 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={handleShare}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">

@@ -13,6 +13,7 @@ import Chat from "./pages/Chat";
 import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
 import SocialWall from "./pages/SocialWall";
+import SinglePost from "./pages/SinglePost";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, Protected } from "@/components/auth-provider";
 
@@ -41,6 +42,7 @@ function AppContent() {
           <Route path="/c/:chatId" element={<Protected><Conversation /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/social-wall" element={<Protected><SocialWall /></Protected>} />
+          <Route path="/social-wall/post/:postId" element={<Protected><SinglePost /></Protected>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
