@@ -224,6 +224,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {/* Share button - temporarily hidden, uncomment to re-enable
             <Button 
               variant="ghost" 
               size="icon" 
@@ -232,6 +233,7 @@ export const PostCard = ({ post, currentUserId, currentUserRoles, onUpdate }: Po
             >
               <Share2 className="h-4 w-4" />
             </Button>
+            */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
