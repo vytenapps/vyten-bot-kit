@@ -39,7 +39,7 @@ const Auth = () => {
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/chat?login_state=${loginSyncId}`,
+          emailRedirectTo: `${window.location.origin}/auth/success?login_state=${loginSyncId}`,
         },
       });
 
